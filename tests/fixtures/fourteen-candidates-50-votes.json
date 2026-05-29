@@ -1,0 +1,3977 @@
+{
+  "meta": {
+    "description": "Sondage public 14 candidats, échelle 1–7, threshold_10, 50 votants figés",
+    "randomSeed": 20260517,
+    "generatedAt": "2026-05-28T15:51:02.644Z",
+    "validatedAt": "2026-05-29T00:00:00.000Z",
+    "frozen": true,
+    "voterCount": 50,
+    "candidateCount": 14,
+    "checkpoints": [
+      10,
+      20,
+      30,
+      40,
+      50
+    ]
+  },
+  "poll": {
+    "name": "Intégration — 14 candidats (MJ)",
+    "creatorId": "integration-test",
+    "platform": "mock",
+    "items": [
+      {
+        "label": "Candidat 01",
+        "sortOrder": 0
+      },
+      {
+        "label": "Candidat 02",
+        "sortOrder": 1
+      },
+      {
+        "label": "Candidat 03",
+        "sortOrder": 2
+      },
+      {
+        "label": "Candidat 04",
+        "sortOrder": 3
+      },
+      {
+        "label": "Candidat 05",
+        "sortOrder": 4
+      },
+      {
+        "label": "Candidat 06",
+        "sortOrder": 5
+      },
+      {
+        "label": "Candidat 07",
+        "sortOrder": 6
+      },
+      {
+        "label": "Candidat 08",
+        "sortOrder": 7
+      },
+      {
+        "label": "Candidat 09",
+        "sortOrder": 8
+      },
+      {
+        "label": "Candidat 10",
+        "sortOrder": 9
+      },
+      {
+        "label": "Candidat 11",
+        "sortOrder": 10
+      },
+      {
+        "label": "Candidat 12",
+        "sortOrder": 11
+      },
+      {
+        "label": "Candidat 13",
+        "sortOrder": 12
+      },
+      {
+        "label": "Candidat 14",
+        "sortOrder": 13
+      }
+    ],
+    "gradeMin": 1,
+    "gradeMax": 7,
+    "gradeLabels": [
+      "Excellent",
+      "Très bien",
+      "Bien",
+      "Assez bien",
+      "Passable",
+      "Insuffisant",
+      "À Rejeter"
+    ],
+    "bestGradeIsLowest": true,
+    "visibility": "public",
+    "voterMode": "public",
+    "resultPolicy": "threshold_10",
+    "dataRegion": "EU",
+    "startsAt": "2026-01-01T00:00:00.000Z",
+    "endsAt": "2027-01-01T00:00:00.000Z"
+  },
+  "votes": [
+    {
+      "subjectId": "fixture-voter-001",
+      "displayName": "Votant 1",
+      "grades": [
+        4,
+        4,
+        1,
+        3,
+        4,
+        7,
+        1,
+        1,
+        3,
+        1,
+        4,
+        3,
+        1,
+        2
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-002",
+      "displayName": "Votant 2",
+      "grades": [
+        1,
+        1,
+        4,
+        1,
+        3,
+        4,
+        4,
+        1,
+        1,
+        1,
+        2,
+        1,
+        4,
+        1
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-003",
+      "displayName": "Votant 3",
+      "grades": [
+        2,
+        3,
+        2,
+        3,
+        3,
+        7,
+        6,
+        2,
+        2,
+        4,
+        6,
+        3,
+        1,
+        5
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-004",
+      "displayName": "Votant 4",
+      "grades": [
+        4,
+        3,
+        6,
+        3,
+        4,
+        4,
+        6,
+        3,
+        7,
+        2,
+        4,
+        7,
+        4,
+        4
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-005",
+      "displayName": "Votant 5",
+      "grades": [
+        6,
+        6,
+        7,
+        6,
+        7,
+        7,
+        7,
+        7,
+        6,
+        6,
+        7,
+        7,
+        6,
+        7
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-006",
+      "displayName": "Votant 6",
+      "grades": [
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        7,
+        3,
+        3,
+        1,
+        2,
+        6,
+        1,
+        1
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-007",
+      "displayName": "Votant 7",
+      "grades": [
+        7,
+        2,
+        6,
+        7,
+        6,
+        6,
+        6,
+        6,
+        7,
+        6,
+        7,
+        1,
+        6,
+        7
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-008",
+      "displayName": "Votant 8",
+      "grades": [
+        5,
+        7,
+        4,
+        7,
+        7,
+        3,
+        6,
+        4,
+        3,
+        7,
+        5,
+        6,
+        7,
+        6
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-009",
+      "displayName": "Votant 9",
+      "grades": [
+        3,
+        2,
+        4,
+        5,
+        3,
+        1,
+        4,
+        4,
+        1,
+        3,
+        1,
+        4,
+        1,
+        3
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-010",
+      "displayName": "Votant 10",
+      "grades": [
+        6,
+        5,
+        1,
+        1,
+        3,
+        1,
+        4,
+        7,
+        2,
+        3,
+        6,
+        2,
+        4,
+        1
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-011",
+      "displayName": "Votant 11",
+      "grades": [
+        5,
+        1,
+        2,
+        4,
+        5,
+        3,
+        5,
+        3,
+        7,
+        3,
+        5,
+        3,
+        1,
+        6
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-012",
+      "displayName": "Votant 12",
+      "grades": [
+        5,
+        7,
+        7,
+        2,
+        5,
+        5,
+        6,
+        5,
+        5,
+        5,
+        7,
+        1,
+        7,
+        5
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-013",
+      "displayName": "Votant 13",
+      "grades": [
+        1,
+        2,
+        1,
+        1,
+        3,
+        3,
+        5,
+        1,
+        1,
+        1,
+        1,
+        6,
+        4,
+        3
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-014",
+      "displayName": "Votant 14",
+      "grades": [
+        3,
+        4,
+        4,
+        4,
+        3,
+        6,
+        6,
+        2,
+        4,
+        4,
+        1,
+        3,
+        5,
+        3
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-015",
+      "displayName": "Votant 15",
+      "grades": [
+        5,
+        3,
+        1,
+        4,
+        6,
+        7,
+        1,
+        3,
+        2,
+        5,
+        6,
+        7,
+        5,
+        6
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-016",
+      "displayName": "Votant 16",
+      "grades": [
+        5,
+        7,
+        5,
+        4,
+        5,
+        4,
+        4,
+        3,
+        1,
+        4,
+        6,
+        1,
+        3,
+        2
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-017",
+      "displayName": "Votant 17",
+      "grades": [
+        5,
+        2,
+        3,
+        7,
+        4,
+        2,
+        5,
+        2,
+        3,
+        3,
+        2,
+        2,
+        5,
+        2
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-018",
+      "displayName": "Votant 18",
+      "grades": [
+        7,
+        6,
+        6,
+        6,
+        7,
+        7,
+        2,
+        7,
+        7,
+        7,
+        4,
+        7,
+        1,
+        5
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-019",
+      "displayName": "Votant 19",
+      "grades": [
+        2,
+        4,
+        1,
+        1,
+        1,
+        1,
+        7,
+        2,
+        3,
+        1,
+        4,
+        1,
+        5,
+        4
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-020",
+      "displayName": "Votant 20",
+      "grades": [
+        7,
+        7,
+        4,
+        5,
+        5,
+        7,
+        6,
+        7,
+        7,
+        5,
+        5,
+        1,
+        6,
+        5
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-021",
+      "displayName": "Votant 21",
+      "grades": [
+        4,
+        1,
+        5,
+        2,
+        5,
+        2,
+        1,
+        7,
+        6,
+        1,
+        1,
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-022",
+      "displayName": "Votant 22",
+      "grades": [
+        7,
+        7,
+        1,
+        7,
+        4,
+        6,
+        7,
+        4,
+        6,
+        7,
+        4,
+        6,
+        6,
+        4
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-023",
+      "displayName": "Votant 23",
+      "grades": [
+        2,
+        2,
+        4,
+        4,
+        2,
+        2,
+        1,
+        7,
+        1,
+        4,
+        5,
+        1,
+        4,
+        3
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-024",
+      "displayName": "Votant 24",
+      "grades": [
+        6,
+        5,
+        3,
+        6,
+        5,
+        3,
+        2,
+        3,
+        5,
+        3,
+        3,
+        5,
+        4,
+        6
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-025",
+      "displayName": "Votant 25",
+      "grades": [
+        1,
+        5,
+        4,
+        4,
+        2,
+        6,
+        4,
+        3,
+        6,
+        5,
+        5,
+        5,
+        5,
+        4
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-026",
+      "displayName": "Votant 26",
+      "grades": [
+        7,
+        7,
+        4,
+        7,
+        7,
+        6,
+        5,
+        6,
+        7,
+        7,
+        5,
+        7,
+        7,
+        5
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-027",
+      "displayName": "Votant 27",
+      "grades": [
+        3,
+        1,
+        5,
+        5,
+        6,
+        6,
+        2,
+        4,
+        5,
+        4,
+        4,
+        2,
+        1,
+        2
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-028",
+      "displayName": "Votant 28",
+      "grades": [
+        5,
+        4,
+        6,
+        4,
+        4,
+        6,
+        2,
+        5,
+        6,
+        5,
+        2,
+        3,
+        3,
+        7
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-029",
+      "displayName": "Votant 29",
+      "grades": [
+        4,
+        2,
+        5,
+        6,
+        5,
+        5,
+        4,
+        2,
+        3,
+        3,
+        6,
+        6,
+        5,
+        4
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-030",
+      "displayName": "Votant 30",
+      "grades": [
+        3,
+        2,
+        6,
+        4,
+        4,
+        2,
+        6,
+        6,
+        7,
+        5,
+        5,
+        1,
+        3,
+        5
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-031",
+      "displayName": "Votant 31",
+      "grades": [
+        4,
+        1,
+        2,
+        2,
+        3,
+        2,
+        2,
+        3,
+        1,
+        6,
+        1,
+        3,
+        3,
+        3
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-032",
+      "displayName": "Votant 32",
+      "grades": [
+        3,
+        1,
+        2,
+        2,
+        7,
+        4,
+        4,
+        5,
+        4,
+        2,
+        1,
+        5,
+        3,
+        3
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-033",
+      "displayName": "Votant 33",
+      "grades": [
+        5,
+        5,
+        7,
+        7,
+        7,
+        6,
+        5,
+        2,
+        6,
+        6,
+        7,
+        5,
+        5,
+        7
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-034",
+      "displayName": "Votant 34",
+      "grades": [
+        1,
+        3,
+        1,
+        1,
+        1,
+        1,
+        6,
+        1,
+        4,
+        3,
+        3,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-035",
+      "displayName": "Votant 35",
+      "grades": [
+        7,
+        5,
+        7,
+        7,
+        6,
+        7,
+        7,
+        4,
+        7,
+        6,
+        7,
+        7,
+        5,
+        7
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-036",
+      "displayName": "Votant 36",
+      "grades": [
+        3,
+        5,
+        1,
+        6,
+        4,
+        5,
+        4,
+        5,
+        2,
+        4,
+        1,
+        6,
+        4,
+        3
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-037",
+      "displayName": "Votant 37",
+      "grades": [
+        7,
+        5,
+        5,
+        6,
+        7,
+        2,
+        7,
+        2,
+        4,
+        6,
+        6,
+        6,
+        5,
+        1
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-038",
+      "displayName": "Votant 38",
+      "grades": [
+        4,
+        6,
+        5,
+        2,
+        4,
+        7,
+        7,
+        7,
+        6,
+        7,
+        7,
+        4,
+        7,
+        6
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-039",
+      "displayName": "Votant 39",
+      "grades": [
+        6,
+        5,
+        3,
+        6,
+        5,
+        6,
+        6,
+        4,
+        5,
+        3,
+        2,
+        4,
+        1,
+        6
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-040",
+      "displayName": "Votant 40",
+      "grades": [
+        2,
+        2,
+        3,
+        5,
+        4,
+        1,
+        4,
+        2,
+        5,
+        6,
+        2,
+        3,
+        3,
+        1
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-041",
+      "displayName": "Votant 41",
+      "grades": [
+        6,
+        5,
+        6,
+        6,
+        3,
+        4,
+        2,
+        2,
+        6,
+        6,
+        2,
+        1,
+        7,
+        1
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-042",
+      "displayName": "Votant 42",
+      "grades": [
+        6,
+        5,
+        5,
+        1,
+        6,
+        7,
+        7,
+        6,
+        7,
+        5,
+        7,
+        7,
+        6,
+        7
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-043",
+      "displayName": "Votant 43",
+      "grades": [
+        1,
+        2,
+        3,
+        6,
+        5,
+        6,
+        2,
+        5,
+        3,
+        4,
+        1,
+        7,
+        2,
+        4
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-044",
+      "displayName": "Votant 44",
+      "grades": [
+        2,
+        7,
+        4,
+        5,
+        4,
+        3,
+        3,
+        7,
+        5,
+        4,
+        1,
+        6,
+        2,
+        6
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-045",
+      "displayName": "Votant 45",
+      "grades": [
+        4,
+        5,
+        7,
+        5,
+        6,
+        5,
+        6,
+        2,
+        3,
+        7,
+        1,
+        6,
+        6,
+        4
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-046",
+      "displayName": "Votant 46",
+      "grades": [
+        7,
+        6,
+        7,
+        4,
+        6,
+        4,
+        3,
+        7,
+        2,
+        7,
+        3,
+        7,
+        7,
+        6
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-047",
+      "displayName": "Votant 47",
+      "grades": [
+        4,
+        3,
+        3,
+        5,
+        4,
+        3,
+        6,
+        6,
+        4,
+        1,
+        4,
+        6,
+        3,
+        2
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-048",
+      "displayName": "Votant 48",
+      "grades": [
+        2,
+        2,
+        3,
+        2,
+        1,
+        5,
+        3,
+        3,
+        1,
+        2,
+        2,
+        2,
+        1,
+        4
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-049",
+      "displayName": "Votant 49",
+      "grades": [
+        4,
+        5,
+        1,
+        7,
+        1,
+        1,
+        5,
+        4,
+        3,
+        4,
+        5,
+        4,
+        2,
+        3
+      ]
+    },
+    {
+      "subjectId": "fixture-voter-050",
+      "displayName": "Votant 50",
+      "grades": [
+        4,
+        7,
+        7,
+        6,
+        4,
+        5,
+        7,
+        5,
+        4,
+        5,
+        6,
+        7,
+        5,
+        5
+      ]
+    }
+  ],
+  "checkpoints": [
+    {
+      "afterVoteCount": 10,
+      "expected": {
+        "voteCount": 10,
+        "visible": true,
+        "policy": "threshold_10",
+        "gradeMin": 1,
+        "gradeMax": 7,
+        "gradeLabels": [
+          "Excellent",
+          "Très bien",
+          "Bien",
+          "Assez bien",
+          "Passable",
+          "Insuffisant",
+          "À Rejeter"
+        ],
+        "bestGradeIsLowest": true,
+        "tieBreakMethod": "dissatisfied_groups",
+        "tieBreakMethodDescription": "Méthode des groupes d'insatisfaits (équivalente au siphonnage médian) : pour chaque candidat à la même mention majoritaire, on compare le pourcentage de partisans (jugements strictement meilleurs que la médiane) et d'opposants (strictement moins bons). Le plus grand pourcentage tranche ; en cas d'égalité entre partisans et opposants, les opposants l'emportent. Si plusieurs candidats restent à égalité, on recommence en élargissant les groupes (successeurs des partisans ou des opposants). Profils de vote identiques : ex-aequo conservé.",
+        "items": [
+          {
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 4,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 2,
+              "2": 1,
+              "3": 1,
+              "4": 2,
+              "5": 1,
+              "6": 2,
+              "7": 1
+            },
+            "rank": 11,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 3,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 1,
+              "2": 3,
+              "3": 2,
+              "4": 1,
+              "5": 1,
+              "6": 1,
+              "7": 1
+            },
+            "rank": 5,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 10,
+              "opponentsPercent": 20,
+              "display": "partisans 10 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 10 %, opposants 20 %)"
+          },
+          {
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 3,
+              "2": 1,
+              "3": 0,
+              "4": 3,
+              "5": 0,
+              "6": 2,
+              "7": 1
+            },
+            "rank": 10,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 30,
+              "display": "partisans 30 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 3,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 3,
+              "2": 0,
+              "3": 3,
+              "4": 0,
+              "5": 1,
+              "6": 1,
+              "7": 2
+            },
+            "rank": 8,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 30,
+              "display": "partisans 30 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 3,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 1,
+              "2": 0,
+              "3": 4,
+              "4": 2,
+              "5": 0,
+              "6": 1,
+              "7": 2
+            },
+            "rank": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 10,
+              "opponentsPercent": 20,
+              "display": "partisans 10 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 10 %, opposants 20 %)"
+          },
+          {
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 3,
+              "2": 0,
+              "3": 1,
+              "4": 2,
+              "5": 0,
+              "6": 1,
+              "7": 3
+            },
+            "rank": 12,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 40,
+              "display": "partisans 40 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 40 %)"
+          },
+          {
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 6,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 1,
+              "2": 0,
+              "3": 0,
+              "4": 3,
+              "5": 0,
+              "6": 4,
+              "7": 2
+            },
+            "rank": 14,
+            "tiedAtMedian": false,
+            "medianDisplay": "6 — Insuffisant"
+          },
+          {
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 3,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 2,
+              "2": 1,
+              "3": 2,
+              "4": 2,
+              "5": 0,
+              "6": 1,
+              "7": 2
+            },
+            "rank": 2,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 20 %)"
+          },
+          {
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 3,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 2,
+              "2": 2,
+              "3": 3,
+              "4": 0,
+              "5": 0,
+              "6": 1,
+              "7": 2
+            },
+            "rank": 1,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 3,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 3,
+              "2": 1,
+              "3": 2,
+              "4": 1,
+              "5": 0,
+              "6": 2,
+              "7": 1
+            },
+            "rank": 6,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 30,
+              "display": "partisans 30 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 1,
+              "2": 2,
+              "3": 0,
+              "4": 2,
+              "5": 1,
+              "6": 2,
+              "7": 2
+            },
+            "rank": 13,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 50,
+              "display": "partisans 30 %, opposants 50 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 50 %)"
+          },
+          {
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 3,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 2,
+              "2": 1,
+              "3": 2,
+              "4": 1,
+              "5": 0,
+              "6": 2,
+              "7": 2
+            },
+            "rank": 7,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 20 %)"
+          },
+          {
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 4,
+              "2": 0,
+              "3": 0,
+              "4": 3,
+              "5": 0,
+              "6": 2,
+              "7": 1
+            },
+            "rank": 9,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 3,
+            "totalJudgments": 10,
+            "distribution": {
+              "1": 3,
+              "2": 1,
+              "3": 1,
+              "4": 1,
+              "5": 1,
+              "6": 1,
+              "7": 2
+            },
+            "rank": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 20 %)"
+          }
+        ],
+        "ranking": [
+          {
+            "rank": 1,
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "rank": 2,
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 20 %)"
+          },
+          {
+            "rank": 3,
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 10,
+              "opponentsPercent": 20,
+              "display": "partisans 10 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 10 %, opposants 20 %)"
+          },
+          {
+            "rank": 4,
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 20 %)"
+          },
+          {
+            "rank": 5,
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 10,
+              "opponentsPercent": 20,
+              "display": "partisans 10 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 10 %, opposants 20 %)"
+          },
+          {
+            "rank": 6,
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 30,
+              "display": "partisans 30 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 30 %)"
+          },
+          {
+            "rank": 7,
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 20 %)"
+          },
+          {
+            "rank": 8,
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 30,
+              "display": "partisans 30 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 30 %)"
+          },
+          {
+            "rank": 9,
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "rank": 10,
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 30,
+              "display": "partisans 30 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 30 %)"
+          },
+          {
+            "rank": 11,
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "rank": 12,
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 40,
+              "display": "partisans 40 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 40 %)"
+          },
+          {
+            "rank": 13,
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 50,
+              "display": "partisans 30 %, opposants 50 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 50 %)"
+          },
+          {
+            "rank": 14,
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 6,
+            "tiedAtMedian": false,
+            "medianDisplay": "6 — Insuffisant"
+          }
+        ]
+      }
+    },
+    {
+      "afterVoteCount": 20,
+      "expected": {
+        "voteCount": 20,
+        "visible": true,
+        "policy": "threshold_10",
+        "gradeMin": 1,
+        "gradeMax": 7,
+        "gradeLabels": [
+          "Excellent",
+          "Très bien",
+          "Bien",
+          "Assez bien",
+          "Passable",
+          "Insuffisant",
+          "À Rejeter"
+        ],
+        "bestGradeIsLowest": true,
+        "tieBreakMethod": "dissatisfied_groups",
+        "tieBreakMethodDescription": "Méthode des groupes d'insatisfaits (équivalente au siphonnage médian) : pour chaque candidat à la même mention majoritaire, on compare le pourcentage de partisans (jugements strictement meilleurs que la médiane) et d'opposants (strictement moins bons). Le plus grand pourcentage tranche ; en cas d'égalité entre partisans et opposants, les opposants l'emportent. Si plusieurs candidats restent à égalité, on recommence en élargissant les groupes (successeurs des partisans ou des opposants). Profils de vote identiques : ex-aequo conservé.",
+        "items": [
+          {
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 5,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 3,
+              "2": 2,
+              "3": 2,
+              "4": 2,
+              "5": 6,
+              "6": 2,
+              "7": 3
+            },
+            "rank": 13,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 45,
+              "opponentsPercent": 25,
+              "display": "partisans 45 %, opposants 25 %"
+            },
+            "medianDisplay": "5 — Passable (partisans 45 %, opposants 25 %)"
+          },
+          {
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 3,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 2,
+              "2": 5,
+              "3": 3,
+              "4": 3,
+              "5": 1,
+              "6": 2,
+              "7": 4
+            },
+            "rank": 1,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 30,
+              "display": "partisans 35 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 35 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 6,
+              "2": 2,
+              "3": 1,
+              "4": 5,
+              "5": 1,
+              "6": 3,
+              "7": 2
+            },
+            "rank": 6,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 4,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 5,
+              "2": 1,
+              "3": 3,
+              "4": 4,
+              "5": 2,
+              "6": 2,
+              "7": 3
+            },
+            "rank": 7,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 35,
+              "display": "partisans 30 %, opposants 35 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 35 %)"
+          },
+          {
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 4,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 2,
+              "2": 0,
+              "3": 6,
+              "4": 3,
+              "5": 4,
+              "6": 2,
+              "7": 3
+            },
+            "rank": 9,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 25,
+              "display": "partisans 40 %, opposants 25 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 25 %)"
+          },
+          {
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 4,
+              "2": 1,
+              "3": 3,
+              "4": 3,
+              "5": 1,
+              "6": 2,
+              "7": 6
+            },
+            "rank": 11,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 40,
+              "display": "partisans 40 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 40 %)"
+          },
+          {
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 5,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 2,
+              "2": 1,
+              "3": 0,
+              "4": 4,
+              "5": 3,
+              "6": 7,
+              "7": 3
+            },
+            "rank": 14,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 50,
+              "display": "partisans 35 %, opposants 50 %"
+            },
+            "medianDisplay": "5 — Passable (partisans 35 %, opposants 50 %)"
+          },
+          {
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 3,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 3,
+              "2": 4,
+              "3": 5,
+              "4": 2,
+              "5": 1,
+              "6": 1,
+              "7": 4
+            },
+            "rank": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 30,
+              "display": "partisans 35 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 35 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 3,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 4,
+              "2": 3,
+              "3": 5,
+              "4": 1,
+              "5": 1,
+              "6": 1,
+              "7": 5
+            },
+            "rank": 5,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 35,
+              "display": "partisans 35 %, opposants 35 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 35 %, opposants 35 %)"
+          },
+          {
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 3,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 5,
+              "2": 1,
+              "3": 4,
+              "4": 3,
+              "5": 3,
+              "6": 2,
+              "7": 2
+            },
+            "rank": 2,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 20 %)"
+          },
+          {
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 3,
+              "2": 3,
+              "3": 0,
+              "4": 4,
+              "5": 3,
+              "6": 4,
+              "7": 3
+            },
+            "rank": 12,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 50,
+              "display": "partisans 30 %, opposants 50 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 50 %)"
+          },
+          {
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 3,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 6,
+              "2": 2,
+              "3": 4,
+              "4": 1,
+              "5": 0,
+              "6": 3,
+              "7": 4
+            },
+            "rank": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 35,
+              "display": "partisans 40 %, opposants 35 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 40 %, opposants 35 %)"
+          },
+          {
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 6,
+              "2": 0,
+              "3": 1,
+              "4": 4,
+              "5": 4,
+              "6": 3,
+              "7": 2
+            },
+            "rank": 10,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 25,
+              "display": "partisans 35 %, opposants 25 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 35 %, opposants 25 %)"
+          },
+          {
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 4,
+            "totalJudgments": 20,
+            "distribution": {
+              "1": 3,
+              "2": 3,
+              "3": 3,
+              "4": 2,
+              "5": 4,
+              "6": 3,
+              "7": 2
+            },
+            "rank": 8,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 45,
+              "opponentsPercent": 25,
+              "display": "partisans 45 %, opposants 25 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 45 %, opposants 25 %)"
+          }
+        ],
+        "ranking": [
+          {
+            "rank": 1,
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 30,
+              "display": "partisans 35 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 35 %, opposants 30 %)"
+          },
+          {
+            "rank": 2,
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 20 %)"
+          },
+          {
+            "rank": 3,
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 35,
+              "display": "partisans 40 %, opposants 35 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 40 %, opposants 35 %)"
+          },
+          {
+            "rank": 4,
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 30,
+              "display": "partisans 35 %, opposants 30 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 35 %, opposants 30 %)"
+          },
+          {
+            "rank": 5,
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 35,
+              "display": "partisans 35 %, opposants 35 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 35 %, opposants 35 %)"
+          },
+          {
+            "rank": 6,
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "rank": 7,
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 35,
+              "display": "partisans 30 %, opposants 35 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 35 %)"
+          },
+          {
+            "rank": 8,
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 45,
+              "opponentsPercent": 25,
+              "display": "partisans 45 %, opposants 25 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 45 %, opposants 25 %)"
+          },
+          {
+            "rank": 9,
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 25,
+              "display": "partisans 40 %, opposants 25 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 25 %)"
+          },
+          {
+            "rank": 10,
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 25,
+              "display": "partisans 35 %, opposants 25 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 35 %, opposants 25 %)"
+          },
+          {
+            "rank": 11,
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 40,
+              "display": "partisans 40 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 40 %)"
+          },
+          {
+            "rank": 12,
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 50,
+              "display": "partisans 30 %, opposants 50 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 50 %)"
+          },
+          {
+            "rank": 13,
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 5,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 45,
+              "opponentsPercent": 25,
+              "display": "partisans 45 %, opposants 25 %"
+            },
+            "medianDisplay": "5 — Passable (partisans 45 %, opposants 25 %)"
+          },
+          {
+            "rank": 14,
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 5,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 50,
+              "display": "partisans 35 %, opposants 50 %"
+            },
+            "medianDisplay": "5 — Passable (partisans 35 %, opposants 50 %)"
+          }
+        ]
+      }
+    },
+    {
+      "afterVoteCount": 30,
+      "expected": {
+        "voteCount": 30,
+        "visible": true,
+        "policy": "threshold_10",
+        "gradeMin": 1,
+        "gradeMax": 7,
+        "gradeLabels": [
+          "Excellent",
+          "Très bien",
+          "Bien",
+          "Assez bien",
+          "Passable",
+          "Insuffisant",
+          "À Rejeter"
+        ],
+        "bestGradeIsLowest": true,
+        "tieBreakMethod": "dissatisfied_groups",
+        "tieBreakMethodDescription": "Méthode des groupes d'insatisfaits (équivalente au siphonnage médian) : pour chaque candidat à la même mention majoritaire, on compare le pourcentage de partisans (jugements strictement meilleurs que la médiane) et d'opposants (strictement moins bons). Le plus grand pourcentage tranche ; en cas d'égalité entre partisans et opposants, les opposants l'emportent. Si plusieurs candidats restent à égalité, on recommence en élargissant les groupes (successeurs des partisans ou des opposants). Profils de vote identiques : ex-aequo conservé.",
+        "items": [
+          {
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 4,
+              "2": 3,
+              "3": 4,
+              "4": 4,
+              "5": 7,
+              "6": 3,
+              "7": 5
+            },
+            "rank": 6,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36.7,
+              "opponentsPercent": 26.7,
+              "display": "partisans 36.7 %, opposants 26.7 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 36.7 %, opposants 26.7 %)"
+          },
+          {
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 3,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 4,
+              "2": 8,
+              "3": 3,
+              "4": 4,
+              "5": 3,
+              "6": 2,
+              "7": 6
+            },
+            "rank": 1,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 36.7,
+              "display": "partisans 40 %, opposants 36.7 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 40 %, opposants 36.7 %)"
+          },
+          {
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 7,
+              "2": 2,
+              "3": 2,
+              "4": 8,
+              "5": 4,
+              "6": 5,
+              "7": 2
+            },
+            "rank": 8,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36.7,
+              "opponentsPercent": 36.7,
+              "display": "partisans 36.7 %, opposants 36.7 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 36.7 %, opposants 36.7 %)"
+          },
+          {
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 5,
+              "2": 2,
+              "3": 3,
+              "4": 8,
+              "5": 3,
+              "6": 4,
+              "7": 5
+            },
+            "rank": 9,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 33.3,
+              "opponentsPercent": 40,
+              "display": "partisans 33.3 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 33.3 %, opposants 40 %)"
+          },
+          {
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 2,
+              "2": 2,
+              "3": 6,
+              "4": 6,
+              "5": 7,
+              "6": 3,
+              "7": 4
+            },
+            "rank": 13,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 33.3,
+              "opponentsPercent": 46.7,
+              "display": "partisans 33.3 %, opposants 46.7 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 33.3 %, opposants 46.7 %)"
+          },
+          {
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 4,
+              "2": 4,
+              "3": 4,
+              "4": 3,
+              "5": 2,
+              "6": 7,
+              "7": 6
+            },
+            "rank": 11,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 13.3,
+              "opponentsPercent": 20,
+              "display": "partisans 13.3 %, opposants 20 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 13.3 %, opposants 20 %)"
+          },
+          {
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 5,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 4,
+              "2": 4,
+              "3": 0,
+              "4": 6,
+              "5": 4,
+              "6": 8,
+              "7": 4
+            },
+            "rank": 14,
+            "tiedAtMedian": false,
+            "medianDisplay": "5 — Passable"
+          },
+          {
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 3,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 3,
+              "2": 5,
+              "3": 7,
+              "4": 4,
+              "5": 2,
+              "6": 3,
+              "7": 6
+            },
+            "rank": 2,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 26.7,
+              "opponentsPercent": 36.7,
+              "display": "partisans 26.7 %, opposants 36.7 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 26.7 %, opposants 36.7 %)"
+          },
+          {
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 5,
+              "2": 3,
+              "3": 6,
+              "4": 1,
+              "5": 3,
+              "6": 5,
+              "7": 7
+            },
+            "rank": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 46.7,
+              "opponentsPercent": 40,
+              "display": "partisans 46.7 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 46.7 %, opposants 40 %)"
+          },
+          {
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 6,
+              "2": 1,
+              "3": 6,
+              "4": 5,
+              "5": 6,
+              "6": 2,
+              "7": 4
+            },
+            "rank": 5,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 43.3,
+              "opponentsPercent": 40,
+              "display": "partisans 43.3 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 43.3 %, opposants 40 %)"
+          },
+          {
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 4,
+              "2": 4,
+              "3": 1,
+              "4": 6,
+              "5": 7,
+              "6": 5,
+              "7": 3
+            },
+            "rank": 7,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 26.7,
+              "display": "partisans 30 %, opposants 26.7 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 26.7 %)"
+          },
+          {
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 3,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 8,
+              "2": 3,
+              "3": 6,
+              "4": 1,
+              "5": 2,
+              "6": 5,
+              "7": 5
+            },
+            "rank": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36.7,
+              "opponentsPercent": 43.3,
+              "display": "partisans 36.7 %, opposants 43.3 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 36.7 %, opposants 43.3 %)"
+          },
+          {
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 8,
+              "2": 0,
+              "3": 3,
+              "4": 6,
+              "5": 6,
+              "6": 4,
+              "7": 3
+            },
+            "rank": 10,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36.7,
+              "opponentsPercent": 23.3,
+              "display": "partisans 36.7 %, opposants 23.3 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 36.7 %, opposants 23.3 %)"
+          },
+          {
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 4,
+            "totalJudgments": 30,
+            "distribution": {
+              "1": 4,
+              "2": 4,
+              "3": 4,
+              "4": 5,
+              "5": 6,
+              "6": 4,
+              "7": 3
+            },
+            "rank": 12,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 13.3,
+              "opponentsPercent": 23.3,
+              "display": "partisans 13.3 %, opposants 23.3 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 13.3 %, opposants 23.3 %)"
+          }
+        ],
+        "ranking": [
+          {
+            "rank": 1,
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 36.7,
+              "display": "partisans 40 %, opposants 36.7 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 40 %, opposants 36.7 %)"
+          },
+          {
+            "rank": 2,
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 26.7,
+              "opponentsPercent": 36.7,
+              "display": "partisans 26.7 %, opposants 36.7 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 26.7 %, opposants 36.7 %)"
+          },
+          {
+            "rank": 3,
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36.7,
+              "opponentsPercent": 43.3,
+              "display": "partisans 36.7 %, opposants 43.3 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 36.7 %, opposants 43.3 %)"
+          },
+          {
+            "rank": 4,
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 46.7,
+              "opponentsPercent": 40,
+              "display": "partisans 46.7 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 46.7 %, opposants 40 %)"
+          },
+          {
+            "rank": 5,
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 43.3,
+              "opponentsPercent": 40,
+              "display": "partisans 43.3 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 43.3 %, opposants 40 %)"
+          },
+          {
+            "rank": 6,
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36.7,
+              "opponentsPercent": 26.7,
+              "display": "partisans 36.7 %, opposants 26.7 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 36.7 %, opposants 26.7 %)"
+          },
+          {
+            "rank": 7,
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 26.7,
+              "display": "partisans 30 %, opposants 26.7 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 26.7 %)"
+          },
+          {
+            "rank": 8,
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36.7,
+              "opponentsPercent": 36.7,
+              "display": "partisans 36.7 %, opposants 36.7 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 36.7 %, opposants 36.7 %)"
+          },
+          {
+            "rank": 9,
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 33.3,
+              "opponentsPercent": 40,
+              "display": "partisans 33.3 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 33.3 %, opposants 40 %)"
+          },
+          {
+            "rank": 10,
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36.7,
+              "opponentsPercent": 23.3,
+              "display": "partisans 36.7 %, opposants 23.3 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 36.7 %, opposants 23.3 %)"
+          },
+          {
+            "rank": 11,
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 13.3,
+              "opponentsPercent": 20,
+              "display": "partisans 13.3 %, opposants 20 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 13.3 %, opposants 20 %)"
+          },
+          {
+            "rank": 12,
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 13.3,
+              "opponentsPercent": 23.3,
+              "display": "partisans 13.3 %, opposants 23.3 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 13.3 %, opposants 23.3 %)"
+          },
+          {
+            "rank": 13,
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 33.3,
+              "opponentsPercent": 46.7,
+              "display": "partisans 33.3 %, opposants 46.7 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 33.3 %, opposants 46.7 %)"
+          },
+          {
+            "rank": 14,
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 5,
+            "tiedAtMedian": false,
+            "medianDisplay": "5 — Passable"
+          }
+        ]
+      }
+    },
+    {
+      "afterVoteCount": 40,
+      "expected": {
+        "voteCount": 40,
+        "visible": true,
+        "policy": "threshold_10",
+        "gradeMin": 1,
+        "gradeMax": 7,
+        "gradeLabels": [
+          "Excellent",
+          "Très bien",
+          "Bien",
+          "Assez bien",
+          "Passable",
+          "Insuffisant",
+          "À Rejeter"
+        ],
+        "bestGradeIsLowest": true,
+        "tieBreakMethod": "dissatisfied_groups",
+        "tieBreakMethodDescription": "Méthode des groupes d'insatisfaits (équivalente au siphonnage médian) : pour chaque candidat à la même mention majoritaire, on compare le pourcentage de partisans (jugements strictement meilleurs que la médiane) et d'opposants (strictement moins bons). Le plus grand pourcentage tranche ; en cas d'égalité entre partisans et opposants, les opposants l'emportent. Si plusieurs candidats restent à égalité, on recommence en élargissant les groupes (successeurs des partisans ou des opposants). Profils de vote identiques : ex-aequo conservé.",
+        "items": [
+          {
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 5,
+              "2": 4,
+              "3": 6,
+              "4": 6,
+              "5": 8,
+              "6": 4,
+              "7": 7
+            },
+            "rank": 13,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 22.5,
+              "opponentsPercent": 27.5,
+              "display": "partisans 22.5 %, opposants 27.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 22.5 %, opposants 27.5 %)"
+          },
+          {
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 6,
+              "2": 9,
+              "3": 4,
+              "4": 4,
+              "5": 8,
+              "6": 3,
+              "7": 6
+            },
+            "rank": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 47.5,
+              "opponentsPercent": 42.5,
+              "display": "partisans 47.5 %, opposants 42.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 47.5 %, opposants 42.5 %)"
+          },
+          {
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 9,
+              "2": 4,
+              "3": 4,
+              "4": 8,
+              "5": 6,
+              "6": 5,
+              "7": 4
+            },
+            "rank": 5,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 42.5,
+              "opponentsPercent": 37.5,
+              "display": "partisans 42.5 %, opposants 37.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 42.5 %, opposants 37.5 %)"
+          },
+          {
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 6,
+              "2": 5,
+              "3": 3,
+              "4": 8,
+              "5": 4,
+              "6": 7,
+              "7": 7
+            },
+            "rank": 10,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 35,
+              "display": "partisans 35 %, opposants 35 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 35 %, opposants 35 %)"
+          },
+          {
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 3,
+              "2": 2,
+              "3": 7,
+              "4": 9,
+              "5": 8,
+              "6": 4,
+              "7": 7
+            },
+            "rank": 12,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 27.5,
+              "display": "partisans 30 %, opposants 27.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 27.5 %)"
+          },
+          {
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 6,
+              "2": 6,
+              "3": 4,
+              "4": 4,
+              "5": 3,
+              "6": 9,
+              "7": 8
+            },
+            "rank": 7,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 20 %)"
+          },
+          {
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 5,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 4,
+              "2": 5,
+              "3": 0,
+              "4": 9,
+              "5": 5,
+              "6": 10,
+              "7": 7
+            },
+            "rank": 14,
+            "tiedAtMedian": false,
+            "medianDisplay": "5 — Passable"
+          },
+          {
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 3,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 4,
+              "2": 8,
+              "3": 8,
+              "4": 6,
+              "5": 4,
+              "6": 3,
+              "7": 7
+            },
+            "rank": 1,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 35,
+              "display": "partisans 30 %, opposants 35 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 35 %)"
+          },
+          {
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 6,
+              "2": 4,
+              "3": 6,
+              "4": 4,
+              "5": 5,
+              "6": 7,
+              "7": 8
+            },
+            "rank": 6,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 37.5,
+              "display": "partisans 40 %, opposants 37.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 37.5 %)"
+          },
+          {
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 6,
+              "2": 2,
+              "3": 8,
+              "4": 6,
+              "5": 6,
+              "6": 7,
+              "7": 5
+            },
+            "rank": 9,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 7,
+              "2": 6,
+              "3": 2,
+              "4": 6,
+              "5": 7,
+              "6": 6,
+              "7": 6
+            },
+            "rank": 11,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 32.5,
+              "opponentsPercent": 30,
+              "display": "partisans 32.5 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 32.5 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 3,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 9,
+              "2": 3,
+              "3": 8,
+              "4": 3,
+              "5": 4,
+              "6": 7,
+              "7": 6
+            },
+            "rank": 2,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 42.5,
+              "display": "partisans 30 %, opposants 42.5 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 42.5 %)"
+          },
+          {
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 10,
+              "2": 0,
+              "3": 6,
+              "4": 7,
+              "5": 9,
+              "6": 4,
+              "7": 4
+            },
+            "rank": 8,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 25,
+              "opponentsPercent": 20,
+              "display": "partisans 25 %, opposants 20 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 25 %, opposants 20 %)"
+          },
+          {
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 4,
+            "totalJudgments": 40,
+            "distribution": {
+              "1": 7,
+              "2": 4,
+              "3": 7,
+              "4": 5,
+              "5": 6,
+              "6": 6,
+              "7": 5
+            },
+            "rank": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 45,
+              "opponentsPercent": 42.5,
+              "display": "partisans 45 %, opposants 42.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 45 %, opposants 42.5 %)"
+          }
+        ],
+        "ranking": [
+          {
+            "rank": 1,
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 35,
+              "display": "partisans 30 %, opposants 35 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 35 %)"
+          },
+          {
+            "rank": 2,
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 42.5,
+              "display": "partisans 30 %, opposants 42.5 %"
+            },
+            "medianDisplay": "3 — Bien (partisans 30 %, opposants 42.5 %)"
+          },
+          {
+            "rank": 3,
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 47.5,
+              "opponentsPercent": 42.5,
+              "display": "partisans 47.5 %, opposants 42.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 47.5 %, opposants 42.5 %)"
+          },
+          {
+            "rank": 4,
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 45,
+              "opponentsPercent": 42.5,
+              "display": "partisans 45 %, opposants 42.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 45 %, opposants 42.5 %)"
+          },
+          {
+            "rank": 5,
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 42.5,
+              "opponentsPercent": 37.5,
+              "display": "partisans 42.5 %, opposants 37.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 42.5 %, opposants 37.5 %)"
+          },
+          {
+            "rank": 6,
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 37.5,
+              "display": "partisans 40 %, opposants 37.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 37.5 %)"
+          },
+          {
+            "rank": 7,
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 20,
+              "display": "partisans 30 %, opposants 20 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 20 %)"
+          },
+          {
+            "rank": 8,
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 25,
+              "opponentsPercent": 20,
+              "display": "partisans 25 %, opposants 20 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 25 %, opposants 20 %)"
+          },
+          {
+            "rank": 9,
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 40,
+              "opponentsPercent": 30,
+              "display": "partisans 40 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 40 %, opposants 30 %)"
+          },
+          {
+            "rank": 10,
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 35,
+              "opponentsPercent": 35,
+              "display": "partisans 35 %, opposants 35 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 35 %, opposants 35 %)"
+          },
+          {
+            "rank": 11,
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 32.5,
+              "opponentsPercent": 30,
+              "display": "partisans 32.5 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 32.5 %, opposants 30 %)"
+          },
+          {
+            "rank": 12,
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 27.5,
+              "display": "partisans 30 %, opposants 27.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 27.5 %)"
+          },
+          {
+            "rank": 13,
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 22.5,
+              "opponentsPercent": 27.5,
+              "display": "partisans 22.5 %, opposants 27.5 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 22.5 %, opposants 27.5 %)"
+          },
+          {
+            "rank": 14,
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 5,
+            "tiedAtMedian": false,
+            "medianDisplay": "5 — Passable"
+          }
+        ]
+      }
+    },
+    {
+      "afterVoteCount": 50,
+      "expected": {
+        "voteCount": 50,
+        "visible": true,
+        "policy": "threshold_10",
+        "gradeMin": 1,
+        "gradeMax": 7,
+        "gradeLabels": [
+          "Excellent",
+          "Très bien",
+          "Bien",
+          "Assez bien",
+          "Passable",
+          "Insuffisant",
+          "À Rejeter"
+        ],
+        "bestGradeIsLowest": true,
+        "tieBreakMethod": "dissatisfied_groups",
+        "tieBreakMethodDescription": "Méthode des groupes d'insatisfaits (équivalente au siphonnage médian) : pour chaque candidat à la même mention majoritaire, on compare le pourcentage de partisans (jugements strictement meilleurs que la médiane) et d'opposants (strictement moins bons). Le plus grand pourcentage tranche ; en cas d'égalité entre partisans et opposants, les opposants l'emportent. Si plusieurs candidats restent à égalité, on recommence en élargissant les groupes (successeurs des partisans ou des opposants). Profils de vote identiques : ex-aequo conservé.",
+        "items": [
+          {
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 6,
+              "2": 6,
+              "3": 6,
+              "4": 10,
+              "5": 8,
+              "6": 6,
+              "7": 8
+            },
+            "rank": 9,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 24,
+              "opponentsPercent": 28,
+              "display": "partisans 24 %, opposants 28 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 24 %, opposants 28 %)"
+          },
+          {
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 6,
+              "2": 11,
+              "3": 5,
+              "4": 4,
+              "5": 12,
+              "6": 4,
+              "7": 8
+            },
+            "rank": 3,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 34,
+              "opponentsPercent": 24,
+              "display": "partisans 34 %, opposants 24 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 34 %, opposants 24 %)"
+          },
+          {
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 10,
+              "2": 4,
+              "3": 7,
+              "4": 9,
+              "5": 7,
+              "6": 6,
+              "7": 7
+            },
+            "rank": 2,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 42,
+              "opponentsPercent": 40,
+              "display": "partisans 42 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 42 %, opposants 40 %)"
+          },
+          {
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 7,
+              "2": 6,
+              "3": 3,
+              "4": 9,
+              "5": 7,
+              "6": 10,
+              "7": 8
+            },
+            "rank": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 32,
+              "opponentsPercent": 36,
+              "display": "partisans 32 %, opposants 36 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 32 %, opposants 36 %)"
+          },
+          {
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 5,
+              "2": 2,
+              "3": 8,
+              "4": 12,
+              "5": 9,
+              "6": 7,
+              "7": 7
+            },
+            "rank": 13,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 28,
+              "display": "partisans 30 %, opposants 28 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 28 %)"
+          },
+          {
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 7,
+              "2": 6,
+              "3": 6,
+              "4": 6,
+              "5": 6,
+              "6": 10,
+              "7": 9
+            },
+            "rank": 5,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 38,
+              "opponentsPercent": 38,
+              "display": "partisans 38 %, opposants 38 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 38 %, opposants 38 %)"
+          },
+          {
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 5,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 4,
+              "2": 7,
+              "3": 3,
+              "4": 9,
+              "5": 6,
+              "6": 12,
+              "7": 9
+            },
+            "rank": 14,
+            "tiedAtMedian": false,
+            "medianDisplay": "5 — Passable"
+          },
+          {
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 4,
+              "2": 10,
+              "3": 9,
+              "4": 7,
+              "5": 6,
+              "6": 5,
+              "7": 9
+            },
+            "rank": 1,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 46,
+              "opponentsPercent": 40,
+              "display": "partisans 46 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 46 %, opposants 40 %)"
+          },
+          {
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 7,
+              "2": 5,
+              "3": 9,
+              "4": 6,
+              "5": 6,
+              "6": 8,
+              "7": 9
+            },
+            "rank": 11,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 42,
+              "opponentsPercent": 34,
+              "display": "partisans 42 %, opposants 34 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 42 %, opposants 34 %)"
+          },
+          {
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 7,
+              "2": 3,
+              "3": 8,
+              "4": 9,
+              "5": 8,
+              "6": 8,
+              "7": 7
+            },
+            "rank": 12,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36,
+              "opponentsPercent": 30,
+              "display": "partisans 36 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 36 %, opposants 30 %)"
+          },
+          {
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 10,
+              "2": 8,
+              "3": 3,
+              "4": 7,
+              "5": 8,
+              "6": 7,
+              "7": 7
+            },
+            "rank": 10,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 20,
+              "opponentsPercent": 28,
+              "display": "partisans 20 %, opposants 28 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 20 %, opposants 28 %)"
+          },
+          {
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 10,
+              "2": 4,
+              "3": 8,
+              "4": 4,
+              "5": 4,
+              "6": 10,
+              "7": 10
+            },
+            "rank": 6,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 28,
+              "opponentsPercent": 40,
+              "display": "partisans 28 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 28 %, opposants 40 %)"
+          },
+          {
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 11,
+              "2": 3,
+              "3": 7,
+              "4": 7,
+              "5": 10,
+              "6": 6,
+              "7": 6
+            },
+            "rank": 8,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 28,
+              "opponentsPercent": 24,
+              "display": "partisans 28 %, opposants 24 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 28 %, opposants 24 %)"
+          },
+          {
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 4,
+            "totalJudgments": 50,
+            "distribution": {
+              "1": 8,
+              "2": 5,
+              "3": 8,
+              "4": 8,
+              "5": 7,
+              "6": 8,
+              "7": 6
+            },
+            "rank": 7,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 42,
+              "opponentsPercent": 42,
+              "display": "partisans 42 %, opposants 42 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 42 %, opposants 42 %)"
+          }
+        ],
+        "ranking": [
+          {
+            "rank": 1,
+            "itemIndex": 7,
+            "label": "Candidat 08",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 46,
+              "opponentsPercent": 40,
+              "display": "partisans 46 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 46 %, opposants 40 %)"
+          },
+          {
+            "rank": 2,
+            "itemIndex": 2,
+            "label": "Candidat 03",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 42,
+              "opponentsPercent": 40,
+              "display": "partisans 42 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 42 %, opposants 40 %)"
+          },
+          {
+            "rank": 3,
+            "itemIndex": 1,
+            "label": "Candidat 02",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 34,
+              "opponentsPercent": 24,
+              "display": "partisans 34 %, opposants 24 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 34 %, opposants 24 %)"
+          },
+          {
+            "rank": 4,
+            "itemIndex": 3,
+            "label": "Candidat 04",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 32,
+              "opponentsPercent": 36,
+              "display": "partisans 32 %, opposants 36 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 32 %, opposants 36 %)"
+          },
+          {
+            "rank": 5,
+            "itemIndex": 5,
+            "label": "Candidat 06",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 38,
+              "opponentsPercent": 38,
+              "display": "partisans 38 %, opposants 38 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 38 %, opposants 38 %)"
+          },
+          {
+            "rank": 6,
+            "itemIndex": 11,
+            "label": "Candidat 12",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 28,
+              "opponentsPercent": 40,
+              "display": "partisans 28 %, opposants 40 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 28 %, opposants 40 %)"
+          },
+          {
+            "rank": 7,
+            "itemIndex": 13,
+            "label": "Candidat 14",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 42,
+              "opponentsPercent": 42,
+              "display": "partisans 42 %, opposants 42 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 42 %, opposants 42 %)"
+          },
+          {
+            "rank": 8,
+            "itemIndex": 12,
+            "label": "Candidat 13",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 28,
+              "opponentsPercent": 24,
+              "display": "partisans 28 %, opposants 24 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 28 %, opposants 24 %)"
+          },
+          {
+            "rank": 9,
+            "itemIndex": 0,
+            "label": "Candidat 01",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 24,
+              "opponentsPercent": 28,
+              "display": "partisans 24 %, opposants 28 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 24 %, opposants 28 %)"
+          },
+          {
+            "rank": 10,
+            "itemIndex": 10,
+            "label": "Candidat 11",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 20,
+              "opponentsPercent": 28,
+              "display": "partisans 20 %, opposants 28 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 20 %, opposants 28 %)"
+          },
+          {
+            "rank": 11,
+            "itemIndex": 8,
+            "label": "Candidat 09",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 42,
+              "opponentsPercent": 34,
+              "display": "partisans 42 %, opposants 34 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 42 %, opposants 34 %)"
+          },
+          {
+            "rank": 12,
+            "itemIndex": 9,
+            "label": "Candidat 10",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 36,
+              "opponentsPercent": 30,
+              "display": "partisans 36 %, opposants 30 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 36 %, opposants 30 %)"
+          },
+          {
+            "rank": 13,
+            "itemIndex": 4,
+            "label": "Candidat 05",
+            "median": 4,
+            "tiedAtMedian": true,
+            "tieBreakMethod": "dissatisfied_groups",
+            "ballotage": {
+              "method": "dissatisfied_groups",
+              "supportersPercent": 30,
+              "opponentsPercent": 28,
+              "display": "partisans 30 %, opposants 28 %"
+            },
+            "medianDisplay": "4 — Assez bien (partisans 30 %, opposants 28 %)"
+          },
+          {
+            "rank": 14,
+            "itemIndex": 6,
+            "label": "Candidat 07",
+            "median": 5,
+            "tiedAtMedian": false,
+            "medianDisplay": "5 — Passable"
+          }
+        ]
+      }
+    }
+  ]
+}

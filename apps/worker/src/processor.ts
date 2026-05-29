@@ -1,0 +1,87 @@
+import type { VoteSubmittedEvent, ResultPolicy } from "@sondage/shared";
+import { hashSubjectForParticipation } from "@sondage/shared";
+import {
+  isEventProcessed,
+  markEventProcessed,
+  incrementHistogram,
+  recordParticipation,
+  recordBallot,
+  getVoteCount,
+} from "@sondage/db";
+import { getPollById } from "@sondage/db";
+import { incrementVoteCount } from "./redis.js";
+import {
+  shouldPublishSnapshot,
+  isResultsVisible,
+} from "@sondage/shared";
+import { computeAndSaveSnapshot } from "@sondage/db";
+
+let snapshotVersionCache = new Map<string, number>();
+
+async function nextVersion(pollId: string): Promise<number> {
+  const current = snapshotVersionCache.get(pollId) ?? 0;
+  const next = current + 1;
+  snapshotVersionCache.set(pollId, next);
+  return next;
+}
+
+export async function processVoteEvent(event: VoteSubmittedEvent): Promise<void> {
+  if (await isEventProcessed(event.eventId)) {
+    return;
+  }
+
+  const data = await getPollById(event.pollId);
+  if (!data) {
+    throw new Error(`Poll not found: ${event.pollId}`);
+  }
+  if (data.poll.platform !== event.platform) {
+    throw new Error("Event platform does not match poll.platform");
+  }
+
+  const previousCount = await getVoteCount(event.pollId);
+
+  for (const { itemId, grade } of event.grades) {
+    await incrementHistogram(event.pollId, itemId, grade);
+  }
+
+  const participationSubject =
+    event.voterMode === "anonymous"
+      ? hashSubjectForParticipation(
+          event.pollId,
+          event.subjectId,
+          process.env.PARTICIPATION_HASH_SALT ?? "dev-salt"
+        )
+      : event.subjectId;
+  await recordParticipation(event.pollId, participationSubject);
+
+  if (event.voterMode === "public") {
+    await recordBallot(
+      event.pollId,
+      event.subjectId,
+      event.displayName,
+      event.grades
+    );
+  }
+
+  await markEventProcessed(event.eventId, event.pollId);
+
+  const newCount = previousCount + 1;
+  await incrementVoteCount(event.pollId);
+
+  const policy = data.poll.resultPolicy as ResultPolicy;
+  const publishThreshold = shouldPublishSnapshot(
+    policy,
+    previousCount,
+    newCount,
+    data.poll.endsAt
+  );
+  const atEnd =
+    new Date() >= data.poll.endsAt &&
+    isResultsVisible(policy, newCount, data.poll.endsAt);
+
+  if (publishThreshold || atEnd) {
+    const version = await nextVersion(event.pollId);
+    const forceVisible = isResultsVisible(policy, newCount, data.poll.endsAt);
+    await computeAndSaveSnapshot(event.pollId, version, forceVisible);
+  }
+}

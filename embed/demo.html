@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Démo widget — Sondage MJ</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 640px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      .sondage-widget fieldset {
+        margin: 1rem 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 1rem;
+      }
+      .sondage-widget label {
+        margin-right: 0.75rem;
+      }
+      .sondage-widget button {
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+      }
+      .sondage-widget .grade-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .sondage-widget .grade-option {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        cursor: pointer;
+      }
+      .sondage-widget .grade-num {
+        font-weight: 600;
+        min-width: 1.25rem;
+      }
+      .sondage-widget .grade-label {
+        color: #333;
+      }
+    </style>
+    <script src="sondage-widget.js"></script>
+  </head>
+  <body>
+    <h1>Démo embed</h1>
+    <p id="help"></p>
+    <div id="widget-host"></div>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var pollId = params.get("pollId");
+        var help = document.getElementById("help");
+        var host = document.getElementById("widget-host");
+
+        if (!pollId) {
+          help.innerHTML =
+            "Ajoutez <code>?pollId=</code> à l’URL avec l’UUID affiché par <code>npm run db:seed</code> :<br><code>http://localhost:3000/embed/demo.html?pollId=VOTRE-UUID</code>";
+          return;
+        }
+
+        help.textContent = "Sondage : " + pollId;
+
+        var widget = document.createElement("sondage-poll-widget");
+        widget.setAttribute("data-poll-id", pollId);
+        widget.setAttribute("data-api-base", "http://localhost:3000");
+        widget.setAttribute("data-platform", "mock");
+        widget.setAttribute("data-subject-id", "widget-voter-1");
+        widget.setAttribute("data-display-name", "Widget User");
+        host.appendChild(widget);
+      })();
+    </script>
+  </body>
+</html>
