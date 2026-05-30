@@ -7,6 +7,7 @@ import {
   recordParticipation,
   recordBallot,
   getVoteCount,
+  getNextSnapshotVersion,
 } from "@sondage/db";
 import { getPollById } from "@sondage/db";
 import { incrementVoteCount } from "./redis.js";
@@ -15,15 +16,6 @@ import {
   isResultsVisible,
 } from "@sondage/shared";
 import { computeAndSaveSnapshot } from "@sondage/db";
-
-let snapshotVersionCache = new Map<string, number>();
-
-async function nextVersion(pollId: string): Promise<number> {
-  const current = snapshotVersionCache.get(pollId) ?? 0;
-  const next = current + 1;
-  snapshotVersionCache.set(pollId, next);
-  return next;
-}
 
 export async function processVoteEvent(event: VoteSubmittedEvent): Promise<void> {
   if (await isEventProcessed(event.eventId)) {
@@ -80,7 +72,7 @@ export async function processVoteEvent(event: VoteSubmittedEvent): Promise<void>
     isResultsVisible(policy, newCount, data.poll.endsAt);
 
   if (publishThreshold || atEnd) {
-    const version = await nextVersion(event.pollId);
+    const version = await getNextSnapshotVersion(event.pollId);
     const forceVisible = isResultsVisible(policy, newCount, data.poll.endsAt);
     await computeAndSaveSnapshot(event.pollId, version, forceVisible);
   }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { PLATFORMS } from "@sondage/shared";
 import { getPollById } from "@sondage/db";
 import { mockOAuthLogin, issueVoterToken } from "../auth/oauth.js";
+import { AppError } from "../errors.js";
 
 export async function authRoutes(app: FastifyInstance) {
   app.post("/auth/mock/login", async (request, reply) => {
@@ -16,14 +17,20 @@ export async function authRoutes(app: FastifyInstance) {
       .parse(request.body);
 
     const data = await getPollById(body.pollId);
-    if (!data) return reply.status(404).send({ error: "Poll not found" });
+    if (!data) {
+      throw new AppError(404, "NOT_FOUND", "Poll not found");
+    }
 
     if (body.platform !== data.poll.platform) {
-      return reply.status(403).send({
-        error: "Platform mismatch",
-        message: `This poll only accepts votes via ${data.poll.platform}`,
-        requiredPlatform: data.poll.platform,
-      });
+      throw new AppError(
+        403,
+        "PLATFORM_MISMATCH",
+        "Platform mismatch",
+        {
+          requiredPlatform: data.poll.platform,
+          message: `This poll only accepts votes via ${data.poll.platform}`,
+        }
+      );
     }
 
     const profile = await mockOAuthLogin(
@@ -50,14 +57,14 @@ export async function authRoutes(app: FastifyInstance) {
   app.get("/auth/session", async (request, reply) => {
     const auth = request.headers.authorization;
     if (!auth?.startsWith("Bearer ")) {
-      return reply.status(401).send({ error: "Missing bearer token" });
+      throw new AppError(401, "UNAUTHORIZED", "Missing bearer token");
     }
     const { verifyVoterToken } = await import("../auth/oauth.js");
     try {
       const payload = await verifyVoterToken(auth.slice(7));
       return { session: payload };
     } catch {
-      return reply.status(401).send({ error: "Invalid token" });
+      throw new AppError(401, "UNAUTHORIZED", "Invalid token");
     }
   });
 }
@@ -67,16 +74,31 @@ export async function requireVoterAuth(
   authorization: string | undefined
 ) {
   if (!authorization?.startsWith("Bearer ")) {
-    throw Object.assign(new Error("Unauthorized"), { statusCode: 401 });
+    throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
   }
   const { verifyVoterToken, assertTokenMatchesPoll } = await import(
     "../auth/oauth.js"
   );
-  const token = await verifyVoterToken(authorization.slice(7));
+  let token;
+  try {
+    token = await verifyVoterToken(authorization.slice(7));
+  } catch {
+    throw new AppError(401, "UNAUTHORIZED", "Invalid token");
+  }
   const data = await getPollById(pollId);
   if (!data) {
-    throw Object.assign(new Error("Poll not found"), { statusCode: 404 });
+    throw new AppError(404, "NOT_FOUND", "Poll not found");
   }
-  assertTokenMatchesPoll(token, pollId, data.poll.platform as typeof token.platform);
+  try {
+    assertTokenMatchesPoll(token, pollId, data.poll.platform as typeof token.platform);
+  } catch (e) {
+    const message = (e as Error).message;
+    if (message.includes("OAuth provider mismatch")) {
+      throw new AppError(403, "PLATFORM_MISMATCH", message, {
+        requiredPlatform: data.poll.platform,
+      });
+    }
+    throw new AppError(403, "FORBIDDEN", message);
+  }
   return { token, poll: data.poll, items: data.items };
 }

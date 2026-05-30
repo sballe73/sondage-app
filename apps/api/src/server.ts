@@ -1,9 +1,11 @@
 import Fastify from "fastify";
-import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
+import { errorHandlerPlugin } from "./plugins/error-handler.js";
+import { corsPlugin } from "./plugins/cors.js";
+import { rateLimitPlugin } from "./plugins/rate-limit.js";
 import { pollRoutes } from "./routes/polls.js";
 import { authRoutes } from "./routes/auth.js";
 import { voteRoutes } from "./routes/votes.js";
@@ -12,9 +14,15 @@ import { adminRoutes } from "./routes/admin.js";
 import { closeRedis } from "./redis.js";
 import { closeDb } from "@sondage/db";
 
-const app = Fastify({ logger: true });
+const app = Fastify({
+  logger: {
+    level: process.env.LOG_LEVEL ?? "info",
+  },
+});
 
-await app.register(cors, { origin: true });
+await app.register(errorHandlerPlugin);
+await app.register(corsPlugin);
+await app.register(rateLimitPlugin);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 await app.register(fastifyStatic, {

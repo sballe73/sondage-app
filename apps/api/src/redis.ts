@@ -40,6 +40,37 @@ function idempotencyKey(pollId: string, key: string) {
   return `idempotency:${pollId}:${key}`;
 }
 
+function voteRateLimitKey(pollId: string, subjectId: string) {
+  return `rate:vote:${pollId}:${subjectId}`;
+}
+
+export type VoteRateLimitResult =
+  | { allowed: true }
+  | { allowed: false; retryAfterSec: number; count: number };
+
+/** Limite les tentatives de vote par (poll, subject) — fenêtre glissante 60 s. */
+export async function checkVoteRateLimit(
+  pollId: string,
+  subjectId: string,
+  maxPerMinute: number
+): Promise<VoteRateLimitResult> {
+  const r = getRedis();
+  const key = voteRateLimitKey(pollId, subjectId);
+  const count = await r.incr(key);
+  if (count === 1) {
+    await r.expire(key, 60);
+  }
+  if (count > maxPerMinute) {
+    const ttl = await r.ttl(key);
+    return {
+      allowed: false,
+      retryAfterSec: Math.max(ttl, 1),
+      count,
+    };
+  }
+  return { allowed: true };
+}
+
 export async function tryClaimVote(
   pollId: string,
   subjectId: string,

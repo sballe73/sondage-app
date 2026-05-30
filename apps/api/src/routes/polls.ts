@@ -13,6 +13,7 @@ import {
   normalizeCreatePoll,
 } from "@sondage/shared";
 import { createPoll, getPollById, listPollsByCreator, createCampaign } from "@sondage/db";
+import { AppError } from "../errors.js";
 
 const createPollSchema = z.object({
   name: z.string().min(1).max(500),
@@ -54,7 +55,11 @@ export async function pollRoutes(app: FastifyInstance) {
 
   app.post("/polls", async (request, reply) => {
     const parsed = createPollSchema.parse(request.body);
-    validateCreatePoll(parsed);
+    try {
+      validateCreatePoll(parsed);
+    } catch (e) {
+      throw new AppError(400, "INVALID_POLL", (e as Error).message);
+    }
     const input = normalizeCreatePoll(parsed);
     const { poll, items } = await createPoll(input);
     return reply.status(201).send({
@@ -68,7 +73,9 @@ export async function pollRoutes(app: FastifyInstance) {
   app.get("/polls/:pollId", async (request, reply) => {
     const { pollId } = z.object({ pollId: z.string().uuid() }).parse(request.params);
     const data = await getPollById(pollId);
-    if (!data) return reply.status(404).send({ error: "Poll not found" });
+    if (!data) {
+      throw new AppError(404, "NOT_FOUND", "Poll not found");
+    }
     return {
       ...data.poll,
       items: data.items,

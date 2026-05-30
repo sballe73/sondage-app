@@ -6,6 +6,7 @@ import { isResultsVisible } from "@sondage/shared";
 import type { ResultPolicy } from "@sondage/shared";
 import { getVoteCount } from "@sondage/db";
 import { enforcePollRegion } from "../middleware/region.js";
+import { AppError } from "../errors.js";
 
 export async function adminRoutes(app: FastifyInstance) {
   app.post("/polls/:pollId/close", async (request, reply) => {
@@ -14,12 +15,10 @@ export async function adminRoutes(app: FastifyInstance) {
       .object({ creatorId: z.string() })
       .parse(request.body ?? {});
 
-    const regionResult = await enforcePollRegion(request, reply, pollId);
-    if (!regionResult || "statusCode" in regionResult) return;
-    const { poll } = regionResult;
+    const { poll } = await enforcePollRegion(request, pollId);
 
     if (poll.creatorId !== body.creatorId) {
-      return reply.status(403).send({ error: "Not poll creator" });
+      throw new AppError(403, "FORBIDDEN", "Not poll creator");
     }
 
     await closePoll(pollId);

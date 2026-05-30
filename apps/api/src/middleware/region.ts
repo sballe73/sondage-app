@@ -1,8 +1,9 @@
-import type { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyRequest } from "fastify";
 import type { DataRegion } from "@sondage/shared";
 import { DATA_REGIONS } from "@sondage/shared";
 import { config } from "../config.js";
 import { getPollById } from "@sondage/db";
+import { AppError } from "../errors.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -23,21 +24,25 @@ export function resolveRequestRegion(
 
 export async function enforcePollRegion(
   request: FastifyRequest,
-  reply: FastifyReply,
   pollId: string
 ) {
   const data = await getPollById(pollId);
   if (!data) {
-    return reply.status(404).send({ error: "Poll not found" });
+    throw new AppError(404, "NOT_FOUND", "Poll not found");
   }
   const requestRegion = resolveRequestRegion(request);
   const pollRegion = data.poll.dataRegion as DataRegion;
   if (pollRegion !== "GLOBAL" && requestRegion !== pollRegion) {
-    return reply.status(451).send({
-      error: "Data region mismatch",
-      message: `Poll is hosted in ${pollRegion}; route requests via ${pollRegion} endpoint`,
-      requiredRegion: pollRegion,
-    });
+    throw new AppError(
+      451,
+      "REGION_MISMATCH",
+      "Data region mismatch",
+      {
+        requiredRegion: pollRegion,
+        requestRegion,
+        message: `Poll is hosted in ${pollRegion}; route requests via ${pollRegion} endpoint`,
+      }
+    );
   }
   request.dataRegion = requestRegion;
   return data;

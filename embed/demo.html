@@ -47,6 +47,9 @@
   <body>
     <h1>Démo embed</h1>
     <p id="help"></p>
+    <p id="results-link" style="display: none">
+      <a id="results-anchor" href="#">Voir les résultats</a>
+    </p>
     <div id="widget-host"></div>
     <script>
       (function () {
@@ -63,9 +66,15 @@
 
         help.textContent = "Sondage : " + pollId;
 
+        var resultsLink = document.getElementById("results-link");
+        var resultsAnchor = document.getElementById("results-anchor");
+        resultsAnchor.href =
+          "results.html?pollId=" + encodeURIComponent(pollId);
+        resultsLink.style.display = "block";
+
         var widget = document.createElement("sondage-poll-widget");
         widget.setAttribute("data-poll-id", pollId);
-        widget.setAttribute("data-api-base", "http://localhost:3000");
+        widget.setAttribute("data-api-base", window.location.origin);
         widget.setAttribute("data-platform", "mock");
         widget.setAttribute("data-subject-id", "widget-voter-1");
         widget.setAttribute("data-display-name", "Widget User");
