@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Créateur — Sondage MJ</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 720px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        color: #1a1a1a;
+      }
+      .page-nav {
+        margin-bottom: 1.5rem;
+      }
+      .page-nav a {
+        color: #2563eb;
+        margin-right: 1rem;
+      }
+      .sondage-creator fieldset {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin: 0 0 1.25rem;
+      }
+      .sondage-creator legend {
+        font-weight: 600;
+        padding: 0 0.25rem;
+      }
+      .sondage-creator label {
+        display: block;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+      }
+      .sondage-creator input[type="text"],
+      .sondage-creator input[type="datetime-local"],
+      .sondage-creator select,
+      .sondage-creator textarea {
+        display: block;
+        width: 100%;
+        margin-top: 0.25rem;
+        padding: 0.45rem 0.6rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font: inherit;
+        box-sizing: border-box;
+      }
+      .sondage-creator .hint {
+        color: #6b7280;
+        font-size: 0.85rem;
+        margin: 0 0 0.75rem;
+      }
+      .sondage-creator .candidate-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .sondage-creator .candidate-row input {
+        flex: 1;
+        margin-top: 0;
+      }
+      .sondage-creator .btn-remove {
+        width: 2.25rem;
+        padding: 0;
+        cursor: pointer;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 1.1rem;
+        line-height: 1;
+      }
+      .sondage-creator .btn-primary,
+      .sondage-creator .btn-secondary,
+      .sondage-creator .btn-copy {
+        padding: 0.45rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font: inherit;
+      }
+      .sondage-creator .btn-primary {
+        background: #2563eb;
+        color: #fff;
+        border: none;
+      }
+      .sondage-creator .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+      .sondage-creator .btn-secondary {
+        background: #fff;
+        border: 1px solid #d1d5db;
+      }
+      .sondage-creator .error {
+        color: #b91c1c;
+        margin: 0.5rem 0;
+      }
+      .sondage-creator .success-banner {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+      .sondage-creator .success-banner h2 {
+        margin: 0 0 0.5rem;
+      }
+      .sondage-creator .poll-id code {
+        font-size: 0.85rem;
+        word-break: break-all;
+      }
+      .sondage-creator .links-panel,
+      .sondage-creator .status-panel {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+      .sondage-creator .links-panel h3,
+      .sondage-creator .status-panel h3 {
+        margin: 0 0 0.75rem;
+        font-size: 1rem;
+      }
+      .sondage-creator .copy-field {
+        margin-bottom: 1rem;
+      }
+      .sondage-creator .copy-field label {
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+      }
+      .sondage-creator .copy-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+      .sondage-creator .copy-row input,
+      .sondage-creator .copy-row textarea {
+        flex: 1;
+        margin-top: 0;
+        font-size: 0.85rem;
+      }
+      .sondage-creator .btn-copy {
+        white-space: nowrap;
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+      }
+      .sondage-creator .status-dl {
+        display: grid;
+        grid-template-columns: 9rem 1fr;
+        gap: 0.35rem 1rem;
+        margin: 0;
+        font-size: 0.9rem;
+      }
+      .sondage-creator .status-dl dt {
+        color: #6b7280;
+        margin: 0;
+      }
+      .sondage-creator .status-dl dd {
+        margin: 0;
+      }
+      .sondage-creator .creator-footer {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+    </style>
+    <script src="sondage-creator.js"></script>
+  </head>
+  <body>
+    <nav class="page-nav">
+      <a href="creator.html">Créateur</a>
+      <a href="demo.html">Vote (démo)</a>
+      <a href="results.html">Résultats</a>
+    </nav>
+    <h1>Créer un sondage</h1>
+    <p class="hint">
+      Configurez un sondage MJ sans curl. L’identifiant créateur est libre en dev
+      (<code>local-dev</code> par défaut) — auth créateur en Phase 2.
+    </p>
+    <div id="creator-host"></div>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var pollId = params.get("pollId");
+        var host = document.getElementById("creator-host");
+        var widget = document.createElement("sondage-creator-widget");
+        widget.setAttribute("data-api-base", window.location.origin);
+        widget.setAttribute("data-data-region", "EU");
+        if (pollId) {
+          widget.setAttribute("data-poll-id", pollId);
+        }
+        host.appendChild(widget);
+      })();
+    </script>
+  </body>
+</html>

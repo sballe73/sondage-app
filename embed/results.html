@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Résultats — Sondage MJ</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 720px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        color: #1a1a1a;
+      }
+      .nav-links {
+        margin-bottom: 1.5rem;
+      }
+      .nav-links a {
+        color: #2563eb;
+      }
+      .sondage-results .results-header h2 {
+        margin: 0 0 0.25rem;
+      }
+      .sondage-results .meta {
+        color: #555;
+        margin: 0 0 1rem;
+      }
+      .sondage-results .notice {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+      }
+      .sondage-results .notice h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+      }
+      .sondage-results .notice p {
+        margin: 0.35rem 0;
+      }
+      .sondage-results .tie-break-info {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+      .sondage-results .live-vote-notice {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin: 0 0 1rem;
+        font-size: 0.9rem;
+        line-height: 1.45;
+        color: #1e40af;
+      }
+      .sondage-results .poll-ended-banner {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 0.85rem 1rem;
+        margin: 0 0 1rem;
+        font-size: 0.95rem;
+        line-height: 1.45;
+        color: #991b1b;
+      }
+      .sondage-results .poll-ended-label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+      }
+      .sondage-results .poll-ended-detail {
+        color: #7f1d1d;
+      }
+      .sondage-results .ranking-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.5rem 0 1.5rem;
+      }
+      .sondage-results .ranking-table th,
+      .sondage-results .ranking-table td {
+        text-align: left;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .sondage-results .ranking-table th {
+        font-weight: 600;
+        color: #374151;
+      }
+      .sondage-results .ranking-table .rank {
+        width: 3rem;
+        font-weight: 700;
+        color: #2563eb;
+      }
+      .sondage-results .ranking-table .median {
+        font-size: 0.92rem;
+      }
+      .sondage-results .histograms-section h3 {
+        margin-top: 2rem;
+      }
+      .sondage-results .hint {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0 0 1rem;
+      }
+      .sondage-results .histogram {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .sondage-results .histogram h4 {
+        margin: 0 0 0.25rem;
+      }
+      .sondage-results .hist-median {
+        margin: 0 0 0.75rem;
+        font-size: 0.875rem;
+        color: #4b5563;
+      }
+      .sondage-results .hist-row {
+        display: grid;
+        grid-template-columns: 1.5rem 6.5rem 1fr 4.5rem;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.35rem;
+        font-size: 0.85rem;
+      }
+      .sondage-results .hist-grade {
+        font-weight: 700;
+        text-align: right;
+      }
+      .sondage-results .hist-label {
+        color: #374151;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .sondage-results .hist-bar-track {
+        background: #f3f4f6;
+        border-radius: 4px;
+        height: 1.1rem;
+        overflow: hidden;
+      }
+      .sondage-results .hist-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        min-width: 0;
+        transition: width 0.2s ease;
+      }
+      .sondage-results .hist-bar-fill.grade-1 { background: #16a34a; }
+      .sondage-results .hist-bar-fill.grade-2 { background: #22c55e; }
+      .sondage-results .hist-bar-fill.grade-3 { background: #84cc16; }
+      .sondage-results .hist-bar-fill.grade-4 { background: #eab308; }
+      .sondage-results .hist-bar-fill.grade-5 { background: #f97316; }
+      .sondage-results .hist-bar-fill.grade-6 { background: #ef4444; }
+      .sondage-results .hist-bar-fill.grade-7 { background: #b91c1c; }
+      .sondage-results .hist-count {
+        text-align: right;
+        color: #374151;
+      }
+      .sondage-results .hist-pct {
+        color: #9ca3af;
+      }
+      .sondage-results .results-footer {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+      }
+      .sondage-results .results-footer button {
+        padding: 0.45rem 1rem;
+        cursor: pointer;
+      }
+      .sondage-results .auto-hint {
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+      .sondage-results .error {
+        color: #b91c1c;
+      }
+    </style>
+    <script src="sondage-results.js"></script>
+  </head>
+  <body>
+    <nav class="nav-links" id="nav"></nav>
+    <h1>Résultats du sondage</h1>
+    <p id="help"></p>
+    <div id="results-host"></div>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var pollId = params.get("pollId");
+        var help = document.getElementById("help");
+        var nav = document.getElementById("nav");
+        var host = document.getElementById("results-host");
+
+        if (!pollId) {
+          help.innerHTML =
+            "Ajoutez <code>?pollId=</code> à l’URL avec l’UUID affiché par <code>npm run db:seed</code> :<br><code>http://localhost:3000/embed/results.html?pollId=VOTRE-UUID</code>";
+          return;
+        }
+
+        nav.innerHTML =
+          '<a href="demo.html?pollId=' +
+          encodeURIComponent(pollId) +
+          '">← Retour au vote</a>';
+
+        help.textContent = "Sondage : " + pollId;
+
+        var widget = document.createElement("sondage-results-widget");
+        widget.setAttribute("data-poll-id", pollId);
+        widget.setAttribute("data-api-base", window.location.origin);
+        widget.setAttribute("data-data-region", "EU");
+
+        widget.addEventListener("sondage-poll-status", function (ev) {
+          var ended = ev.detail && ev.detail.ended;
+          if (ended) {
+            nav.innerHTML =
+              '<a href="creator.html?pollId=' +
+              encodeURIComponent(pollId) +
+              '">← Créateur</a>';
+            document.title = "Résultats finaux — Sondage MJ";
+            var h1 = document.querySelector("h1");
+            if (h1) h1.textContent = "Résultats finaux";
+          } else {
+            nav.innerHTML =
+              '<a href="demo.html?pollId=' +
+              encodeURIComponent(pollId) +
+              '">← Retour au vote</a>';
+          }
+        });
+
+        host.appendChild(widget);
+      })();
+    </script>
+  </body>
+</html>

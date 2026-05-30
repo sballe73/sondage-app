@@ -6,8 +6,10 @@ import type { VoteSubmittedEvent } from "@sondage/shared";
 import { enforcePollRegion } from "../middleware/region.js";
 import { requireVoterAuth } from "./auth.js";
 import { verifyGroupMembership } from "../auth/oauth.js";
-import { tryClaimVote, releaseVoteClaim } from "../redis.js";
+import { tryClaimVote, releaseVoteClaim, checkVoteRateLimit } from "../redis.js";
 import { publishVoteEvent } from "../events.js";
+import { AppError } from "../errors.js";
+import { config } from "../config.js";
 
 const voteBodySchema = z.object({
   grades: z.array(
@@ -21,26 +23,50 @@ const voteBodySchema = z.object({
 export async function voteRoutes(app: FastifyInstance) {
   app.post("/polls/:pollId/votes", async (request, reply) => {
     const { pollId } = z.object({ pollId: z.string().uuid() }).parse(request.params);
-    const regionResult = await enforcePollRegion(request, reply, pollId);
-    if (!regionResult || "statusCode" in regionResult) return;
+    const { poll, items } = await enforcePollRegion(request, pollId);
 
-    const { poll, items } = regionResult;
     const now = new Date();
     if (now < poll.startsAt) {
-      return reply.status(403).send({ error: "Poll has not started yet" });
+      throw new AppError(403, "POLL_NOT_STARTED", "Poll has not started yet", {
+        startsAt: poll.startsAt,
+      });
     }
     if (now >= poll.endsAt || poll.closedAt) {
-      return reply.status(403).send({ error: "Poll is closed" });
+      throw new AppError(403, "POLL_CLOSED", "Poll is closed", {
+        endsAt: poll.endsAt,
+        closedAt: poll.closedAt ?? undefined,
+      });
     }
 
-    let auth;
-    try {
-      auth = await requireVoterAuth(pollId, request.headers.authorization);
-    } catch (e) {
-      const err = e as Error & { statusCode?: number };
-      return reply
-        .status(err.statusCode ?? 500)
-        .send({ error: err.message });
+    const auth = await requireVoterAuth(pollId, request.headers.authorization);
+
+    const rateLimit = await checkVoteRateLimit(
+      pollId,
+      auth.token.subjectId,
+      config.rateLimitVotesPerMinute
+    );
+    if (!rateLimit.allowed) {
+      request.log.warn(
+        {
+          pollId,
+          platform: auth.token.platform,
+          subjectId: auth.token.subjectId,
+          event: "vote_rate_limited",
+          count: rateLimit.count,
+          retryAfterSec: rateLimit.retryAfterSec,
+        },
+        "Vote rate limit exceeded"
+      );
+      throw new AppError(
+        429,
+        "RATE_LIMIT_EXCEEDED",
+        "Too many vote attempts",
+        {
+          limit: config.rateLimitVotesPerMinute,
+          retryAfterSec: rateLimit.retryAfterSec,
+        },
+        { "Retry-After": String(rateLimit.retryAfterSec) }
+      );
     }
 
     if (poll.visibility === "group" && poll.groupId) {
@@ -50,7 +76,12 @@ export async function voteRoutes(app: FastifyInstance) {
         auth.token.subjectId
       );
       if (!member) {
-        return reply.status(403).send({ error: "Not a member of required group" });
+        throw new AppError(
+          403,
+          "FORBIDDEN",
+          "Not a member of required group",
+          { groupId: poll.groupId }
+        );
       }
     }
 
@@ -59,7 +90,7 @@ export async function voteRoutes(app: FastifyInstance) {
     try {
       validateGrades(body.grades, itemIds, poll.gradeMin, poll.gradeMax);
     } catch (e) {
-      return reply.status(400).send({ error: (e as Error).message });
+      throw new AppError(400, "INVALID_GRADES", (e as Error).message);
     }
 
     const idempotencyKey =
@@ -73,10 +104,28 @@ export async function voteRoutes(app: FastifyInstance) {
       idempotencyKey
     );
 
+    const voteLogBase = {
+      pollId,
+      platform: auth.token.platform,
+      subjectId: auth.token.subjectId,
+    };
+
     if (claim === "already_voted") {
-      return reply.status(409).send({ error: "Already voted" });
+      request.log.warn(
+        { ...voteLogBase, event: "vote_rejected", reason: "already_voted" },
+        "Double vote rejected"
+      );
+      throw new AppError(409, "ALREADY_VOTED", "Already voted");
     }
     if (claim === "idempotent_replay") {
+      request.log.warn(
+        {
+          ...voteLogBase,
+          event: "vote_idempotent_replay",
+          idempotencyKey,
+        },
+        "Vote idempotency replay"
+      );
       return reply.status(202).send({ status: "accepted", replay: true });
     }
 
@@ -98,6 +147,16 @@ export async function voteRoutes(app: FastifyInstance) {
       await releaseVoteClaim(pollId, auth.token.subjectId);
       throw e;
     }
+
+    request.log.info(
+      {
+        ...voteLogBase,
+        event: "vote_accepted",
+        eventId: event.eventId,
+        idempotencyKey,
+      },
+      "Vote accepted"
+    );
 
     return reply.status(202).send({
       status: "accepted",

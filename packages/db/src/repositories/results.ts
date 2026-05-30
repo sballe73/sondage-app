@@ -69,6 +69,21 @@ export async function saveSnapshot(
   });
 }
 
+export async function getMaxSnapshotVersion(pollId: string): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      max: sql<number>`coalesce(max(${resultSnapshots.version}), 0)::int`,
+    })
+    .from(resultSnapshots)
+    .where(eq(resultSnapshots.pollId, pollId));
+  return row?.max ?? 0;
+}
+
+export async function getNextSnapshotVersion(pollId: string): Promise<number> {
+  return (await getMaxSnapshotVersion(pollId)) + 1;
+}
+
 export async function getLatestVisibleSnapshot(pollId: string) {
   const db = getDb();
   const rows = await db
