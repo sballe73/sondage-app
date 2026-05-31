@@ -345,6 +345,7 @@
         { headers: { "X-Data-Region": this.dataRegion } }
       );
       const resultsBody = await resultsRes.json().catch(() => ({}));
+      const pollVoteCount = this.createdPoll?.voteCount;
 
       if (resultsRes.ok) {
         this.statusInfo = {
@@ -356,14 +357,14 @@
       } else if (resultsRes.status === 403) {
         const info = normalizeResultsErrorBody(resultsBody);
         this.statusInfo = {
-          voteCount: info.voteCount ?? 0,
+          voteCount: info.voteCount ?? pollVoteCount ?? 0,
           resultsState: "hidden",
           policy: info.policy,
         };
       } else if (resultsRes.status === 404) {
         const info = normalizeResultsErrorBody(resultsBody);
         this.statusInfo = {
-          voteCount: info.voteCount ?? 0,
+          voteCount: info.voteCount ?? pollVoteCount ?? 0,
           resultsState: "pending",
         };
       } else {

@@ -104,15 +104,19 @@ export async function tryClaimVote(
     );
   }
 
+  await r.incr(voteCountKey(pollId));
   return "claimed";
 }
 
 export async function releaseVoteClaim(pollId: string, subjectId: string) {
-  await getRedis().del(participationKey(pollId, subjectId));
-}
-
-export async function incrementVoteCount(pollId: string): Promise<number> {
-  return getRedis().incr(voteCountKey(pollId));
+  const r = getRedis();
+  const deleted = await r.del(participationKey(pollId, subjectId));
+  if (deleted > 0) {
+    const current = await r.decr(voteCountKey(pollId));
+    if (current < 0) {
+      await r.set(voteCountKey(pollId), "0");
+    }
+  }
 }
 
 export async function getVoteCountRedis(pollId: string): Promise<number> {
@@ -126,4 +130,31 @@ export async function syncVoteCountFromDb(pollId: string, count: number) {
   if (count > current) {
     await getRedis().set(key, String(count));
   }
+}
+
+/** Votes acceptés (clés participation Redis), y compris avant compteur vote_count. */
+export async function countParticipationClaims(pollId: string): Promise<number> {
+  const r = getRedis();
+  const pattern = `participation:${pollId}:*`;
+  let count = 0;
+  let cursor = "0";
+  do {
+    const [next, keys] = await r.scan(cursor, "MATCH", pattern, "COUNT", 200);
+    cursor = next;
+    count += keys.length;
+  } while (cursor !== "0");
+  return count;
+}
+
+/** max(Postgres traités, compteur Redis, participations enregistrées). */
+export async function getLiveVoteCount(
+  pollId: string,
+  dbCount: number
+): Promise<number> {
+  await syncVoteCountFromDb(pollId, dbCount);
+  const [counter, claimed] = await Promise.all([
+    getVoteCountRedis(pollId),
+    countParticipationClaims(pollId),
+  ]);
+  return Math.max(dbCount, counter, claimed);
 }

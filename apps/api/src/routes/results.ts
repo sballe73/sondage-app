@@ -15,7 +15,7 @@ import {
   isResultsVisible,
   shouldPublishSnapshot,
 } from "../services/results-policy.js";
-import { getVoteCountRedis, syncVoteCountFromDb } from "../redis.js";
+import { getLiveVoteCount } from "../redis.js";
 import { requireVoterAuth } from "./auth.js";
 import { AppError } from "../errors.js";
 
@@ -28,8 +28,7 @@ export async function resultsRoutes(app: FastifyInstance) {
     const { poll } = await enforcePollRegion(request, pollId);
 
     const dbCount = await getVoteCount(pollId);
-    await syncVoteCountFromDb(pollId, dbCount);
-    const voteCount = Math.max(dbCount, await getVoteCountRedis(pollId));
+    const voteCount = await getLiveVoteCount(pollId, dbCount);
 
     const policy = poll.resultPolicy as ResultPolicy;
     const visible = isResultsVisible(policy, voteCount, poll.endsAt);

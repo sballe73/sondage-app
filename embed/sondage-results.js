@@ -178,7 +178,8 @@
     renderHidden() {
       const info = this.hiddenInfo || {};
       const policy = info.policy || this.poll?.resultPolicy;
-      const voteCount = info.voteCount ?? 0;
+      const voteCount =
+        info.voteCount ?? this.poll?.voteCount ?? 0;
       const policyLabel = POLICY_LABELS[policy] || policy;
       const threshold = THRESHOLD_BY_POLICY[policy];
       const remaining =
@@ -212,7 +213,7 @@
 
     renderNoSnapshot() {
       const info = this.noSnapshotInfo || {};
-      const voteCount = info.voteCount ?? 0;
+      const voteCount = info.voteCount ?? this.poll?.voteCount ?? 0;
 
       this.innerHTML = `
         <article class="sondage-results">

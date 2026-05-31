@@ -12,8 +12,9 @@ import {
   validateCreatePoll,
   normalizeCreatePoll,
 } from "@sondage/shared";
-import { createPoll, getPollById, listPollsByCreator, createCampaign } from "@sondage/db";
+import { createPoll, getPollById, listPollsByCreator, createCampaign, getVoteCount } from "@sondage/db";
 import { AppError } from "../errors.js";
+import { getLiveVoteCount } from "../redis.js";
 
 const createPollSchema = z.object({
   name: z.string().min(1).max(500),
@@ -76,9 +77,12 @@ export async function pollRoutes(app: FastifyInstance) {
     if (!data) {
       throw new AppError(404, "NOT_FOUND", "Poll not found");
     }
+    const dbCount = await getVoteCount(pollId);
+    const voteCount = await getLiveVoteCount(pollId, dbCount);
     return {
       ...data.poll,
       items: data.items,
+      voteCount,
     };
   });
 
