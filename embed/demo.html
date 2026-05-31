@@ -6,40 +6,144 @@
     <style>
       body {
         font-family: system-ui, sans-serif;
-        max-width: 640px;
+        max-width: 960px;
         margin: 2rem auto;
         padding: 0 1rem;
+        color: #1a1a1a;
       }
-      .sondage-widget fieldset {
-        margin: 1rem 0;
-        border: 1px solid #ccc;
+      .sondage-widget .meta {
+        color: #555;
+        margin: 0 0 0.75rem;
+      }
+      .sondage-widget .hint {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0 0 1rem;
+      }
+      .sondage-widget .vote-grid-wrap {
+        overflow-x: auto;
+        margin: 0 0 1rem;
+        border: 1px solid #e5e7eb;
         border-radius: 8px;
-        padding: 1rem;
       }
-      .sondage-widget label {
-        margin-right: 0.75rem;
+      .sondage-widget .vote-grid {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 36rem;
       }
-      .sondage-widget button {
-        margin-top: 1rem;
-        padding: 0.5rem 1rem;
+      .sondage-widget .vote-grid th,
+      .sondage-widget .vote-grid td {
+        padding: 0;
+        border: 1px solid #e5e7eb;
+        vertical-align: middle;
       }
-      .sondage-widget .grade-options {
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-      .sondage-widget .grade-option {
-        display: flex;
-        align-items: baseline;
-        gap: 0.5rem;
-        cursor: pointer;
-      }
-      .sondage-widget .grade-num {
+      .sondage-widget .vote-grid thead th {
+        background: #f9fafb;
         font-weight: 600;
-        min-width: 1.25rem;
+        text-align: center;
+        padding: 0.5rem 0.45rem;
       }
-      .sondage-widget .grade-label {
-        color: #333;
+      .sondage-widget .vote-grid .candidate-col {
+        text-align: left;
+        min-width: 8rem;
+      }
+      .sondage-widget .vote-grid .candidate-label {
+        text-align: left;
+        font-weight: 600;
+        background: #fff;
+        padding: 0.65rem 0.75rem;
+        min-width: 9rem;
+      }
+      .sondage-widget .vote-grid .grade-col {
+        min-width: 4.5rem;
+        line-height: 1.25;
+      }
+      .sondage-widget .vote-grid .grade-num {
+        display: block;
+        font-size: 0.95rem;
+      }
+      .sondage-widget .vote-grid .grade-lab {
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: #6b7280;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 5.5rem;
+      }
+      .sondage-widget .vote-grid .grade-cell {
+        width: 4.5rem;
+        height: 2.75rem;
+        background: #fafafa;
+      }
+      .sondage-widget .vote-grid .grade-cell-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        min-height: 2.75rem;
+        cursor: pointer;
+        margin: 0;
+        transition: background-color 0.15s ease;
+      }
+      .sondage-widget .vote-grid .grade-cell-label input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+      }
+      .sondage-widget .vote-grid .grade-cell-mark {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        border: 2px solid #d1d5db;
+        background: #fff;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+      .sondage-widget .vote-grid .grade-cell-label:hover .grade-cell-mark {
+        border-color: #9ca3af;
+      }
+      .sondage-widget .vote-grid .grade-cell.grade-1 { background: rgba(22, 163, 74, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-2 { background: rgba(34, 197, 94, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-3 { background: rgba(132, 204, 22, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-4 { background: rgba(234, 179, 8, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-5 { background: rgba(249, 115, 22, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-6 { background: rgba(239, 68, 68, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-7 { background: rgba(185, 28, 28, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-1:has(input:checked) { background: rgba(22, 163, 74, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-2:has(input:checked) { background: rgba(34, 197, 94, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-3:has(input:checked) { background: rgba(132, 204, 22, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-4:has(input:checked) { background: rgba(234, 179, 8, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-5:has(input:checked) { background: rgba(249, 115, 22, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-6:has(input:checked) { background: rgba(239, 68, 68, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-7:has(input:checked) { background: rgba(185, 28, 28, 0.88); }
+      .sondage-widget .vote-grid .grade-cell:has(input:checked) .grade-cell-mark {
+        border-color: #fff;
+        background: #fff;
+      }
+      .sondage-widget .vote-grid thead .grade-1 { color: #16a34a; }
+      .sondage-widget .vote-grid thead .grade-2 { color: #22c55e; }
+      .sondage-widget .vote-grid thead .grade-3 { color: #84cc16; }
+      .sondage-widget .vote-grid thead .grade-4 { color: #ca8a04; }
+      .sondage-widget .vote-grid thead .grade-5 { color: #f97316; }
+      .sondage-widget .vote-grid thead .grade-6 { color: #ef4444; }
+      .sondage-widget .vote-grid thead .grade-7 { color: #b91c1c; }
+      .sondage-widget button {
+        margin-top: 0.5rem;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font: inherit;
+        border-radius: 6px;
+        border: none;
+        background: #2563eb;
+        color: #fff;
+      }
+      .sondage-widget button:hover {
+        background: #1d4ed8;
       }
       .sondage-widget .oauth-login-btn {
         display: inline-block;

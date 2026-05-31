@@ -227,33 +227,66 @@
 
       const windowLine = formatPollWindow(this.poll);
 
+      const headerCells = grades
+        .map((g) => {
+          const lab = labels[g - min] || String(g);
+          return `
+            <th scope="col" class="grade-col grade-${g}" title="${escapeHtml(lab)}">
+              <span class="grade-num">${g}</span>
+              <span class="grade-lab">${escapeHtml(lab)}</span>
+            </th>`;
+        })
+        .join("");
+
+      const bodyRows = items
+        .map((item) => {
+          const cells = grades
+            .map((g, idx) => {
+              const lab = labels[g - min] || String(g);
+              const requiredAttr = idx === 0 ? " required" : "";
+              return `
+                <td class="grade-cell grade-${g}">
+                  <label class="grade-cell-label" title="${escapeHtml(lab)}">
+                    <input
+                      type="radio"
+                      name="item-${item.id}"
+                      value="${g}"${requiredAttr}
+                      aria-label="${escapeHtml(item.label)} — ${escapeHtml(lab)}"
+                    />
+                    <span class="grade-cell-mark" aria-hidden="true"></span>
+                  </label>
+                </td>`;
+            })
+            .join("");
+
+          return `
+            <tr>
+              <th scope="row" class="candidate-label">${escapeHtml(item.label)}</th>
+              ${cells}
+            </tr>`;
+        })
+        .join("");
+
       this.innerHTML = `
         <article class="sondage-widget">
           <h2>${escapeHtml(this.poll.name)}</h2>
           ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
           <p class="meta">Plateforme : <strong>${escapeHtml(platformLabel)}</strong>${voterLine} · ${escapeHtml(gradeHint)}</p>
+          <p class="hint">Attribuez une note à chaque candidat (1 = meilleure note).</p>
           <form id="vote-form">
-            ${items
-              .map(
-                (item) => `
-              <fieldset>
-                <legend>${escapeHtml(item.label)}</legend>
-                <div class="grade-options">
-                ${grades
-                  .map((g) => {
-                    const lab = labels[g - min] || String(g);
-                    return `
-                  <label class="grade-option" title="${escapeHtml(lab)}">
-                    <input type="radio" name="item-${item.id}" value="${g}" required />
-                    <span class="grade-num">${g}</span>
-                    <span class="grade-label">${escapeHtml(lab)}</span>
-                  </label>`;
-                  })
-                  .join("")}
-                </div>
-              </fieldset>`
-              )
-              .join("")}
+            <div class="vote-grid-wrap">
+              <table class="vote-grid">
+                <thead>
+                  <tr>
+                    <th scope="col" class="candidate-col">Candidat</th>
+                    ${headerCells}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${bodyRows}
+                </tbody>
+              </table>
+            </div>
             <button type="submit">Envoyer mon jugement</button>
           </form>
           <p id="status"></p>
