@@ -189,6 +189,55 @@ Token en `sessionStorage` (`sondage_token_<pollId>`).
 
 Les sondages portent `data_region` (`EU`, `US`, `GLOBAL`). Les requêtes doivent inclure `X-Data-Region` aligné sur le sondage (sauf `GLOBAL`). En production : déployer une stack API/worker/Postgres/Redis par région et router via GeoDNS.
 
+## Déploiement Render (pilote Meta HTTPS)
+
+Fichier [`render.yaml`](render.yaml) : Postgres (Frankfurt), Redis, service web **API + worker** (plan free).
+
+### Création
+
+1. [render.com](https://render.com/) → **New** → **Blueprint** → repo `sondage-app`.
+2. Valider la création des ressources (`sondage-db`, `sondage-redis`, `sondage`).
+3. Attendre le 1er déploiement ; noter l’URL : `https://sondage.onrender.com` (nom variable).
+
+### Variables d’environnement (service `sondage`)
+
+| Variable | Valeur |
+|----------|--------|
+| `OAUTH_FACEBOOK_APP_ID` | App ID Meta |
+| `OAUTH_FACEBOOK_APP_SECRET` | App Secret Meta |
+| `MOCK_OAUTH` | `false` (déjà dans le blueprint) |
+
+`PUBLIC_BASE_URL` est **optionnel** : l’API utilise `RENDER_EXTERNAL_URL` si absent.  
+Callback OAuth dérivé : `{PUBLIC_BASE_URL ou RENDER_EXTERNAL_URL}/auth/facebook/callback`.
+
+### Meta Developers
+
+1. **Facebook Login** → Valid OAuth Redirect URIs :
+   `https://<votre-service>.onrender.com/auth/facebook/callback`
+2. **Basic Settings** — pages légales (GitHub Pages, inchangé) :
+   - `https://sballe73.github.io/sondage-app/legal/privacy.html`
+   - `https://sballe73.github.io/sondage-app/legal/terms.html`
+   - `https://sballe73.github.io/sondage-app/legal/data-deletion.html`
+3. Mode **Development** + testeurs jusqu’à validation du pilote.
+
+### Recette sur Render
+
+1. `https://<votre-service>.onrender.com/embed/creator.html` → sondage `facebook`.
+2. Lien vote → login Meta → vote → résultats.
+
+### Scripts
+
+| Script | Rôle |
+|--------|------|
+| `scripts/render-build.sh` | `npm ci` + build monorepo |
+| `scripts/render-start.sh` | worker en arrière-plan + API (plan free) |
+| `npm run db:migrate:prod` | migrations SQL (preDeploy Render) |
+
+**Coût indicatif :** web + Redis free ; Postgres `basic-256mb` (~7 $/mois). Le plan free web **s’endort** après inactivité (~30 s au réveil).
+
+**Évolution :** séparer API et worker en deux services Render quand le trafic augmente.
+
+
 ## Test d'intégration (14 candidats × 50 votants)
 
 Fixture **figée et validée** : [`tests/fixtures/fourteen-candidates-50-votes.json`](tests/fixtures/fourteen-candidates-50-votes.json) — sondage public, échelle 1–7, `threshold_10`, checkpoints aux votes 10 / 20 / 30 / 40 / 50 (`meta.frozen: true`).

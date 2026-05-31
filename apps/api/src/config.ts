@@ -15,7 +15,9 @@ export const config = {
   host: process.env.HOST ?? "0.0.0.0",
   /** URL publique de l’API (redirect OAuth, liens embed). */
   publicBaseUrl: (
-    process.env.PUBLIC_BASE_URL ?? `http://localhost:${port}`
+    process.env.PUBLIC_BASE_URL ??
+    process.env.RENDER_EXTERNAL_URL ??
+    `http://localhost:${port}`
   ).replace(/\/$/, ""),
   redisUrl: process.env.REDIS_URL ?? "redis://localhost:6379",
   jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
@@ -41,12 +43,12 @@ export const config = {
   oauthGoogleClientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET ?? "",
   oauthGoogleRedirectUri:
     process.env.OAUTH_GOOGLE_REDIRECT_URI ??
-    `${(process.env.PUBLIC_BASE_URL ?? `http://localhost:${port}`).replace(/\/$/, "")}/auth/google/callback`,
+    `${(process.env.PUBLIC_BASE_URL ?? process.env.RENDER_EXTERNAL_URL ?? `http://localhost:${port}`).replace(/\/$/, "")}/auth/google/callback`,
   oauthFacebookAppId: process.env.OAUTH_FACEBOOK_APP_ID ?? "",
   oauthFacebookAppSecret: process.env.OAUTH_FACEBOOK_APP_SECRET ?? "",
   oauthFacebookRedirectUri:
     process.env.OAUTH_FACEBOOK_REDIRECT_URI ??
-    `${(process.env.PUBLIC_BASE_URL ?? `http://localhost:${port}`).replace(/\/$/, "")}/auth/facebook/callback`,
+    `${(process.env.PUBLIC_BASE_URL ?? process.env.RENDER_EXTERNAL_URL ?? `http://localhost:${port}`).replace(/\/$/, "")}/auth/facebook/callback`,
 };
 
 export function isGoogleOAuthConfigured(): boolean {

@@ -1,0 +1,54 @@
+# Blueprint Render — https://render.com/docs/blueprint-spec
+# Déploiement : Dashboard → New → Blueprint → repo GitHub.
+# Après le 1er déploiement : renseigner OAUTH_FACEBOOK_* dans l’env du service web.
+
+databases:
+  - name: sondage-db
+    databaseName: sondage
+    user: sondage
+    plan: basic-256mb
+    region: frankfurt
+
+services:
+  - type: redis
+    name: sondage-redis
+    plan: free
+    region: frankfurt
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+  - type: web
+    name: sondage
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: ./scripts/render-build.sh
+    preDeployCommand: npm run db:migrate:prod
+    startCommand: ./scripts/render-start.sh
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sondage-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: sondage-redis
+          property: connectionString
+      - key: DEFAULT_DATA_REGION
+        value: EU
+      - key: MOCK_OAUTH
+        value: "false"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PARTICIPATION_HASH_SALT
+        generateValue: true
+      # PUBLIC_BASE_URL : défaut = RENDER_EXTERNAL_URL (voir config.ts)
+      # À configurer manuellement après création de l’app Meta :
+      # - key: OAUTH_FACEBOOK_APP_ID
+      #   sync: false
+      # - key: OAUTH_FACEBOOK_APP_SECRET
+      #   sync: false
