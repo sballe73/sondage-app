@@ -136,15 +136,19 @@ CORS : variable `CORS_ORIGINS` (liste séparée par des virgules, ou `*` / absen
    - **Web OAuth login** : Oui
 3. **Settings** → **Basic** : noter **App ID** et **App Secret**.
 4. Mode **Development** : ajouter des **testeurs** (Roles → Test Users ou rôles sur l’app) pour les comptes qui voteront.
-5. **Settings** → **Basic** — URLs obligatoires Meta (accessibles publiquement, même origine que l’API) :
+5. **Settings** → **Basic** — URLs obligatoires Meta (**HTTPS** publiques, joignables par le crawler Meta) :
 
-   | Champ Meta | URL (remplacer l’hôte par `PUBLIC_BASE_URL`) |
-   |------------|-----------------------------------------------|
-   | Privacy Policy URL | `{PUBLIC_BASE_URL}/embed/legal/privacy.html` |
-   | Terms of Service URL | `{PUBLIC_BASE_URL}/embed/legal/terms.html` |
-   | User data deletion | `{PUBLIC_BASE_URL}/embed/legal/data-deletion.html` |
+   Les pages légales sont publiées via **GitHub Pages** (`docs/legal/` — Settings → Pages → branche `main`, dossier **`/docs`**) :
 
-   Exemple : `{PUBLIC_BASE_URL}/embed/legal/privacy.html` (URL **HTTPS** publique requise par Meta — voir README OAuth).
+   | Champ Meta | URL |
+   |------------|-----|
+   | Privacy Policy URL | `https://<user>.github.io/<repo>/legal/privacy.html` |
+   | Terms of Service URL | `https://<user>.github.io/<repo>/legal/terms.html` |
+   | User data deletion | `https://<user>.github.io/<repo>/legal/data-deletion.html` |
+
+   Exemple : `https://sballe73.github.io/sondage-app/legal/privacy.html`
+
+   En local, les mêmes fichiers sont aussi servis sous `embed/legal/` (même contenu que `docs/legal/`).
 
 6. Dans `.env` :
    ```bash
