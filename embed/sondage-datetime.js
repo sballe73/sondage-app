@@ -22,9 +22,13 @@
     if (Number.isNaN(date.getTime())) return String(iso);
 
     const tz = userTimeZone();
+    // dateStyle/timeStyle cannot be combined with timeZoneName (RangeError).
     const options = {
-      dateStyle: "medium",
-      timeStyle: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
       timeZoneName: "short",
     };
     if (tz) options.timeZone = tz;
