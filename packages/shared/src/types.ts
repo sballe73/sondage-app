@@ -1,4 +1,4 @@
-export const PLATFORMS = ["facebook", "x", "linkedin", "mock"] as const;
+export const PLATFORMS = ["facebook", "x", "linkedin", "google", "apple", "mock"] as const;
 export type Platform = (typeof PLATFORMS)[number];
 
 export const DATA_REGIONS = ["EU", "US", "GLOBAL"] as const;

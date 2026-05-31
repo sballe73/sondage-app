@@ -8,9 +8,15 @@ export function parseCorsOrigins(
   return origins.length > 0 ? origins : true;
 }
 
+const port = Number(process.env.PORT ?? 3000);
+
 export const config = {
-  port: Number(process.env.PORT ?? 3000),
+  port,
   host: process.env.HOST ?? "0.0.0.0",
+  /** URL publique de l’API (redirect OAuth, liens embed). */
+  publicBaseUrl: (
+    process.env.PUBLIC_BASE_URL ?? `http://localhost:${port}`
+  ).replace(/\/$/, ""),
   redisUrl: process.env.REDIS_URL ?? "redis://localhost:6379",
   jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
   jwtIssuer: "sondage-app",
@@ -31,4 +37,30 @@ export const config = {
   rateLimitVotesPerMinute: Number(
     process.env.RATE_LIMIT_VOTES_PER_MINUTE ?? 5
   ),
+  oauthGoogleClientId: process.env.OAUTH_GOOGLE_CLIENT_ID ?? "",
+  oauthGoogleClientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET ?? "",
+  oauthGoogleRedirectUri:
+    process.env.OAUTH_GOOGLE_REDIRECT_URI ??
+    `${(process.env.PUBLIC_BASE_URL ?? `http://localhost:${port}`).replace(/\/$/, "")}/auth/google/callback`,
+  oauthFacebookAppId: process.env.OAUTH_FACEBOOK_APP_ID ?? "",
+  oauthFacebookAppSecret: process.env.OAUTH_FACEBOOK_APP_SECRET ?? "",
+  oauthFacebookRedirectUri:
+    process.env.OAUTH_FACEBOOK_REDIRECT_URI ??
+    `${(process.env.PUBLIC_BASE_URL ?? `http://localhost:${port}`).replace(/\/$/, "")}/auth/facebook/callback`,
 };
+
+export function isGoogleOAuthConfigured(): boolean {
+  return Boolean(
+    config.oauthGoogleClientId &&
+      config.oauthGoogleClientSecret &&
+      config.oauthGoogleRedirectUri
+  );
+}
+
+export function isFacebookOAuthConfigured(): boolean {
+  return Boolean(
+    config.oauthFacebookAppId &&
+      config.oauthFacebookAppSecret &&
+      config.oauthFacebookRedirectUri
+  );
+}

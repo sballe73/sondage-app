@@ -153,9 +153,11 @@
                 Plateforme OAuth
                 <select name="platform">
                   <option value="mock" selected>mock (dev / tests)</option>
-                  <option value="linkedin">linkedin</option>
-                  <option value="x">x</option>
-                  <option value="facebook">facebook</option>
+                  <option value="facebook">facebook / Meta — OAuth (pilote Lot 3)</option>
+                  <option value="google">google — OAuth (après projet GCP)</option>
+                  <option value="apple">apple — à venir</option>
+                  <option value="linkedin">linkedin (Phase 2+)</option>
+                  <option value="x">x (abandonné — coût API)</option>
                 </select>
               </label>
               <label>

@@ -1,3 +1,4 @@
+import "./load-env.js";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import { join, dirname } from "node:path";

@@ -106,6 +106,11 @@ Depuis la page de vote (`demo.html`), le lien **Voir les résultats** ouvre cett
 
 - `POST /polls` — Créer un sondage
 - `POST /auth/mock/login` — Token votant (dev, plateforme `mock`)
+- `GET /auth/facebook/login?pollId=&returnTo=` — Redirect Meta/Facebook (`platform=facebook`)
+- `GET /auth/facebook/callback` — Callback Facebook → redirect embed avec `#access_token=…`
+- `GET /auth/google/login?pollId=&returnTo=` — Redirect Google (`platform=google`, si configuré)
+- `GET /auth/google/callback` — Callback Google
+- `GET /auth/session` — Infos session à partir du Bearer token
 - `POST /polls/:id/votes` — Soumettre un vote (Bearer + `Idempotency-Key`)
 - `GET /polls/:id/results` — Résultats si politique le permet
 - `GET /polls/:id/ballots` — Bulletins (mode public uniquement)
@@ -116,6 +121,65 @@ Les votes refusés (double vote, idempotency replay, rate limit) sont logués c�
 
 Rate limiting : **100 req/min/IP** (global, header `X-RateLimit-*`) ; **5 tentatives de vote/min/votant** par sondage (Redis, header `Retry-After`).  
 CORS : variable `CORS_ORIGINS` (liste séparée par des virgules, ou `*` / absent en dev).
+
+## OAuth (Lot 3)
+
+**Pilote actuel : Meta (Facebook Login)** — plateforme `facebook` dans l’API. **Google** implémenté aussi (dès qu’un projet GCP est disponible). **Apple** à venir. **X** abandonné. **`mock`** pour dev/CI.
+
+### Meta / Facebook — configuration
+
+1. [developers.facebook.com](https://developers.facebook.com/) → **Create App** → type **Consumer** (ou **Other**).
+2. Ajouter le produit **Facebook Login** → **Settings** :
+   - **Valid OAuth Redirect URIs** : `{PUBLIC_BASE_URL}/auth/facebook/callback`  
+     (ex. distant : `http://VOTRE_HOTE:3000/auth/facebook/callback` — aligné sur `PUBLIC_BASE_URL`)
+   - **Client OAuth login** : Oui  
+   - **Web OAuth login** : Oui
+3. **Settings** → **Basic** : noter **App ID** et **App Secret**.
+4. Mode **Development** : ajouter des **testeurs** (Roles → Test Users ou rôles sur l’app) pour les comptes qui voteront.
+5. **Settings** → **Basic** — URLs obligatoires Meta (accessibles publiquement, même origine que l’API) :
+
+   | Champ Meta | URL (remplacer l’hôte par `PUBLIC_BASE_URL`) |
+   |------------|-----------------------------------------------|
+   | Privacy Policy URL | `{PUBLIC_BASE_URL}/embed/legal/privacy.html` |
+   | Terms of Service URL | `{PUBLIC_BASE_URL}/embed/legal/terms.html` |
+   | User data deletion | `{PUBLIC_BASE_URL}/embed/legal/data-deletion.html` |
+
+   Exemple : `{PUBLIC_BASE_URL}/embed/legal/privacy.html` (URL **HTTPS** publique requise par Meta — voir README OAuth).
+
+6. Dans `.env` :
+   ```bash
+   PUBLIC_BASE_URL=http://localhost:3000
+   OAUTH_FACEBOOK_APP_ID=…
+   OAUTH_FACEBOOK_APP_SECRET=…
+   OAUTH_FACEBOOK_REDIRECT_URI=http://localhost:3000/auth/facebook/callback
+   ```
+6. Redémarrer l’API (`npm run dev`).
+
+Scopes demandés par l’app : `public_profile`, `email` (identifiant votant = Graph `id`).
+
+### Recette Meta
+
+1. `creator.html` → sondage plateforme **facebook / Meta**, `threshold_10`.
+2. Ouvrir le vote via **la même origine** que `PUBLIC_BASE_URL` (ex. IP publique, pas `localhost` si `PUBLIC_BASE_URL` est l’IP).
+3. **Se connecter avec Meta (Facebook)** → voter → `results.html`.
+
+Token en `sessionStorage` (`sondage_token_<pollId>`).
+
+### Google (quand projet Cloud disponible)
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → OAuth 2.0 Client ID (Web).
+2. Redirect : `{PUBLIC_BASE_URL}/auth/google/callback`
+3. `.env` : `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET`, `OAUTH_GOOGLE_REDIRECT_URI`
+4. Sondage `platform=google` → **Se connecter avec Google**
+
+### Roadmap OAuth
+
+| Plateforme | Statut |
+|------------|--------|
+| **Meta** (`facebook`) | **Pilote** — implémenté |
+| **Google** | Implémenté (en attente projet GCP) |
+| **Apple** | Phase 3 |
+| **X** | Abandonné |
 
 ## Multi-région (hybride)
 
