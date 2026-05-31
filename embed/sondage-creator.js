@@ -349,7 +349,9 @@
 
       if (resultsRes.ok) {
         this.statusInfo = {
-          voteCount: resultsBody.voteCount,
+          voteCount: resultsBody.liveVoteCount ?? resultsBody.voteCount,
+          snapshotVoteCount: resultsBody.voteCount,
+          liveVoteCount: resultsBody.liveVoteCount,
           resultsState: "visible",
           snapshotVersion: resultsBody.version,
           computedAt: resultsBody.computedAt,
