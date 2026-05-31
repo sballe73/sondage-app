@@ -18,6 +18,7 @@
 
   const POLICY_LABELS = {
     end_only: "Fin du sondage uniquement",
+    threshold_1: "Seuil de 1 vote (mock)",
     threshold_10: "Seuil de 10 votes",
     threshold_100: "Seuil de 100 votes",
     threshold_1000: "Seuil de 1000 votes",
@@ -202,6 +203,31 @@
       this.querySelector("#creator-form").addEventListener("submit", (ev) =>
         this.submitForm(ev)
       );
+
+      const platformSelect = this.querySelector('select[name="platform"]');
+      const resultPolicySelect = this.querySelector('select[name="resultPolicy"]');
+      const syncMockOnlyOptions = () => {
+        const isMock = platformSelect.value === "mock";
+        let threshold1Option = resultPolicySelect.querySelector(
+          'option[value="threshold_1"]'
+        );
+        if (isMock && !threshold1Option) {
+          threshold1Option = document.createElement("option");
+          threshold1Option.value = "threshold_1";
+          threshold1Option.textContent = "threshold_1 (dès 1 vote)";
+          resultPolicySelect.insertBefore(
+            threshold1Option,
+            resultPolicySelect.firstChild
+          );
+        } else if (!isMock && threshold1Option) {
+          if (resultPolicySelect.value === "threshold_1") {
+            resultPolicySelect.value = "threshold_10";
+          }
+          threshold1Option.remove();
+        }
+      };
+      platformSelect.addEventListener("change", syncMockOnlyOptions);
+      syncMockOnlyOptions();
     }
 
     _addCandidateRow(list) {
@@ -228,13 +254,15 @@
         .map((el) => el.value.trim())
         .filter(Boolean);
 
+      const platform = String(fd.get("platform") || "mock");
+
       return {
         creatorId: String(fd.get("creatorId") || "").trim(),
         name: String(fd.get("name") || "").trim(),
         candidates,
         startsAt: String(fd.get("startsAt") || ""),
         endsAt: String(fd.get("endsAt") || ""),
-        platform: String(fd.get("platform") || "mock"),
+        platform,
         voterMode: String(fd.get("voterMode") || "public"),
         resultPolicy: String(fd.get("resultPolicy") || "threshold_10"),
       };

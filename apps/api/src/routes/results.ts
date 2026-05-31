@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import type { ResultPolicy } from "@sondage/shared";
+import type { Platform, ResultPolicy } from "@sondage/shared";
 import {
   getLatestVisibleSnapshot,
   getSnapshotByVersion,
@@ -31,7 +31,17 @@ export async function resultsRoutes(app: FastifyInstance) {
     const voteCount = await getLiveVoteCount(pollId, dbCount);
 
     const policy = poll.resultPolicy as ResultPolicy;
-    const visible = isResultsVisible(policy, voteCount, poll.endsAt);
+    const snapshotOptions = {
+      platform: poll.platform as Platform,
+      mockSnapshotEveryVote: poll.mockSnapshotEveryVote,
+    };
+    const visible = isResultsVisible(
+      policy,
+      voteCount,
+      poll.endsAt,
+      new Date(),
+      snapshotOptions
+    );
 
     if (!visible) {
       reply.header("Cache-Control", `private, max-age=${CACHE_MAX_AGE_HIDDEN}`);
@@ -49,7 +59,14 @@ export async function resultsRoutes(app: FastifyInstance) {
     const pollEnded = now >= poll.endsAt;
     const needsSnapshot =
       !snapshot ||
-      shouldPublishSnapshot(policy, snapshotVoteCount, voteCount, poll.endsAt) ||
+      shouldPublishSnapshot(
+        policy,
+        snapshotVoteCount,
+        voteCount,
+        poll.endsAt,
+        now,
+        snapshotOptions
+      ) ||
       (pollEnded && snapshotVoteCount < voteCount);
 
     if (needsSnapshot) {

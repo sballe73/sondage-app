@@ -7,6 +7,7 @@ import {
   TIEBREAK_METHOD_ID,
   TIEBREAK_METHOD_DESCRIPTION,
   type PollResultsSnapshot,
+  type Platform,
   type ResultPolicy,
 } from "@sondage/shared";
 import { getPollById } from "./repositories/polls.js";
@@ -31,7 +32,12 @@ export async function computeAndSaveSnapshot(
     isResultsVisible(
       poll.resultPolicy as ResultPolicy,
       voteCount,
-      poll.endsAt
+      poll.endsAt,
+      new Date(),
+      {
+        platform: poll.platform as Platform,
+        mockSnapshotEveryVote: poll.mockSnapshotEveryVote,
+      }
     );
 
   const itemResults = items.map((item) => {

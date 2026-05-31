@@ -12,6 +12,7 @@ export type VoterMode = (typeof VOTER_MODES)[number];
 
 export const RESULT_POLICIES = [
   "end_only",
+  "threshold_1",
   "threshold_10",
   "threshold_100",
   "threshold_1000",
@@ -22,6 +23,7 @@ export const THRESHOLD_BY_POLICY: Record<
   Exclude<ResultPolicy, "end_only">,
   number
 > = {
+  threshold_1: 1,
   threshold_10: 10,
   threshold_100: 100,
   threshold_1000: 1000,
@@ -49,6 +51,8 @@ export interface CreatePollInput {
   groupId?: string | null;
   voterMode: VoterMode;
   resultPolicy: ResultPolicy;
+  /** Mock only: refresh results snapshot on every vote. */
+  mockSnapshotEveryVote?: boolean;
   dataRegion?: DataRegion;
   campaignId?: string | null;
 }

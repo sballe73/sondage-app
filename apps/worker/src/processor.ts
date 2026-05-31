@@ -1,4 +1,4 @@
-import type { VoteSubmittedEvent, ResultPolicy } from "@sondage/shared";
+import type { VoteSubmittedEvent, ResultPolicy, Platform } from "@sondage/shared";
 import { hashSubjectForParticipation } from "@sondage/shared";
 import {
   isEventProcessed,
@@ -61,19 +61,37 @@ export async function processVoteEvent(event: VoteSubmittedEvent): Promise<void>
   await reconcileVoteCount(event.pollId, newCount);
 
   const policy = data.poll.resultPolicy as ResultPolicy;
+  const snapshotOptions = {
+    platform: data.poll.platform as Platform,
+    mockSnapshotEveryVote: data.poll.mockSnapshotEveryVote,
+  };
   const publishThreshold = shouldPublishSnapshot(
     policy,
     previousCount,
     newCount,
-    data.poll.endsAt
+    data.poll.endsAt,
+    new Date(),
+    snapshotOptions
   );
   const atEnd =
     new Date() >= data.poll.endsAt &&
-    isResultsVisible(policy, newCount, data.poll.endsAt);
+    isResultsVisible(
+      policy,
+      newCount,
+      data.poll.endsAt,
+      new Date(),
+      snapshotOptions
+    );
 
   if (publishThreshold || atEnd) {
     const version = await getNextSnapshotVersion(event.pollId);
-    const forceVisible = isResultsVisible(policy, newCount, data.poll.endsAt);
+    const forceVisible = isResultsVisible(
+      policy,
+      newCount,
+      data.poll.endsAt,
+      new Date(),
+      snapshotOptions
+    );
     await computeAndSaveSnapshot(event.pollId, version, forceVisible);
   }
 }

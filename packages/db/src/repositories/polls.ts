@@ -34,6 +34,7 @@ export async function createPoll(input: CreatePollInput) {
         gradeLabels: normalized.gradeLabels,
         bestGradeIsLowest: normalized.bestGradeIsLowest,
         resultPolicy: normalized.resultPolicy,
+        mockSnapshotEveryVote: normalized.mockSnapshotEveryVote ?? false,
         dataRegion: normalized.dataRegion ?? "EU",
         campaignId,
         platformLocked: true,

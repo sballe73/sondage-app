@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getPollById, closePoll } from "@sondage/db";
 import { computeAndSaveSnapshot } from "@sondage/db";
 import { isResultsVisible } from "@sondage/shared";
-import type { ResultPolicy } from "@sondage/shared";
+import type { Platform, ResultPolicy } from "@sondage/shared";
 import { getVoteCount } from "@sondage/db";
 import { enforcePollRegion } from "../middleware/region.js";
 import { AppError } from "../errors.js";
@@ -26,7 +26,12 @@ export async function adminRoutes(app: FastifyInstance) {
     const visible = isResultsVisible(
       poll.resultPolicy as ResultPolicy,
       voteCount,
-      new Date(0)
+      new Date(0),
+      new Date(),
+      {
+        platform: poll.platform as Platform,
+        mockSnapshotEveryVote: poll.mockSnapshotEveryVote,
+      }
     );
     const snapshot = await computeAndSaveSnapshot(pollId, 1, visible || true);
     return { closed: true, snapshot };

@@ -50,6 +50,9 @@ export const polls = pgTable(
     dataRegion: text("data_region").notNull().default("EU"),
     campaignId: uuid("campaign_id").references(() => campaigns.id),
     platformLocked: boolean("platform_locked").notNull().default(false),
+    mockSnapshotEveryVote: boolean("mock_snapshot_every_vote")
+      .notNull()
+      .default(false),
     closedAt: timestamp("closed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

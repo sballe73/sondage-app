@@ -38,6 +38,7 @@ const createPollSchema = z.object({
   groupId: z.string().nullable().optional(),
   voterMode: z.enum(VOTER_MODES),
   resultPolicy: z.enum(RESULT_POLICIES),
+  mockSnapshotEveryVote: z.boolean().optional(),
   dataRegion: z.enum(DATA_REGIONS).optional(),
   campaignId: z.string().uuid().nullable().optional(),
 });

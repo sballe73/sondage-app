@@ -6,7 +6,7 @@
     <style>
       body {
         font-family: system-ui, sans-serif;
-        max-width: 720px;
+        max-width: 960px;
         margin: 2rem auto;
         padding: 0 1rem;
         color: #1a1a1a;
@@ -98,7 +98,7 @@
       .sondage-results .ranking-table .median {
         font-size: 0.92rem;
       }
-      .sondage-results .histograms-section h3 {
+      .sondage-results .distribution-section h3 {
         margin-top: 2rem;
       }
       .sondage-results .hint {
@@ -106,64 +106,91 @@
         font-size: 0.875rem;
         margin: 0 0 1rem;
       }
-      .sondage-results .histogram {
+      .sondage-results .distribution-grid-wrap {
+        overflow-x: auto;
+        margin: 0 0 1.5rem;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 1rem;
       }
-      .sondage-results .histogram h4 {
-        margin: 0 0 0.25rem;
-      }
-      .sondage-results .hist-median {
-        margin: 0 0 0.75rem;
-        font-size: 0.875rem;
-        color: #4b5563;
-      }
-      .sondage-results .hist-row {
-        display: grid;
-        grid-template-columns: 1.5rem 6.5rem 1fr 4.5rem;
-        gap: 0.5rem;
-        align-items: center;
-        margin-bottom: 0.35rem;
+      .sondage-results .distribution-grid {
+        width: 100%;
+        border-collapse: collapse;
         font-size: 0.85rem;
+        min-width: 36rem;
       }
-      .sondage-results .hist-grade {
-        font-weight: 700;
-        text-align: right;
+      .sondage-results .distribution-grid th,
+      .sondage-results .distribution-grid td {
+        padding: 0.5rem 0.45rem;
+        border: 1px solid #e5e7eb;
+        vertical-align: middle;
       }
-      .sondage-results .hist-label {
-        color: #374151;
+      .sondage-results .distribution-grid thead th {
+        background: #f9fafb;
+        font-weight: 600;
+        text-align: center;
+      }
+      .sondage-results .distribution-grid .candidate-col {
+        text-align: left;
+        min-width: 8rem;
+      }
+      .sondage-results .distribution-grid .candidate-label {
+        text-align: left;
+        font-weight: 600;
+        background: #fff;
+        min-width: 9rem;
+      }
+      .sondage-results .distribution-grid .candidate-name {
+        display: block;
+      }
+      .sondage-results .distribution-grid .candidate-median {
+        display: block;
+        margin-top: 0.2rem;
+        font-size: 0.78rem;
+        font-weight: 400;
+        color: #6b7280;
+      }
+      .sondage-results .distribution-grid .grade-col {
+        min-width: 4.5rem;
+        line-height: 1.25;
+      }
+      .sondage-results .distribution-grid .grade-num {
+        display: block;
+        font-size: 0.95rem;
+      }
+      .sondage-results .distribution-grid .grade-lab {
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: #6b7280;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        max-width: 5.5rem;
       }
-      .sondage-results .hist-bar-track {
-        background: #f3f4f6;
-        border-radius: 4px;
-        height: 1.1rem;
-        overflow: hidden;
+      .sondage-results .distribution-grid .distribution-cell {
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        color: #1f2937;
+        transition: background-color 0.2s ease;
       }
-      .sondage-results .hist-bar-fill {
-        height: 100%;
-        border-radius: 4px;
-        min-width: 0;
-        transition: width 0.2s ease;
+      .sondage-results .distribution-grid .distribution-cell.is-empty {
+        color: #9ca3af;
+        background: #fafafa !important;
       }
-      .sondage-results .hist-bar-fill.grade-1 { background: #16a34a; }
-      .sondage-results .hist-bar-fill.grade-2 { background: #22c55e; }
-      .sondage-results .hist-bar-fill.grade-3 { background: #84cc16; }
-      .sondage-results .hist-bar-fill.grade-4 { background: #eab308; }
-      .sondage-results .hist-bar-fill.grade-5 { background: #f97316; }
-      .sondage-results .hist-bar-fill.grade-6 { background: #ef4444; }
-      .sondage-results .hist-bar-fill.grade-7 { background: #b91c1c; }
-      .sondage-results .hist-count {
-        text-align: right;
-        color: #374151;
-      }
-      .sondage-results .hist-pct {
+      .sondage-results .distribution-grid .cell-sep {
         color: #9ca3af;
       }
+      .sondage-results .distribution-grid .cell-pct {
+        font-size: 0.78rem;
+        color: #4b5563;
+      }
+      .sondage-results .distribution-grid thead .grade-1 { color: #16a34a; }
+      .sondage-results .distribution-grid thead .grade-2 { color: #22c55e; }
+      .sondage-results .distribution-grid thead .grade-3 { color: #84cc16; }
+      .sondage-results .distribution-grid thead .grade-4 { color: #ca8a04; }
+      .sondage-results .distribution-grid thead .grade-5 { color: #f97316; }
+      .sondage-results .distribution-grid thead .grade-6 { color: #ef4444; }
+      .sondage-results .distribution-grid thead .grade-7 { color: #b91c1c; }
       .sondage-results .results-footer {
         display: flex;
         align-items: center;

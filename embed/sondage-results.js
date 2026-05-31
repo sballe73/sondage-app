@@ -1,5 +1,5 @@
 /**
- * Sondage MJ results widget — histogrammes + classement.
+ * Sondage MJ results widget — classement + grille de votes.
  *
  * Usage:
  *   <sondage-results-widget
@@ -19,12 +19,14 @@
 
   const POLICY_LABELS = {
     end_only: "Fin du sondage uniquement",
+    threshold_1: "Seuil de 1 vote (mock)",
     threshold_10: "Seuil de 10 votes",
     threshold_100: "Seuil de 100 votes",
     threshold_1000: "Seuil de 1000 votes",
   };
 
   const THRESHOLD_BY_POLICY = {
+    threshold_1: 1,
     threshold_10: 10,
     threshold_100: 100,
     threshold_1000: 1000,
@@ -283,22 +285,16 @@
               </tbody>
             </table>
           </section>
-          <section class="histograms-section">
-            <h3>Histogrammes par candidat</h3>
-            <p class="hint">Barres proportionnelles au nombre de jugements par note (1 = meilleure note).</p>
-            ${ranking
-              .map((entry) => {
-                const item = itemsById[entry.itemId];
-                if (!item) return "";
-                return renderHistogram(
-                  entry.label,
-                  item,
-                  snap.gradeMin,
-                  snap.gradeMax,
-                  snap.gradeLabels || []
-                );
-              })
-              .join("")}
+          <section class="distribution-section">
+            <h3>Grille de votes</h3>
+            <p class="hint">Répartition des jugements par note (1 = meilleure note). Intensité de couleur proportionnelle au pourcentage.</p>
+            ${renderDistributionGrid(
+              ranking,
+              itemsById,
+              snap.gradeMin,
+              snap.gradeMax,
+              snap.gradeLabels || []
+            )}
           </section>
           ${renderRefreshControls(
             !isPollEnded(this.poll),
@@ -397,7 +393,7 @@
         "Le classement affiché n’inclut pas encore tous les votes reçus avant la clôture. Rechargez la page pour afficher le résultat final.";
     } else if (threshold && policy !== "end_only") {
       const nextCheckpoint = Math.ceil(liveCount / threshold) * threshold;
-      message = `Les histogrammes et le classement ci-dessous correspondent au palier de ${snapshotCount} votes. Prochaine mise à jour prévue à ${nextCheckpoint} votes (${liveCount} votes enregistrés).`;
+      message = `La grille et le classement ci-dessous correspondent au palier de ${snapshotCount} votes. Prochaine mise à jour prévue à ${nextCheckpoint} votes (${liveCount} votes enregistrés).`;
     } else {
       message = `Classement affiché basé sur ${snapshotCount} votes sur ${liveCount} enregistrés.`;
     }
@@ -418,41 +414,98 @@
       </footer>`;
   }
 
-  function renderHistogram(label, item, gradeMin, gradeMax, gradeLabels) {
-    const total = item.totalJudgments || 0;
-    const distribution = item.distribution || {};
+  const GRADE_RGB = {
+    1: "22,163,74",
+    2: "34,197,94",
+    3: "132,204,22",
+    4: "234,179,8",
+    5: "249,115,22",
+    6: "239,68,68",
+    7: "185,28,28",
+  };
+
+  function gradeCellBackground(grade, count, pct) {
+    if (count === 0) return "transparent";
+    const rgb = GRADE_RGB[grade] || "107,114,128";
+    const alpha = 0.12 + (pct / 100) * 0.88;
+    return `rgba(${rgb}, ${alpha.toFixed(3)})`;
+  }
+
+  function renderDistributionGrid(
+    ranking,
+    itemsById,
+    gradeMin,
+    gradeMax,
+    gradeLabels
+  ) {
     const grades = Array.from(
       { length: gradeMax - gradeMin + 1 },
       (_, i) => gradeMin + i
     );
-    const maxCount = Math.max(
-      1,
-      ...grades.map((g) => distribution[g] || 0)
-    );
 
-    const rows = grades
+    const headerCells = grades
       .map((g) => {
-        const count = distribution[g] || 0;
-        const pct = total > 0 ? (count / total) * 100 : 0;
-        const barPct = (count / maxCount) * 100;
         const lab = gradeLabels[g - gradeMin] || String(g);
         return `
-          <div class="hist-row">
-            <span class="hist-grade" title="${escapeHtml(lab)}">${g}</span>
-            <span class="hist-label">${escapeHtml(lab)}</span>
-            <div class="hist-bar-track" aria-hidden="true">
-              <div class="hist-bar-fill grade-${g}" style="width:${barPct}%"></div>
-            </div>
-            <span class="hist-count">${count} <span class="hist-pct">(${pct.toFixed(0)} %)</span></span>
-          </div>`;
+          <th scope="col" class="grade-col grade-${g}" title="${escapeHtml(lab)}">
+            <span class="grade-num">${g}</span>
+            <span class="grade-lab">${escapeHtml(lab)}</span>
+          </th>`;
+      })
+      .join("");
+
+    const bodyRows = ranking
+      .map((entry) => {
+        const item = itemsById[entry.itemId];
+        if (!item) return "";
+        const total = item.totalJudgments || 0;
+        const distribution = item.distribution || {};
+
+        const cells = grades
+          .map((g) => {
+            const count = distribution[g] || 0;
+            const pct = total > 0 ? (count / total) * 100 : 0;
+            const lab = gradeLabels[g - gradeMin] || String(g);
+            const bg = gradeCellBackground(g, count, pct);
+            return `
+              <td
+                class="distribution-cell grade-${g}${count === 0 ? " is-empty" : ""}"
+                style="background-color:${bg}"
+                title="${escapeHtml(lab)} : ${count} jugement${count !== 1 ? "s" : ""} (${pct.toFixed(1)} %)"
+              >
+                <span class="cell-count">${count}</span><span class="cell-sep"> / </span><span class="cell-pct">${pct.toFixed(0)} %</span>
+              </td>`;
+          })
+          .join("");
+
+        return `
+          <tr>
+            <th scope="row" class="candidate-label">
+              <span class="candidate-name">${escapeHtml(entry.label)}</span>
+              ${
+                entry.medianDisplay
+                  ? `<span class="candidate-median">${escapeHtml(entry.medianDisplay)}</span>`
+                  : ""
+              }
+            </th>
+            ${cells}
+          </tr>`;
       })
       .join("");
 
     return `
-      <div class="histogram">
-        <h4>${escapeHtml(label)}</h4>
-        ${item.medianDisplay ? `<p class="hist-median">${escapeHtml(item.medianDisplay)}</p>` : ""}
-        <div class="hist-rows">${rows}</div>
+      <div class="distribution-grid-wrap">
+        <table class="distribution-grid">
+          <thead>
+            <tr>
+              <th scope="col" class="candidate-col">Candidat</th>
+              ${headerCells}
+            </tr>
+          </thead>
+          <tbody>
+            ${bodyRows}
+          </tbody>
+        </table>
       </div>`;
   }
 

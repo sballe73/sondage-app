@@ -61,6 +61,8 @@ export function normalizeCreatePoll(input: CreatePollInput): CreatePollInput & {
     gradeMax,
     gradeLabels,
     bestGradeIsLowest,
+    mockSnapshotEveryVote:
+      input.platform === "mock" ? (input.mockSnapshotEveryVote ?? false) : false,
   };
 }
 
@@ -84,5 +86,11 @@ export function validateCreatePoll(input: CreatePollInput): void {
   );
   if (normalized.visibility === "group" && !normalized.groupId) {
     throw new Error("groupId required when visibility is group");
+  }
+  if (input.mockSnapshotEveryVote && input.platform !== "mock") {
+    throw new Error("mockSnapshotEveryVote is only valid for mock platform");
+  }
+  if (normalized.resultPolicy === "threshold_1" && normalized.platform !== "mock") {
+    throw new Error("threshold_1 is only valid for mock platform");
   }
 }
