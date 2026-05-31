@@ -23,7 +23,7 @@ services:
     plan: free
     region: frankfurt
     buildCommand: ./scripts/render-build.sh
-    preDeployCommand: npm run db:migrate:prod
+    # Plan free : pas de preDeployCommand — migrations dans render-start.sh
     startCommand: ./scripts/render-start.sh
     healthCheckPath: /health
     envVars:
