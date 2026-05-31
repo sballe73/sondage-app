@@ -6,6 +6,11 @@
  *   <script src="sondage-creator.js"></script>
  */
 (function () {
+  const DT = window.SondageDateTime;
+  const formatDateTime = (iso) => DT.formatDateTime(iso);
+  const toDatetimeLocal = (date) => DT.toDatetimeLocal(date);
+  const datetimeLocalToIso = (value) => DT.datetimeLocalToIso(value);
+
   const TAG = "sondage-creator-widget";
   const STATUS_POLL_MS = 30000;
   const MIN_CANDIDATES = 1;
@@ -137,6 +142,7 @@
 
             <fieldset>
               <legend>Fenêtre de vote</legend>
+              <p class="hint">Heures saisies et affichées dans votre fuseau local (${escapeHtml(DT.userTimeZone() || "navigateur")}).</p>
               <label>
                 Début
                 <input type="datetime-local" name="startsAt" value="${toDatetimeLocal(starts)}" required />
@@ -281,8 +287,8 @@
         creatorId: data.creatorId,
         platform: data.platform,
         items: data.candidates.map((label, i) => ({ label, sortOrder: i })),
-        startsAt: new Date(data.startsAt).toISOString(),
-        endsAt: new Date(data.endsAt).toISOString(),
+        startsAt: datetimeLocalToIso(data.startsAt),
+        endsAt: datetimeLocalToIso(data.endsAt),
         visibility: "public",
         voterMode: data.voterMode,
         resultPolicy: data.resultPolicy,
@@ -348,14 +354,16 @@
           computedAt: resultsBody.computedAt,
         };
       } else if (resultsRes.status === 403) {
+        const info = normalizeResultsErrorBody(resultsBody);
         this.statusInfo = {
-          voteCount: resultsBody.voteCount ?? 0,
+          voteCount: info.voteCount ?? 0,
           resultsState: "hidden",
-          policy: resultsBody.policy,
+          policy: info.policy,
         };
       } else if (resultsRes.status === 404) {
+        const info = normalizeResultsErrorBody(resultsBody);
         this.statusInfo = {
-          voteCount: resultsBody.voteCount ?? 0,
+          voteCount: info.voteCount ?? 0,
           resultsState: "pending",
         };
       } else {
@@ -377,6 +385,7 @@
   data-api-base="${this.apiBase}"
   data-platform="${poll.platform}">
 </sondage-poll-widget>
+<script src="${embedBase}/sondage-datetime.js"><\/script>
 <script src="${embedBase}/sondage-widget.js"><\/script>`;
 
       this.innerHTML = `
@@ -541,23 +550,17 @@
     }
   }
 
-  function toDatetimeLocal(date) {
-    const pad = (n) => String(n).padStart(2, "0");
-    return (
-      `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-      `T${pad(date.getHours())}:${pad(date.getMinutes())}`
-    );
-  }
-
-  function formatDateTime(iso) {
-    try {
-      return new Date(iso).toLocaleString("fr-FR", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      });
-    } catch {
-      return String(iso);
-    }
+  function normalizeResultsErrorBody(body) {
+    const details =
+      body.details && typeof body.details === "object" ? body.details : {};
+    return {
+      ...details,
+      policy: details.policy ?? body.policy,
+      voteCount: details.voteCount ?? body.voteCount,
+      endsAt: details.endsAt ?? body.endsAt,
+      code: body.code,
+      error: body.error,
+    };
   }
 
   function escapeHtml(s) {

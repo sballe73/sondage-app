@@ -10,7 +10,7 @@ import {
   getNextSnapshotVersion,
 } from "@sondage/db";
 import { getPollById } from "@sondage/db";
-import { incrementVoteCount } from "./redis.js";
+import { reconcileVoteCount } from "./redis.js";
 import {
   shouldPublishSnapshot,
   isResultsVisible,
@@ -58,7 +58,7 @@ export async function processVoteEvent(event: VoteSubmittedEvent): Promise<void>
   await markEventProcessed(event.eventId, event.pollId);
 
   const newCount = previousCount + 1;
-  await incrementVoteCount(event.pollId);
+  await reconcileVoteCount(event.pollId, newCount);
 
   const policy = data.poll.resultPolicy as ResultPolicy;
   const publishThreshold = shouldPublishSnapshot(

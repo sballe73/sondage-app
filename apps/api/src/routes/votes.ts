@@ -6,7 +6,7 @@ import type { VoteSubmittedEvent } from "@sondage/shared";
 import { enforcePollRegion } from "../middleware/region.js";
 import { requireVoterAuth } from "./auth.js";
 import { verifyGroupMembership } from "../auth/oauth.js";
-import { tryClaimVote, releaseVoteClaim, checkVoteRateLimit } from "../redis.js";
+import { tryClaimVote, releaseVoteClaim, checkVoteRateLimit, incrementVoteCount } from "../redis.js";
 import { publishVoteEvent } from "../events.js";
 import { AppError } from "../errors.js";
 import { config } from "../config.js";
@@ -143,6 +143,7 @@ export async function voteRoutes(app: FastifyInstance) {
 
     try {
       await publishVoteEvent(event);
+      await incrementVoteCount(pollId);
     } catch (e) {
       await releaseVoteClaim(pollId, auth.token.subjectId);
       throw e;

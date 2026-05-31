@@ -11,6 +11,11 @@
 (function () {
   const TAG = "sondage-poll-widget";
 
+  function formatPollWindow(poll) {
+    if (!poll || !window.SondageDateTime) return "";
+    return window.SondageDateTime.formatPollWindow(poll.startsAt, poll.endsAt);
+  }
+
   const PLATFORM_LABELS = {
     mock: "mock (dev)",
     google: "Google",
@@ -188,9 +193,12 @@
         `?pollId=${encodeURIComponent(this.pollId)}` +
         `&returnTo=${encodeURIComponent(returnTo)}`;
 
+      const windowLine = formatPollWindow(this.poll);
+
       this.innerHTML = `
         <article class="sondage-widget">
           <h2>${escapeHtml(this.poll.name)}</h2>
+          ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
           <p class="meta">Connexion <strong>${escapeHtml(label)}</strong> requise pour voter.</p>
           <p><a class="oauth-login-btn oauth-login-btn--${escapeAttr(this.platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a></p>
         </article>
@@ -217,9 +225,12 @@
         ? ` · Connecté : ${escapeHtml(this.displayName)}`
         : "";
 
+      const windowLine = formatPollWindow(this.poll);
+
       this.innerHTML = `
         <article class="sondage-widget">
           <h2>${escapeHtml(this.poll.name)}</h2>
+          ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
           <p class="meta">Plateforme : <strong>${escapeHtml(platformLabel)}</strong>${voterLine} · ${escapeHtml(gradeHint)}</p>
           <form id="vote-form">
             ${items

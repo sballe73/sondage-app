@@ -10,6 +10,10 @@
  *   <script src="sondage-results.js"></script>
  */
 (function () {
+  const DT = window.SondageDateTime;
+  const formatDateTime = (iso) => DT.formatDateTime(iso);
+  const formatPollWindow = (starts, ends) => DT.formatPollWindow(starts, ends);
+
   const TAG = "sondage-results-widget";
   const POLL_INTERVAL_MS = 30000;
 
@@ -372,6 +376,7 @@
     return `
       <header class="results-header">
         <h2>${escapeHtml(name || "Résultats")}</h2>
+        ${poll?.startsAt || poll?.endsAt ? `<p class="meta poll-window">${escapeHtml(formatPollWindow(poll.startsAt, poll.endsAt))}</p>` : ""}
         ${parts.length ? `<p class="meta">${escapeHtml(parts.join(" · "))}</p>` : ""}
       </header>`;
   }
@@ -448,17 +453,6 @@
         ${item.medianDisplay ? `<p class="hist-median">${escapeHtml(item.medianDisplay)}</p>` : ""}
         <div class="hist-rows">${rows}</div>
       </div>`;
-  }
-
-  function formatDateTime(iso) {
-    try {
-      return new Date(iso).toLocaleString("fr-FR", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      });
-    } catch {
-      return iso;
-    }
   }
 
   function escapeHtml(s) {

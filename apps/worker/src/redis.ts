@@ -13,8 +13,17 @@ export function getRedis(): RedisClient {
   return redis;
 }
 
-export async function incrementVoteCount(pollId: string): Promise<number> {
-  return getRedis().incr(`vote_count:${pollId}`);
+export async function reconcileVoteCount(
+  pollId: string,
+  dbCount: number
+): Promise<void> {
+  const key = `vote_count:${pollId}`;
+  const r = getRedis();
+  const raw = await r.get(key);
+  const current = raw ? parseInt(raw, 10) : 0;
+  if (dbCount > current) {
+    await r.set(key, String(dbCount));
+  }
 }
 
 export async function ensureConsumerGroup(): Promise<void> {
