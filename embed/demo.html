@@ -41,6 +41,32 @@
       .sondage-widget .grade-label {
         color: #333;
       }
+      .sondage-widget .oauth-login-btn {
+        display: inline-block;
+        padding: 0.6rem 1.2rem;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .sondage-widget .oauth-login-btn--google {
+        background: #4285f4;
+      }
+      .sondage-widget .oauth-login-btn--google:hover {
+        background: #3367d6;
+      }
+      .sondage-widget .oauth-login-btn--x {
+        background: #0f1419;
+      }
+      .sondage-widget .oauth-login-btn--x:hover {
+        background: #272c30;
+      }
+      .sondage-widget .oauth-login-btn--facebook {
+        background: #1877f2;
+      }
+      .sondage-widget .oauth-login-btn--facebook:hover {
+        background: #166fe5;
+      }
     </style>
     <script src="sondage-widget.js"></script>
   </head>
@@ -75,9 +101,7 @@
         var widget = document.createElement("sondage-poll-widget");
         widget.setAttribute("data-poll-id", pollId);
         widget.setAttribute("data-api-base", window.location.origin);
-        widget.setAttribute("data-platform", "mock");
-        widget.setAttribute("data-subject-id", "widget-voter-1");
-        widget.setAttribute("data-display-name", "Widget User");
+        /* data-platform omis : le widget utilise poll.platform (mock ou google) */
         host.appendChild(widget);
       })();
     </script>

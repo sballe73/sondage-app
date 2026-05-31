@@ -1,16 +1,26 @@
 /**
- * Sondage MJ embed widget — uses poll.platform OAuth via API base URL.
+ * Sondage MJ embed widget — vote via mock OAuth ou redirect Google.
  *
  * Usage:
- *   <motion-poll-widget
+ *   <sondage-poll-widget
  *     data-poll-id="uuid"
- *     data-api-base="https://api.example.com"
- *     data-platform="mock">
- *   </motion-poll-widget>
- *   <script src="sondage-widget.js" type="module"></script>
+ *     data-api-base="https://api.example.com">
+ *   </sondage-poll-widget>
+ *   <script src="sondage-widget.js"></script>
  */
 (function () {
   const TAG = "sondage-poll-widget";
+
+  const PLATFORM_LABELS = {
+    mock: "mock (dev)",
+    google: "Google",
+    apple: "Apple",
+    facebook: "Meta (Facebook)",
+    linkedin: "LinkedIn",
+    x: "X",
+  };
+
+  const REAL_OAUTH_PLATFORMS = new Set(["facebook", "google"]);
 
   class SondagePollWidget extends HTMLElement {
     static get observedAttributes() {
@@ -50,6 +60,42 @@
       this.load();
     }
 
+    tokenStorageKey() {
+      return `sondage_token_${this.pollId}`;
+    }
+
+    consumeOAuthHash() {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (!hash) return null;
+      const params = new URLSearchParams(hash);
+      const oauthError = params.get("oauth_error");
+      if (oauthError) {
+        history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search
+        );
+        throw new Error(decodeURIComponent(oauthError));
+      }
+      const accessToken = params.get("access_token");
+      if (!accessToken) return null;
+      sessionStorage.setItem(this.tokenStorageKey(), accessToken);
+      history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+      return accessToken;
+    }
+
+    readStoredToken() {
+      return (
+        this.consumeOAuthHash() ||
+        sessionStorage.getItem(this.tokenStorageKey()) ||
+        null
+      );
+    }
+
     async load() {
       try {
         const res = await fetch(`${this.apiBase}/polls/${this.pollId}`, {
@@ -63,20 +109,40 @@
           );
         }
         this.platform = this.poll.platform;
-        await this.ensureToken();
+
+        const ready = await this.ensureToken();
+        if (!ready) return;
+
         this.renderForm();
       } catch (e) {
-        this.innerHTML = `<p class="error">${e.message}</p>`;
+        this.innerHTML = `<p class="error">${escapeHtml(e.message)}</p>`;
       }
     }
 
     async ensureToken() {
-      if (this.token) return;
-      if (this.platform !== "mock") {
-        throw new Error(
-          `OAuth for ${this.platform} must be completed by host app; only mock is built-in`
-        );
+      if (this.token) return true;
+
+      this.token = this.readStoredToken();
+      if (this.token) {
+        await this.loadSession();
+        return true;
       }
+
+      if (this.platform === "mock") {
+        return this.mockLogin();
+      }
+
+      if (REAL_OAUTH_PLATFORMS.has(this.platform)) {
+        this.renderLoginPrompt();
+        return false;
+      }
+
+      throw new Error(
+        `OAuth pour ${this.platform} (${PLATFORM_LABELS[this.platform] || this.platform}) n'est pas encore disponible dans le widget — plateformes prévues : Google, Apple, Meta`
+      );
+    }
+
+    async mockLogin() {
       const subjectId =
         this.subjectId || `guest-${Math.random().toString(36).slice(2, 10)}`;
       const res = await fetch(`${this.apiBase}/auth/mock/login`, {
@@ -93,6 +159,42 @@
       const data = await res.json();
       this.token = data.accessToken;
       this.subjectId = subjectId;
+      return true;
+    }
+
+    async loadSession() {
+      const res = await fetch(`${this.apiBase}/auth/session`, {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "X-Data-Region": "EU",
+        },
+      });
+      if (!res.ok) {
+        sessionStorage.removeItem(this.tokenStorageKey());
+        this.token = null;
+        throw new Error("Session expirée — reconnectez-vous.");
+      }
+      const data = await res.json();
+      this.subjectId = data.session.subjectId;
+      this.displayName = data.session.displayName;
+    }
+
+    renderLoginPrompt() {
+      const label =
+        PLATFORM_LABELS[this.platform] || this.platform;
+      const returnTo = window.location.href.split("#")[0];
+      const loginUrl =
+        `${this.apiBase}/auth/${encodeURIComponent(this.platform)}/login` +
+        `?pollId=${encodeURIComponent(this.pollId)}` +
+        `&returnTo=${encodeURIComponent(returnTo)}`;
+
+      this.innerHTML = `
+        <article class="sondage-widget">
+          <h2>${escapeHtml(this.poll.name)}</h2>
+          <p class="meta">Connexion <strong>${escapeHtml(label)}</strong> requise pour voter.</p>
+          <p><a class="oauth-login-btn oauth-login-btn--${escapeAttr(this.platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a></p>
+        </article>
+      `;
     }
 
     render() {
@@ -109,11 +211,16 @@
         labels.length > 0
           ? `${labels[0]} (1) … ${labels[labels.length - 1]} (${max})`
           : `Échelle ${min}–${max}`;
+      const platformLabel =
+        PLATFORM_LABELS[this.platform] || this.platform;
+      const voterLine = this.displayName
+        ? ` · Connecté : ${escapeHtml(this.displayName)}`
+        : "";
 
       this.innerHTML = `
         <article class="sondage-widget">
           <h2>${escapeHtml(this.poll.name)}</h2>
-          <p class="meta">Plateforme : <strong>${escapeHtml(this.poll.platform)}</strong> · ${escapeHtml(gradeHint)}</p>
+          <p class="meta">Plateforme : <strong>${escapeHtml(platformLabel)}</strong>${voterLine} · ${escapeHtml(gradeHint)}</p>
           <form id="vote-form">
             ${items
               .map(
@@ -175,7 +282,8 @@
         status.textContent = `Erreur : ${await res.text()}`;
         return;
       }
-      status.textContent = "Vote enregistré. Résultats selon la politique du sondage.";
+      status.textContent =
+        "Vote enregistré. Résultats selon la politique du sondage.";
     }
   }
 
@@ -185,6 +293,10 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  function escapeAttr(s) {
+    return escapeHtml(s).replace(/'/g, "&#39;");
   }
 
   if (!customElements.get(TAG)) {
