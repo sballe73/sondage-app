@@ -2,10 +2,10 @@ import "./load-env.js";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import { join, dirname } from "node:path";
-import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
 import { buildHealthPayload } from "./health.js";
+import { buildHomeHtml } from "./home-page.js";
 import { errorHandlerPlugin } from "./plugins/error-handler.js";
 import { corsPlugin } from "./plugins/cors.js";
 import { rateLimitPlugin } from "./plugins/rate-limit.js";
@@ -29,7 +29,6 @@ await app.register(rateLimitPlugin);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const embedRoot = join(__dirname, "../../../embed");
-const homeHtml = readFileSync(join(embedRoot, "index.html"), "utf8");
 
 await app.register(fastifyStatic, {
   root: embedRoot,
@@ -38,7 +37,7 @@ await app.register(fastifyStatic, {
 });
 
 app.get("/", async (_request, reply) => {
-  return reply.type("text/html; charset=utf-8").code(200).send(homeHtml);
+  return reply.type("text/html; charset=utf-8").code(200).send(buildHomeHtml());
 });
 
 app.get("/health", async () => buildHealthPayload());
