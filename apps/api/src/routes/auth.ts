@@ -14,6 +14,7 @@ import {
 } from "../auth/providers/index.js";
 import { signOAuthState, verifyOAuthState } from "../auth/oauth-state.js";
 import { generateCodeVerifier } from "../auth/pkce.js";
+import { handleFacebookDataDeletionCallback } from "../auth/facebook-data-deletion.js";
 
 const oauthPlatformSchema = z.enum(REAL_OAUTH_PLATFORMS);
 
@@ -92,6 +93,23 @@ async function assertPollAcceptsPlatform(
 }
 
 export async function authRoutes(app: FastifyInstance) {
+  if (!app.hasContentTypeParser("application/x-www-form-urlencoded")) {
+    app.addContentTypeParser(
+      "application/x-www-form-urlencoded",
+      { parseAs: "string" },
+      (_req, body, done) => {
+        try {
+          done(
+            null,
+            Object.fromEntries(new URLSearchParams(body as string).entries())
+          );
+        } catch (err) {
+          done(err as Error, undefined);
+        }
+      }
+    );
+  }
+
   app.get("/auth/:platform/login", async (request, reply) => {
     const platform = oauthPlatformSchema.parse(
       (request.params as { platform: string }).platform
@@ -128,6 +146,36 @@ export async function authRoutes(app: FastifyInstance) {
     });
 
     return reply.redirect(provider.getAuthorizationUrl(state, codeVerifier));
+  });
+
+  app.post("/auth/facebook/data-deletion", async (request, reply) => {
+    if (!isOAuthPlatformConfigured("facebook")) {
+      throw new AppError(
+        503,
+        "OAUTH_NOT_CONFIGURED",
+        "facebook OAuth is not configured on this server",
+        { requiredEnv: oauthRequiredEnv("facebook") }
+      );
+    }
+
+    const body = z
+      .object({
+        signed_request: z.string().min(1),
+      })
+      .parse(request.body ?? {});
+
+    try {
+      const result = handleFacebookDataDeletionCallback(body.signed_request);
+      request.log.info(
+        { confirmation_code: result.confirmation_code },
+        "Meta data deletion callback received"
+      );
+      return result;
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : "Invalid data deletion request";
+      throw new AppError(400, "VALIDATION_ERROR", message);
+    }
   });
 
   app.get("/auth/:platform/callback", async (request, reply) => {

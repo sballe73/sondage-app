@@ -210,20 +210,49 @@ Fichier [`render.yaml`](render.yaml) : Postgres (Frankfurt), Redis, service web 
 `PUBLIC_BASE_URL` est **optionnel** : l’API utilise `RENDER_EXTERNAL_URL` si absent.  
 Callback OAuth dérivé : `{PUBLIC_BASE_URL ou RENDER_EXTERNAL_URL}/auth/facebook/callback`.
 
-### Meta Developers
+### Meta Developers (serveur pilote `sondage-app-eweb`)
+
+URL API : **`https://sondage-app-eweb.onrender.com`**
+
+| Champ Meta | Valeur |
+|------------|--------|
+| App Domains | `sondage-app-eweb.onrender.com` |
+| Site URL | `https://sondage-app-eweb.onrender.com` |
+| Valid OAuth Redirect URIs | `https://sondage-app-eweb.onrender.com/auth/facebook/callback` |
+| Data Deletion Request URL | `https://sondage-app-eweb.onrender.com/auth/facebook/data-deletion` |
+| Privacy Policy URL | `https://sballe73.github.io/sondage-app/legal/privacy.html` |
+| Terms of Service URL | `https://sballe73.github.io/sondage-app/legal/terms.html` |
+| User data deletion (instructions) | `https://sballe73.github.io/sondage-app/legal/data-deletion.html` |
+
+Vérification après déploiement :
+
+```bash
+curl -s https://sondage-app-eweb.onrender.com/health | jq .
+# oauth.facebook.configured doit être true
+# oauth.facebook.redirectUri doit correspondre à Meta
+```
+
+Mode **Development** : ajouter chaque compte votant dans **App roles → Testers** (ou Test Users).
+
+### Meta Developers (générique)
 
 1. **Facebook Login** → Valid OAuth Redirect URIs :
    `https://<votre-service>.onrender.com/auth/facebook/callback`
-2. **Basic Settings** — pages légales (GitHub Pages, inchangé) :
+2. **Data Deletion Request URL** :
+   `https://<votre-service>.onrender.com/auth/facebook/data-deletion`
+3. **Basic Settings** — pages légales (GitHub Pages) :
    - `https://sballe73.github.io/sondage-app/legal/privacy.html`
    - `https://sballe73.github.io/sondage-app/legal/terms.html`
    - `https://sballe73.github.io/sondage-app/legal/data-deletion.html`
-3. Mode **Development** + testeurs jusqu’à validation du pilote.
+4. Mode **Development** + testeurs jusqu’à validation du pilote.
 
 ### Recette sur Render
 
-1. `https://<votre-service>.onrender.com/embed/creator.html` → sondage `facebook`.
-2. Lien vote → login Meta → vote → résultats.
+1. `https://sondage-app-eweb.onrender.com/embed/creator.html` → sondage **facebook / Meta**.
+2. Ouvrir le lien vote (`demo.html?pollId=…`) → **Se connecter avec Meta (Facebook)**.
+3. Voter → `results.html`.
+
+(Générique : remplacer par `https://<votre-service>.onrender.com`.)
 
 ### Scripts
 

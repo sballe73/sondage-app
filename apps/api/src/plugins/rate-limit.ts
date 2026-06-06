@@ -10,7 +10,12 @@ export async function rateLimitPlugin(app: FastifyInstance) {
     global: true,
     max: config.rateLimitGlobalMax,
     timeWindow: config.rateLimitGlobalWindowMs,
-    allowList: (request) => request.url.split("?")[0] === "/health",
+    allowList: (request) => {
+      const path = request.url.split("?")[0];
+      return (
+        path === "/health" || path === "/auth/facebook/data-deletion"
+      );
+    },
     addHeaders: {
       "x-ratelimit-limit": true,
       "x-ratelimit-remaining": true,

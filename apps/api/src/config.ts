@@ -49,6 +49,8 @@ export const config = {
   oauthFacebookRedirectUri:
     process.env.OAUTH_FACEBOOK_REDIRECT_URI ??
     `${(process.env.PUBLIC_BASE_URL ?? process.env.RENDER_EXTERNAL_URL ?? `http://localhost:${port}`).replace(/\/$/, "")}/auth/facebook/callback`,
+  /** URL de suivi renvoyée à Meta après une demande de suppression (callback). */
+  metaDataDeletionStatusUrl: process.env.META_DATA_DELETION_STATUS_URL,
 };
 
 export function isGoogleOAuthConfigured(): boolean {

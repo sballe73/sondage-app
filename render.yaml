@@ -46,8 +46,11 @@ services:
         generateValue: true
       - key: PARTICIPATION_HASH_SALT
         generateValue: true
-      # PUBLIC_BASE_URL : défaut = RENDER_EXTERNAL_URL (voir config.ts)
-      # À configurer manuellement après création de l’app Meta :
+      # PUBLIC_BASE_URL : optionnel — RENDER_EXTERNAL_URL par défaut
+      # Serveur pilote : https://sondage-app-eweb.onrender.com
+      # - key: PUBLIC_BASE_URL
+      #   value: https://sondage-app-eweb.onrender.com
+      # À configurer manuellement dans le Dashboard Render :
       # - key: OAUTH_FACEBOOK_APP_ID
       #   sync: false
       # - key: OAUTH_FACEBOOK_APP_SECRET

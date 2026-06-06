@@ -4,6 +4,7 @@ import fastifyStatic from "@fastify/static";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
+import { buildHealthPayload } from "./health.js";
 import { errorHandlerPlugin } from "./plugins/error-handler.js";
 import { corsPlugin } from "./plugins/cors.js";
 import { rateLimitPlugin } from "./plugins/rate-limit.js";
@@ -32,7 +33,7 @@ await app.register(fastifyStatic, {
   decorateReply: false,
 });
 
-app.get("/health", async () => ({ status: "ok", region: config.defaultDataRegion }));
+app.get("/health", async () => buildHealthPayload());
 
 await app.register(pollRoutes);
 await app.register(authRoutes);

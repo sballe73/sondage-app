@@ -53,6 +53,7 @@
     </p>
 
     <h2>4. Délai de traitement</h2>
+    <p id="deletion-status" hidden></p>
     <p>
       Nous traitons les demandes dans un délai maximal de <strong>30 jours</strong>.
       Vous recevrez une confirmation une fois la suppression effectuée.
@@ -70,5 +71,18 @@
       <a href="privacy.html">Politique de confidentialité</a> ·
       <a href="terms.html">Conditions d’utilisation</a>
     </p>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var code = params.get("confirmation_code");
+        if (!code) return;
+        var el = document.getElementById("deletion-status");
+        el.hidden = false;
+        el.innerHTML =
+          "<strong>Demande Meta enregistrée.</strong> Code de suivi : <code>" +
+          code +
+          "</code>. Nous traitons la suppression sous 30 jours.";
+      })();
+    </script>
   </body>
 </html>
