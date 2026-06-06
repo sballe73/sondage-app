@@ -138,17 +138,15 @@ CORS : variable `CORS_ORIGINS` (liste séparée par des virgules, ou `*` / absen
 4. Mode **Development** : ajouter des **testeurs** (Roles → Test Users ou rôles sur l’app) pour les comptes qui voteront.
 5. **Settings** → **Basic** — URLs obligatoires Meta (**HTTPS** publiques, joignables par le crawler Meta) :
 
-   Les pages légales sont publiées via **GitHub Pages** (`docs/legal/` — Settings → Pages → branche `main`, dossier **`/docs`**) :
+   Les pages légales sont servies par l’API (HTTPS) sous `{PUBLIC_BASE_URL}/legal/*.html` (contenu dans `embed/legal/`). Les anciens liens GitHub Pages (`docs/legal/`) redirigent vers le site Render canonique.
 
    | Champ Meta | URL |
    |------------|-----|
-   | Privacy Policy URL | `https://<user>.github.io/<repo>/legal/privacy.html` |
-   | Terms of Service URL | `https://<user>.github.io/<repo>/legal/terms.html` |
-   | User data deletion | `https://<user>.github.io/<repo>/legal/data-deletion.html` |
+   | Privacy Policy URL | `{PUBLIC_BASE_URL}/legal/privacy.html` |
+   | Terms of Service URL | `{PUBLIC_BASE_URL}/legal/terms.html` |
+   | User data deletion | `{PUBLIC_BASE_URL}/legal/data-deletion.html` |
 
-   Exemple : `https://sballe73.github.io/sondage-app/legal/privacy.html`
-
-   En local, les mêmes fichiers sont aussi servis sous `embed/legal/` (même contenu que `docs/legal/`).
+   Exemple local : `http://localhost:3000/legal/privacy.html`
 
 6. Dans `.env` :
    ```bash
@@ -220,9 +218,9 @@ URL API : **`https://sondage-app-eweb.onrender.com`**
 | Site URL | `https://sondage-app-eweb.onrender.com` (répond en HTTP 200, lien vers le créateur) |
 | Valid OAuth Redirect URIs | `https://sondage-app-eweb.onrender.com/auth/facebook/callback` |
 | Data Deletion Request URL | `https://sondage-app-eweb.onrender.com/auth/facebook/data-deletion` |
-| Privacy Policy URL | `https://sballe73.github.io/sondage-app/legal/privacy.html` |
-| Terms of Service URL | `https://sballe73.github.io/sondage-app/legal/terms.html` |
-| User data deletion (instructions) | `https://sballe73.github.io/sondage-app/legal/data-deletion.html` |
+| Privacy Policy URL | `https://sondage-app-eweb.onrender.com/legal/privacy.html` |
+| Terms of Service URL | `https://sondage-app-eweb.onrender.com/legal/terms.html` |
+| User data deletion (instructions) | `https://sondage-app-eweb.onrender.com/legal/data-deletion.html` |
 
 Vérification après déploiement :
 
@@ -240,10 +238,10 @@ Mode **Development** : ajouter chaque compte votant dans **App roles → Testers
    `https://<votre-service>.onrender.com/auth/facebook/callback`
 2. **Data Deletion Request URL** :
    `https://<votre-service>.onrender.com/auth/facebook/data-deletion`
-3. **Basic Settings** — pages légales (GitHub Pages) :
-   - `https://sballe73.github.io/sondage-app/legal/privacy.html`
-   - `https://sballe73.github.io/sondage-app/legal/terms.html`
-   - `https://sballe73.github.io/sondage-app/legal/data-deletion.html`
+3. **Basic Settings** — pages légales (API Render, `{PUBLIC_BASE_URL}/legal/…`) :
+   - `https://<votre-service>.onrender.com/legal/privacy.html`
+   - `https://<votre-service>.onrender.com/legal/terms.html`
+   - `https://<votre-service>.onrender.com/legal/data-deletion.html`
 4. Mode **Development** + testeurs jusqu’à validation du pilote.
 
 ### Recette sur Render

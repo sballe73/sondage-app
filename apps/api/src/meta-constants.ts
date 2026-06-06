@@ -1,7 +1,12 @@
-/** Meta App ID — public (visible in OAuth URLs). Used in static legal pages on GitHub Pages. */
+/** Meta App ID — public (visible in OAuth URLs). */
 export const META_FACEBOOK_APP_ID = "510975820333642";
 
-export const META_OG_IMAGE =
-  "https://sondage-app-eweb.onrender.com/embed/og-image.png";
+export type LegalPage = "privacy" | "terms" | "data-deletion";
 
-export const META_LEGAL_BASE = "https://sballe73.github.io/sondage-app/legal";
+export function legalPagePath(page: LegalPage): string {
+  return `/legal/${page}.html`;
+}
+
+export function legalPageUrl(baseUrl: string, page: LegalPage): string {
+  return `${baseUrl.replace(/\/$/, "")}${legalPagePath(page)}`;
+}

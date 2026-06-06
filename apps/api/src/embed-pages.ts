@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
 import { injectOpenGraphMeta, injectLegalOpenGraphMeta } from "./open-graph.js";
+import type { LegalPage } from "./meta-constants.js";
 
 const EMBED_HTML_PAGES = [
   {
@@ -21,26 +22,31 @@ const EMBED_HTML_PAGES = [
   },
 ] as const;
 
-const LEGAL_HTML_PAGES = [
+const LEGAL_HTML_PAGES: ReadonlyArray<{
+  file: string;
+  routes: readonly string[];
+  title: string;
+  page: LegalPage;
+}> = [
   {
     file: "legal/privacy.html",
-    route: "/embed/legal/privacy.html",
+    routes: ["/legal/privacy.html", "/embed/legal/privacy.html"],
     title: "Politique de confidentialité — Sondage MJ",
-    page: "privacy" as const,
+    page: "privacy",
   },
   {
     file: "legal/terms.html",
-    route: "/embed/legal/terms.html",
+    routes: ["/legal/terms.html", "/embed/legal/terms.html"],
     title: "Conditions d'utilisation — Sondage MJ",
-    page: "terms" as const,
+    page: "terms",
   },
   {
     file: "legal/data-deletion.html",
-    route: "/embed/legal/data-deletion.html",
+    routes: ["/legal/data-deletion.html", "/embed/legal/data-deletion.html"],
     title: "Suppression des données — Sondage MJ",
-    page: "data-deletion" as const,
+    page: "data-deletion",
   },
-] as const;
+];
 
 export function registerEmbedHtmlRoutes(
   app: FastifyInstance,
@@ -62,17 +68,16 @@ export function registerEmbedHtmlRoutes(
   }
 
   for (const page of LEGAL_HTML_PAGES) {
-    app.get(page.route, async (_request, reply) => {
-      const html = readFileSync(join(embedRoot, page.file), "utf8");
-      return reply
-        .type("text/html; charset=utf-8")
-        .code(200)
-        .send(
-          injectLegalOpenGraphMeta(html, {
-            title: page.title,
-            page: page.page,
-          })
-        );
+    const html = readFileSync(join(embedRoot, page.file), "utf8");
+    const enriched = injectLegalOpenGraphMeta(html, {
+      title: page.title,
+      page: page.page,
     });
+
+    for (const route of page.routes) {
+      app.get(route, async (_request, reply) => {
+        return reply.type("text/html; charset=utf-8").code(200).send(enriched);
+      });
+    }
   }
 }

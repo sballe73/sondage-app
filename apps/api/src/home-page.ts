@@ -64,8 +64,8 @@ ${ogHead}    <meta name="viewport" content="width=device-width, initial-scale=1"
     <nav>
       <a href="/embed/demo.html">Vote (démo)</a>
       <a href="/embed/results.html">Résultats</a>
-      <a href="https://sballe73.github.io/sondage-app/legal/privacy.html">Confidentialité</a>
-      <a href="https://sballe73.github.io/sondage-app/legal/terms.html">Conditions</a>
+      <a href="/legal/privacy.html">Confidentialité</a>
+      <a href="/legal/terms.html">Conditions</a>
     </nav>
   </body>
 </html>`;
