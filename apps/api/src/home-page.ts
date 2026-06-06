@@ -15,10 +15,9 @@ export function buildHomeHtml(): string {
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+${ogHead}    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${TITLE}</title>
-    <meta name="description" content="${DESCRIPTION}" />
-${ogHead}    <style>
+    <meta name="description" content="${DESCRIPTION}" />    <style>
       body {
         font-family: system-ui, sans-serif;
         max-width: 40rem;
