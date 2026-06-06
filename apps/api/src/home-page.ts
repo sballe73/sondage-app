@@ -23,6 +23,7 @@ export function buildHomeHtml(): string {
     <meta property="og:image:width" content="1536" />
     <meta property="og:image:height" content="1024" />
     <meta property="og:locale" content="fr_FR" />
+    <meta property="fb:app_id" content="${config.oauthFacebookAppId}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${TITLE}" />
     <meta name="twitter:description" content="${DESCRIPTION}" />
