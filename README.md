@@ -217,7 +217,7 @@ URL API : **`https://sondage-app-eweb.onrender.com`**
 | Champ Meta | Valeur |
 |------------|--------|
 | App Domains | `sondage-app-eweb.onrender.com` |
-| Site URL | `https://sondage-app-eweb.onrender.com` |
+| Site URL | `https://sondage-app-eweb.onrender.com` (répond en HTTP 200, lien vers le créateur) |
 | Valid OAuth Redirect URIs | `https://sondage-app-eweb.onrender.com/auth/facebook/callback` |
 | Data Deletion Request URL | `https://sondage-app-eweb.onrender.com/auth/facebook/data-deletion` |
 | Privacy Policy URL | `https://sballe73.github.io/sondage-app/legal/privacy.html` |
