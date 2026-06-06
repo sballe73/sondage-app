@@ -29,21 +29,29 @@ ${ogHead}    <style>
       }
       h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
       p { color: #444; }
-      nav { margin-top: 1.5rem; }
+      .primary {
+        display: inline-block;
+        margin-top: 1.25rem;
+        padding: 0.75rem 1.4rem;
+        background: #2563eb;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+      }
+      .primary:hover {
+        background: #1d4ed8;
+      }
+      nav {
+        margin-top: 2rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid #e5e7eb;
+      }
       nav a {
         display: inline-block;
         margin: 0.35rem 1rem 0.35rem 0;
         color: #2563eb;
-      }
-      .primary {
-        display: inline-block;
-        margin-top: 1rem;
-        padding: 0.6rem 1.2rem;
-        background: #2563eb;
-        color: #fff;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 600;
       }
     </style>
   </head>
@@ -55,7 +63,6 @@ ${ogHead}    <style>
     </p>
     <a class="primary" href="/embed/creator.html">Créer un sondage</a>
     <nav>
-      <a href="/embed/creator.html">Créateur</a>
       <a href="/embed/demo.html">Vote (démo)</a>
       <a href="/embed/results.html">Résultats</a>
       <a href="https://sballe73.github.io/sondage-app/legal/privacy.html">Confidentialité</a>
