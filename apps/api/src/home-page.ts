@@ -1,12 +1,15 @@
-import { config } from "./config.js";
+import { buildOpenGraphHead } from "./open-graph.js";
 
 const TITLE = "Sondage MJ — Jugement majoritaire";
 const DESCRIPTION =
   "Application de sondages par jugement majoritaire avec authentification Meta (Facebook) pour garantir un vote par personne.";
 
 export function buildHomeHtml(): string {
-  const base = config.publicBaseUrl;
-  const ogImage = `${base}/embed/og-image.png`;
+  const ogHead = buildOpenGraphHead({
+    title: TITLE,
+    description: DESCRIPTION,
+    urlPath: "/",
+  });
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -15,21 +18,7 @@ export function buildHomeHtml(): string {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${TITLE}</title>
     <meta name="description" content="${DESCRIPTION}" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="${base}/" />
-    <meta property="og:title" content="${TITLE}" />
-    <meta property="og:description" content="${DESCRIPTION}" />
-    <meta property="og:image" content="${ogImage}" />
-    <meta property="og:image:width" content="1536" />
-    <meta property="og:image:height" content="1024" />
-    <meta property="og:locale" content="fr_FR" />
-    <meta property="fb:app_id" content="${config.oauthFacebookAppId}" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${TITLE}" />
-    <meta name="twitter:description" content="${DESCRIPTION}" />
-    <meta name="twitter:image" content="${ogImage}" />
-    <meta http-equiv="refresh" content="0;url=/embed/creator.html" />
-    <style>
+${ogHead}    <style>
       body {
         font-family: system-ui, sans-serif;
         max-width: 40rem;
@@ -72,7 +61,6 @@ export function buildHomeHtml(): string {
       <a href="https://sballe73.github.io/sondage-app/legal/privacy.html">Confidentialité</a>
       <a href="https://sballe73.github.io/sondage-app/legal/terms.html">Conditions</a>
     </nav>
-    <p><small>Redirection automatique vers le créateur…</small></p>
   </body>
 </html>`;
 }

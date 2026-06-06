@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
 import { buildHealthPayload } from "./health.js";
 import { buildHomeHtml } from "./home-page.js";
+import { registerEmbedHtmlRoutes } from "./embed-pages.js";
 import { errorHandlerPlugin } from "./plugins/error-handler.js";
 import { corsPlugin } from "./plugins/cors.js";
 import { rateLimitPlugin } from "./plugins/rate-limit.js";
@@ -30,14 +31,16 @@ await app.register(rateLimitPlugin);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const embedRoot = join(__dirname, "../../../embed");
 
+app.get("/", async (_request, reply) => {
+  return reply.type("text/html; charset=utf-8").code(200).send(buildHomeHtml());
+});
+
+registerEmbedHtmlRoutes(app, embedRoot);
+
 await app.register(fastifyStatic, {
   root: embedRoot,
   prefix: "/embed/",
   decorateReply: false,
-});
-
-app.get("/", async (_request, reply) => {
-  return reply.type("text/html; charset=utf-8").code(200).send(buildHomeHtml());
 });
 
 app.get("/health", async () => buildHealthPayload());
