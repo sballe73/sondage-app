@@ -27,6 +27,15 @@
 
   const REAL_OAUTH_PLATFORMS = new Set(["facebook", "google"]);
 
+  function shuffleArray(arr) {
+    const copy = arr.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
   class SondagePollWidget extends HTMLElement {
     static get observedAttributes() {
       return [
@@ -210,7 +219,7 @@
     }
 
     renderForm() {
-      const items = this.poll.items || [];
+      const items = shuffleArray(this.poll.items || []);
       const min = this.poll.gradeMin;
       const max = this.poll.gradeMax;
       const labels = this.poll.gradeLabels || [];
