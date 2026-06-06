@@ -1,12 +1,13 @@
 import { randomBytes } from "node:crypto";
 import { config } from "../config.js";
+import { legalPageUrl } from "../meta-constants.js";
 import { parseFacebookSignedRequest } from "./facebook-signed-request.js";
 
 export function buildFacebookDataDeletionResponse(facebookUserId: string) {
   const confirmationCode = randomBytes(12).toString("hex");
   const statusBase =
     config.metaDataDeletionStatusUrl ??
-    "https://sballe73.github.io/sondage-app/legal/data-deletion.html";
+    legalPageUrl(config.publicBaseUrl, "data-deletion");
   const url = new URL(statusBase);
   url.searchParams.set("confirmation_code", confirmationCode);
   url.searchParams.set("facebook_user_id", facebookUserId);
