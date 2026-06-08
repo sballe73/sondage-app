@@ -12,7 +12,14 @@ import {
   validateCreatePoll,
   normalizeCreatePoll,
 } from "@sondage/shared";
-import { createPoll, getPollById, listPollsByCreator, createCampaign, getVoteCount } from "@sondage/db";
+import {
+  createPoll,
+  getPollById,
+  listPollsByCreator,
+  searchPolls,
+  createCampaign,
+  getVoteCount,
+} from "@sondage/db";
 import { AppError } from "../errors.js";
 import { getLiveVoteCount } from "../redis.js";
 
@@ -70,6 +77,43 @@ export async function pollRoutes(app: FastifyInstance) {
       platformNote:
         "platform is immutable; all voters must authenticate via this platform only",
     });
+  });
+
+  app.get("/polls", async (request) => {
+    const query = z
+      .object({
+        search: z.string().optional(),
+        activeOnly: z
+          .enum(["true", "false"])
+          .optional()
+          .transform((v) => v === "true"),
+        offset: z.coerce.number().int().min(0).default(0),
+        limit: z.coerce.number().int().min(1).max(50).default(10),
+      })
+      .parse(request.query);
+
+    const result = await searchPolls({
+      search: query.search,
+      activeOnly: query.activeOnly ?? false,
+      offset: query.offset,
+      limit: query.limit,
+    });
+
+    return {
+      polls: result.polls.map((poll) => ({
+        id: poll.id,
+        name: poll.name,
+        platform: poll.platform,
+        startsAt: poll.startsAt.toISOString(),
+        endsAt: poll.endsAt.toISOString(),
+        closedAt: poll.closedAt?.toISOString() ?? null,
+        resultPolicy: poll.resultPolicy,
+        createdAt: poll.createdAt.toISOString(),
+      })),
+      total: result.total,
+      offset: result.offset,
+      limit: result.limit,
+    };
   });
 
   app.get("/polls/:pollId", async (request, reply) => {

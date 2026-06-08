@@ -26,6 +26,24 @@ export async function reconcileVoteCount(
   }
 }
 
+function isMissingConsumerGroupError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.includes("NOGROUP") || msg.includes("NOSTREAM");
+}
+
+function parseStreamMessages(
+  messages: [string, string[]][]
+): { id: string; event: import("@sondage/shared").VoteSubmittedEvent }[] {
+  return messages.map(([id, fields]) => {
+    const payloadIdx = fields.indexOf("payload");
+    const payload = fields[payloadIdx + 1] ?? "{}";
+    return {
+      id,
+      event: JSON.parse(payload) as import("@sondage/shared").VoteSubmittedEvent,
+    };
+  });
+}
+
 export async function ensureConsumerGroup(): Promise<void> {
   const r = getRedis();
   try {
@@ -42,10 +60,25 @@ export async function ensureConsumerGroup(): Promise<void> {
   }
 }
 
-export async function readGroupEvents(): Promise<
-  { id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]
-> {
-  const r = getRedis();
+export async function ensureConsumerGroupWithRetry(
+  attempts = 10,
+  delayMs = 1_000
+): Promise<void> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      await ensureConsumerGroup();
+      return;
+    } catch (err) {
+      if (i === attempts - 1) throw err;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
+async function readGroupEventsOnce(
+  r: RedisClient,
+  blockMs = workerConfig.blockMs
+): Promise<{ id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]> {
   const rows = await r.xreadgroup(
     "GROUP",
     workerConfig.consumerGroup,
@@ -53,21 +86,65 @@ export async function readGroupEvents(): Promise<
     "COUNT",
     workerConfig.batchSize,
     "BLOCK",
-    workerConfig.blockMs,
+    blockMs,
     "STREAMS",
     workerConfig.voteEventsStream,
     ">"
   );
   if (!rows) return [];
   const [, messages] = rows[0] as [string, [string, string[]][]];
-  return messages.map(([id, fields]) => {
-    const payloadIdx = fields.indexOf("payload");
-    const payload = fields[payloadIdx + 1] ?? "{}";
-    return {
-      id,
-      event: JSON.parse(payload) as import("@sondage/shared").VoteSubmittedEvent,
-    };
-  });
+  return parseStreamMessages(messages);
+}
+
+/** Reclaim events stuck in PEL after a worker crash (idle > minIdleMs). */
+export async function claimStalePendingEvents(
+  minIdleMs = 60_000
+): Promise<{ id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]> {
+  const r = getRedis();
+  try {
+    const result = (await r.xautoclaim(
+      workerConfig.voteEventsStream,
+      workerConfig.consumerGroup,
+      workerConfig.consumerName,
+      minIdleMs,
+      "0-0",
+      "COUNT",
+      workerConfig.batchSize
+    )) as [string, [string, string[]][], string[]];
+    const messages = result[1] ?? [];
+    return parseStreamMessages(messages);
+  } catch (err) {
+    if (!isMissingConsumerGroupError(err)) throw err;
+    await ensureConsumerGroup();
+    return [];
+  }
+}
+
+export async function readGroupEvents(): Promise<
+  { id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]
+> {
+  const r = getRedis();
+  try {
+    return await readGroupEventsOnce(r);
+  } catch (err) {
+    if (!isMissingConsumerGroupError(err)) throw err;
+    await ensureConsumerGroup();
+    return readGroupEventsOnce(r);
+  }
+}
+
+/** Lecture immédiate (sans attente) pour vider le lag du consumer group. */
+export async function readGroupEventsImmediate(): Promise<
+  { id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]
+> {
+  const r = getRedis();
+  try {
+    return await readGroupEventsOnce(r, 0);
+  } catch (err) {
+    if (!isMissingConsumerGroupError(err)) throw err;
+    await ensureConsumerGroup();
+    return readGroupEventsOnce(r, 0);
+  }
 }
 
 export async function ackEvent(id: string): Promise<void> {

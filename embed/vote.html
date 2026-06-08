@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Voter — Sondage MJ</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 960px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        color: #1a1a1a;
+      }
+      .sondage-widget .meta {
+        color: #555;
+        margin: 0 0 0.75rem;
+      }
+      .sondage-widget .hint {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0 0 1rem;
+      }
+      .sondage-widget .vote-grid-wrap {
+        overflow-x: auto;
+        margin: 0 0 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+      }
+      .sondage-widget .vote-grid {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 36rem;
+      }
+      .sondage-widget .vote-grid th,
+      .sondage-widget .vote-grid td {
+        padding: 0;
+        border: 1px solid #e5e7eb;
+        vertical-align: middle;
+      }
+      .sondage-widget .vote-grid thead th {
+        background: #f9fafb;
+        font-weight: 600;
+        text-align: center;
+        padding: 0.5rem 0.45rem;
+      }
+      .sondage-widget .vote-grid .candidate-col {
+        text-align: left;
+        min-width: 8rem;
+      }
+      .sondage-widget .vote-grid .candidate-label {
+        text-align: left;
+        font-weight: 600;
+        background: #fff;
+        padding: 0.65rem 0.75rem;
+        min-width: 9rem;
+      }
+      .sondage-widget .vote-grid .grade-col {
+        min-width: 4.5rem;
+        line-height: 1.25;
+      }
+      .sondage-widget .vote-grid .grade-num {
+        display: block;
+        font-size: 0.95rem;
+      }
+      .sondage-widget .vote-grid .grade-lab {
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: #6b7280;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 5.5rem;
+      }
+      .sondage-widget .vote-grid .grade-cell {
+        width: 4.5rem;
+        height: 2.75rem;
+        background: #fafafa;
+      }
+      .sondage-widget .vote-grid .grade-cell-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        min-height: 2.75rem;
+        cursor: pointer;
+        margin: 0;
+        transition: background-color 0.15s ease;
+      }
+      .sondage-widget .vote-grid .grade-cell-label input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+      }
+      .sondage-widget .vote-grid .grade-cell-mark {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        border: 2px solid #d1d5db;
+        background: #fff;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+      .sondage-widget .vote-grid .grade-cell-label:hover .grade-cell-mark {
+        border-color: #9ca3af;
+      }
+      .sondage-widget .vote-grid .grade-cell.grade-1 { background: rgba(22, 163, 74, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-2 { background: rgba(34, 197, 94, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-3 { background: rgba(132, 204, 22, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-4 { background: rgba(234, 179, 8, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-5 { background: rgba(249, 115, 22, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-6 { background: rgba(239, 68, 68, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-7 { background: rgba(185, 28, 28, 0.06); }
+      .sondage-widget .vote-grid .grade-cell.grade-1:has(input:checked) { background: rgba(22, 163, 74, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-2:has(input:checked) { background: rgba(34, 197, 94, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-3:has(input:checked) { background: rgba(132, 204, 22, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-4:has(input:checked) { background: rgba(234, 179, 8, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-5:has(input:checked) { background: rgba(249, 115, 22, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-6:has(input:checked) { background: rgba(239, 68, 68, 0.88); }
+      .sondage-widget .vote-grid .grade-cell.grade-7:has(input:checked) { background: rgba(185, 28, 28, 0.88); }
+      .sondage-widget .vote-grid .grade-cell:has(input:checked) .grade-cell-mark {
+        border-color: #fff;
+        background: #000;
+      }
+      .sondage-widget .vote-grid thead .grade-1 { color: #16a34a; }
+      .sondage-widget .vote-grid thead .grade-2 { color: #22c55e; }
+      .sondage-widget .vote-grid thead .grade-3 { color: #84cc16; }
+      .sondage-widget .vote-grid thead .grade-4 { color: #ca8a04; }
+      .sondage-widget .vote-grid thead .grade-5 { color: #f97316; }
+      .sondage-widget .vote-grid thead .grade-6 { color: #ef4444; }
+      .sondage-widget .vote-grid thead .grade-7 { color: #b91c1c; }
+      .sondage-widget .vote-submit-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+      }
+      .sondage-widget .vote-submit-row button {
+        margin-top: 0;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font: inherit;
+        border-radius: 6px;
+        border: none;
+        background: #2563eb;
+        color: #fff;
+      }
+      .sondage-widget .vote-submit-row button:hover {
+        background: #1d4ed8;
+      }
+      .sondage-widget .vote-form-error:not(:empty) {
+        margin: 0;
+        padding: 0.35rem 0.5rem;
+        color: #991b1b;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        line-height: 1.35;
+        flex: 1 1 12rem;
+        max-width: 28rem;
+      }
+      .sondage-widget .oauth-login-btn {
+        display: inline-block;
+        padding: 0.6rem 1.2rem;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .sondage-widget .oauth-login-btn--google {
+        background: #4285f4;
+      }
+      .sondage-widget .oauth-login-btn--google:hover {
+        background: #3367d6;
+      }
+      .sondage-widget .oauth-login-btn--x {
+        background: #0f1419;
+      }
+      .sondage-widget .oauth-login-btn--x:hover {
+        background: #272c30;
+      }
+      .sondage-widget .oauth-login-btn--facebook {
+        background: #1877f2;
+      }
+      .sondage-widget .oauth-login-btn--facebook:hover {
+        background: #166fe5;
+      }
+    </style>
+    <script src="sondage-shell.js"></script>
+    <script src="sondage-datetime.js"></script>
+    <script src="sondage-poll-picker.js"></script>
+    <script src="vote-form-validate.js"></script>
+    <script src="vote-candidate-order.js"></script>
+    <script src="sondage-widget.js"></script>
+  </head>
+  <body>
+    <h1>Voter</h1>
+    <p id="help" class="sondage-poll-ref"></p>
+    <p id="change-poll-wrap" style="display: none">
+      <button type="button" id="change-poll-btn" class="sondage-change-poll-btn">
+        Changer de sondage
+      </button>
+    </p>
+    <div id="poll-picker-host"></div>
+    <p id="results-link" style="display: none">
+      <a id="results-anchor" href="#">Voir les résultats</a>
+    </p>
+    <div id="widget-host"></div>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var pollId = params.get("pollId");
+        var help = document.getElementById("help");
+        var pickerHost = document.getElementById("poll-picker-host");
+        var host = document.getElementById("widget-host");
+
+        if (!pollId && window.SondageShell) {
+          pollId = SondageShell.getActivePollId();
+          if (pollId) {
+            window.location.replace(
+              "vote.html?pollId=" + encodeURIComponent(pollId)
+            );
+            return;
+          }
+        }
+
+        if (!pollId) {
+          help.textContent = "Aucun sondage sélectionné";
+          host.style.display = "none";
+          SondageShell.init({ active: "vote" });
+          SondagePollPicker.mount({
+            host: pickerHost,
+            mode: "vote",
+            targetPage: "vote.html",
+          });
+          return;
+        }
+
+        pickerHost.style.display = "none";
+        if (window.SondageShell) {
+          SondageShell.setActivePollId(pollId);
+        }
+        help.textContent = "Sondage : " + pollId;
+        document.getElementById("change-poll-wrap").style.display = "block";
+        document.getElementById("change-poll-btn").addEventListener("click", function () {
+          SondageShell.goToPollPicker("vote.html");
+        });
+
+        var resultsLink = document.getElementById("results-link");
+        var resultsAnchor = document.getElementById("results-anchor");
+        resultsAnchor.href =
+          "results.html?pollId=" + encodeURIComponent(pollId);
+        resultsLink.style.display = "block";
+
+        var widget = document.createElement("sondage-poll-widget");
+        widget.setAttribute("data-poll-id", pollId);
+        widget.setAttribute("data-api-base", window.location.origin);
+        /* data-platform omis : le widget utilise poll.platform (mock ou google) */
+        host.appendChild(widget);
+        SondageShell.init({ active: "vote" });
+      })();
+    </script>
+  </body>
+</html>

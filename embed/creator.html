@@ -164,15 +164,11 @@
         flex-wrap: wrap;
       }
     </style>
+    <script src="sondage-shell.js"></script>
     <script src="sondage-datetime.js"></script>
     <script src="sondage-creator.js"></script>
   </head>
   <body>
-    <nav class="page-nav">
-      <a href="creator.html">Créateur</a>
-      <a href="demo.html">Vote (démo)</a>
-      <a href="results.html">Résultats</a>
-    </nav>
     <h1>Créer un sondage</h1>
     <p class="hint">
       Configurez un sondage MJ sans curl. L’identifiant créateur est libre en dev
@@ -191,6 +187,7 @@
           widget.setAttribute("data-poll-id", pollId);
         }
         host.appendChild(widget);
+        SondageShell.init({ active: "creator" });
       })();
     </script>
   </body>

@@ -5,6 +5,7 @@ import {
   getLatestVisibleSnapshot,
   getSnapshotByVersion,
   getVoteCount,
+  getHistogramRows,
   getNextSnapshotVersion,
   listBallots,
   getBallotBySubject,
@@ -16,6 +17,7 @@ import {
   shouldPublishSnapshot,
 } from "../services/results-policy.js";
 import { getLiveVoteCount } from "../redis.js";
+import { drainVoteEventsForPoll } from "../services/vote-drain.js";
 import { requireVoterAuth } from "./auth.js";
 import { AppError } from "../errors.js";
 
@@ -27,8 +29,16 @@ export async function resultsRoutes(app: FastifyInstance) {
     const { pollId } = z.object({ pollId: z.string().uuid() }).parse(request.params);
     const { poll } = await enforcePollRegion(request, pollId);
 
-    const dbCount = await getVoteCount(pollId);
-    const voteCount = await getLiveVoteCount(pollId, dbCount);
+    let dbCount = await getVoteCount(pollId);
+    let voteCount = await getLiveVoteCount(pollId, dbCount);
+
+    if (dbCount < voteCount) {
+      await drainVoteEventsForPoll(pollId);
+      dbCount = await getVoteCount(pollId);
+      voteCount = await getLiveVoteCount(pollId, dbCount);
+    }
+
+    const aggregationPending = voteCount > dbCount;
 
     const policy = poll.resultPolicy as ResultPolicy;
     const snapshotOptions = {
@@ -68,6 +78,16 @@ export async function resultsRoutes(app: FastifyInstance) {
         snapshotOptions
       ) ||
       (pollEnded && snapshotVoteCount < voteCount);
+
+    if (aggregationPending) {
+      reply.header("Cache-Control", `private, max-age=${CACHE_MAX_AGE_HIDDEN}`);
+      throw new AppError(
+        404,
+        "SNAPSHOT_NOT_FOUND",
+        "No published snapshot yet",
+        { voteCount }
+      );
+    }
 
     if (needsSnapshot) {
       const version = await getNextSnapshotVersion(pollId);

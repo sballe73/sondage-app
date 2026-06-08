@@ -36,7 +36,7 @@ Parcours complet : **créateur → vote → résultats** (voir section ci-dessou
 
 Pour le sondage seed uniquement :
 
-`http://localhost:3000/embed/demo.html?pollId=<UUID>`
+`http://localhost:3000/embed/vote.html?pollId=<UUID>`
 
 Remplacez `<UUID>` par la valeur affichée par le seed (`Seed poll created: …`).
 
@@ -45,7 +45,7 @@ Remplacez `<UUID>` par la valeur affichée par le seed (`Seed poll created: …`
 1. Ouvrir [`/embed/creator.html`](http://localhost:3000/embed/creator.html).
 2. Renseigner le nom, 3 à 14 candidats, dates, politique (`threshold_10` par défaut), plateforme `mock`.
 3. Cliquer **Créer le sondage** — copier le lien vote ou le snippet embed.
-4. Ouvrir le lien vote (`demo.html?pollId=…`) et voter (mock OAuth automatique).
+4. Ouvrir le lien vote (`vote.html?pollId=…`) et voter (mock OAuth automatique).
 5. Simuler des votes supplémentaires si besoin (auto-incrément `sim-voter-*`, évite les 409) :
    ```bash
    ./scripts/simulate-votes.sh <UUID> 10
@@ -63,7 +63,7 @@ Page dédiée aux histogrammes et au classement MJ :
 
 `http://localhost:3000/embed/results.html?pollId=<UUID>`
 
-Depuis la page de vote (`demo.html`), le lien **Voir les résultats** ouvre cette page avec le même `pollId`.
+Depuis la page de vote (`vote.html`), le lien **Voir les résultats** ouvre cette page avec le même `pollId`.
 
 ### Recette manuelle
 
@@ -134,7 +134,12 @@ CORS : variable `CORS_ORIGINS` (liste séparée par des virgules, ou `*` / absen
      (ex. distant : `http://VOTRE_HOTE:3000/auth/facebook/callback` — aligné sur `PUBLIC_BASE_URL`)
    - **Client OAuth login** : Oui  
    - **Web OAuth login** : Oui
-3. **Settings** → **Basic** : noter **App ID** et **App Secret**.
+
+   **Piège interface Meta :** l’URI OAuth ne se configure **pas** dans *Paramètres → Avancé → Authentification de l’application → Autoriser l’URL de rappel* (champ souvent vide après enregistrement). C’est la liste **Valid OAuth Redirect URIs** sous **Facebook Login → Settings** (ou *Use cases → Facebook Login → Customize → Settings*). Coller l’URI, appuyer sur **Entrée** pour l’ajouter à la liste, puis **Enregistrer**.
+
+   Dans *Paramètres → Avancé → Authentification de l’application*, pour une app **web** (OAuth serveur) : désactiver **App native ou de bureau** et **Clé secrète intégrée dans le client**.
+
+3. **Settings** → **Basic** : noter **App ID** et **App Secret**. Ajouter la plateforme **Website** si absente (*Site URL* = `{PUBLIC_BASE_URL}/`).
 4. Mode **Development** : ajouter des **testeurs** (Roles → Test Users ou rôles sur l’app) pour les comptes qui voteront.
 5. **Settings** → **Basic** — URLs obligatoires Meta (**HTTPS** publiques, joignables par le crawler Meta) :
 
@@ -157,7 +162,7 @@ CORS : variable `CORS_ORIGINS` (liste séparée par des virgules, ou `*` / absen
    ```
 6. Redémarrer l’API (`npm run dev`).
 
-Scopes demandés par l’app : `public_profile`, `email` (identifiant votant = Graph `id`).
+Scopes demandés par l’app (pilote) : `public_profile` seul (identifiant votant = Graph `id`, nom affiché).
 
 ### Recette Meta
 
@@ -247,7 +252,7 @@ Mode **Development** : ajouter chaque compte votant dans **App roles → Testers
 ### Recette sur Render
 
 1. `https://sondage-app-eweb.onrender.com/embed/creator.html` → sondage **facebook / Meta**.
-2. Ouvrir le lien vote (`demo.html?pollId=…`) → **Se connecter avec Meta (Facebook)**.
+2. Ouvrir le lien vote (`vote.html?pollId=…`) → **Se connecter avec Meta (Facebook)**.
 3. Voter → `results.html`.
 
 (Générique : remplacer par `https://<votre-service>.onrender.com`.)

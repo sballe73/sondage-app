@@ -27,15 +27,6 @@
 
   const REAL_OAUTH_PLATFORMS = new Set(["facebook", "google"]);
 
-  function shuffleArray(arr) {
-    const copy = arr.slice();
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    return copy;
-  }
-
   class SondagePollWidget extends HTMLElement {
     static get observedAttributes() {
       return [
@@ -128,6 +119,9 @@
         if (!ready) return;
 
         this.renderForm();
+        if (window.SondageShell && window.SondageShell.refresh) {
+          await window.SondageShell.refresh();
+        }
       } catch (e) {
         this.innerHTML = `<p class="error">${escapeHtml(e.message)}</p>`;
       }
@@ -219,7 +213,10 @@
     }
 
     renderForm() {
-      const items = shuffleArray(this.poll.items || []);
+      const sourceItems = this.poll.items || [];
+      const items = window.SondageVoteCandidateOrder
+        ? window.SondageVoteCandidateOrder.shuffleItems(sourceItems)
+        : sourceItems;
       const min = this.poll.gradeMin;
       const max = this.poll.gradeMax;
       const labels = this.poll.gradeLabels || [];
@@ -252,14 +249,13 @@
           const cells = grades
             .map((g, idx) => {
               const lab = labels[g - min] || String(g);
-              const requiredAttr = idx === 0 ? " required" : "";
               return `
                 <td class="grade-cell grade-${g}">
                   <label class="grade-cell-label" title="${escapeHtml(lab)}">
                     <input
                       type="radio"
                       name="item-${item.id}"
-                      value="${g}"${requiredAttr}
+                      value="${g}"
                       aria-label="${escapeHtml(item.label)} — ${escapeHtml(lab)}"
                     />
                     <span class="grade-cell-mark" aria-hidden="true"></span>
@@ -282,7 +278,7 @@
           ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
           <p class="meta">Plateforme : <strong>${escapeHtml(platformLabel)}</strong>${voterLine} · ${escapeHtml(gradeHint)}</p>
           <p class="hint">Attribuez une note à chaque candidat (1 = meilleure note).</p>
-          <form id="vote-form">
+          <form id="vote-form" novalidate>
             <div class="vote-grid-wrap">
               <table class="vote-grid">
                 <thead>
@@ -296,27 +292,51 @@
                 </tbody>
               </table>
             </div>
-            <button type="submit">Envoyer mon jugement</button>
+            <div class="vote-submit-row">
+              <button type="submit">Envoyer mon jugement</button>
+              <p id="vote-form-error" class="vote-form-error" role="alert" aria-live="polite"></p>
+            </div>
           </form>
           <p id="status"></p>
         </article>
       `;
 
-      this.querySelector("#vote-form").addEventListener("submit", (ev) =>
-        this.submitVote(ev)
-      );
+      const form = this.querySelector("#vote-form");
+      form.addEventListener("submit", (ev) => this.submitVote(ev));
+      form.addEventListener("change", () => {
+        const formError = this.querySelector("#vote-form-error");
+        if (formError) formError.textContent = "";
+      });
     }
 
     async submitVote(ev) {
       ev.preventDefault();
       const status = this.querySelector("#status");
+      const formError = this.querySelector("#vote-form-error");
+      if (formError) formError.textContent = "";
+
+      const validation = window.SondageVoteFormValidate.validateVoteGrades(
+        this.poll.items || [],
+        (itemId) => {
+          const input = this.querySelector(
+            `input[name="item-${itemId}"]:checked`
+          );
+          return input ? Number(input.value) : null;
+        }
+      );
+
+      if (!validation.ok) {
+        status.textContent = "";
+        if (formError) {
+          formError.textContent = validation.message;
+          formError.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+        return;
+      }
+
+      const grades = validation.grades;
+
       status.textContent = "Envoi…";
-      const grades = (this.poll.items || []).map((item) => {
-        const input = this.querySelector(
-          `input[name="item-${item.id}"]:checked`
-        );
-        return { itemId: item.id, grade: Number(input.value) };
-      });
       const res = await fetch(`${this.apiBase}/polls/${this.pollId}/votes`, {
         method: "POST",
         headers: {

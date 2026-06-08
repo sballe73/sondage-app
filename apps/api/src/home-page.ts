@@ -24,10 +24,13 @@ ${ogHead}    <meta charset="UTF-8" />
       body {
         font-family: system-ui, sans-serif;
         max-width: 40rem;
-        margin: 3rem auto;
-        padding: 0 1rem;
+        margin: 0 auto;
+        padding: 1rem;
         line-height: 1.5;
         color: #1a1a1a;
+      }
+      main {
+        margin-top: 1rem;
       }
       h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
       p { color: #444; }
@@ -45,31 +48,19 @@ ${ogHead}    <meta charset="UTF-8" />
       .primary:hover {
         background: #1d4ed8;
       }
-      nav {
-        margin-top: 2rem;
-        padding-top: 1.25rem;
-        border-top: 1px solid #e5e7eb;
-      }
-      nav a {
-        display: inline-block;
-        margin: 0.35rem 1rem 0.35rem 0;
-        color: #2563eb;
-      }
     </style>
+    <script src="/embed/sondage-shell.js"></script>
   </head>
   <body>
-    <h1>Sondage MJ</h1>
-    <p>
-      Créez et participez à des sondages par <strong>jugement majoritaire</strong>.
-      L’identité des votants est vérifiée via Meta (Facebook Login).
-    </p>
-    <a class="primary" href="/embed/creator.html">Créer un sondage</a>
-    <nav>
-      <a href="/embed/demo.html">Vote (démo)</a>
-      <a href="/embed/results.html">Résultats</a>
-      <a href="/legal/privacy.html">Confidentialité</a>
-      <a href="/legal/terms.html">Conditions</a>
-    </nav>
+    <main>
+      <h1>Sondage MJ</h1>
+      <p>
+        Créez et participez à des sondages par <strong>jugement majoritaire</strong>.
+        L’identité des votants est vérifiée via Meta (Facebook Login).
+      </p>
+      <a class="primary" href="/embed/creator.html">Créer un sondage</a>
+    </main>
+    <script>SondageShell.init({ active: "home" });</script>
   </body>
 </html>`;
 }

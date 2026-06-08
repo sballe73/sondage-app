@@ -211,34 +211,60 @@
         color: #b91c1c;
       }
     </style>
+    <script src="sondage-shell.js"></script>
     <script src="sondage-datetime.js"></script>
+    <script src="sondage-poll-picker.js"></script>
     <script src="sondage-results.js"></script>
   </head>
   <body>
-    <nav class="nav-links" id="nav"></nav>
     <h1>Résultats du sondage</h1>
-    <p id="help"></p>
+    <p id="help" class="sondage-poll-ref"></p>
+    <p id="change-poll-wrap" style="display: none">
+      <button type="button" id="change-poll-btn" class="sondage-change-poll-btn">
+        Changer de sondage
+      </button>
+    </p>
+    <div id="poll-picker-host"></div>
     <div id="results-host"></div>
     <script>
       (function () {
         var params = new URLSearchParams(window.location.search);
         var pollId = params.get("pollId");
         var help = document.getElementById("help");
-        var nav = document.getElementById("nav");
+        var pickerHost = document.getElementById("poll-picker-host");
         var host = document.getElementById("results-host");
 
+        if (!pollId && window.SondageShell) {
+          pollId = SondageShell.getActivePollId();
+          if (pollId) {
+            window.location.replace(
+              "results.html?pollId=" + encodeURIComponent(pollId)
+            );
+            return;
+          }
+        }
+
         if (!pollId) {
-          help.innerHTML =
-            "Ajoutez <code>?pollId=</code> à l’URL avec l’UUID affiché par <code>npm run db:seed</code> :<br><code>http://localhost:3000/embed/results.html?pollId=VOTRE-UUID</code>";
+          help.textContent = "Aucun sondage sélectionné";
+          host.style.display = "none";
+          SondageShell.init({ active: "results" });
+          SondagePollPicker.mount({
+            host: pickerHost,
+            mode: "results",
+            targetPage: "results.html",
+          });
           return;
         }
 
-        nav.innerHTML =
-          '<a href="demo.html?pollId=' +
-          encodeURIComponent(pollId) +
-          '">← Retour au vote</a>';
-
+        pickerHost.style.display = "none";
+        if (window.SondageShell) {
+          SondageShell.setActivePollId(pollId);
+        }
         help.textContent = "Sondage : " + pollId;
+        document.getElementById("change-poll-wrap").style.display = "block";
+        document.getElementById("change-poll-btn").addEventListener("click", function () {
+          SondageShell.goToPollPicker("results.html");
+        });
 
         var widget = document.createElement("sondage-results-widget");
         widget.setAttribute("data-poll-id", pollId);
@@ -248,22 +274,14 @@
         widget.addEventListener("sondage-poll-status", function (ev) {
           var ended = ev.detail && ev.detail.ended;
           if (ended) {
-            nav.innerHTML =
-              '<a href="creator.html?pollId=' +
-              encodeURIComponent(pollId) +
-              '">← Créateur</a>';
             document.title = "Résultats finaux — Sondage MJ";
             var h1 = document.querySelector("h1");
             if (h1) h1.textContent = "Résultats finaux";
-          } else {
-            nav.innerHTML =
-              '<a href="demo.html?pollId=' +
-              encodeURIComponent(pollId) +
-              '">← Retour au vote</a>';
           }
         });
 
         host.appendChild(widget);
+        SondageShell.init({ active: "results" });
       })();
     </script>
   </body>

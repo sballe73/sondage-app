@@ -11,9 +11,14 @@ const EMBED_HTML_PAGES = [
     title: "Créateur — Sondage MJ",
   },
   {
+    file: "vote.html",
+    route: "/embed/vote.html",
+    title: "Voter — Sondage MJ",
+  },
+  {
     file: "demo.html",
     route: "/embed/demo.html",
-    title: "Vote — Sondage MJ",
+    title: "Voter — Sondage MJ",
   },
   {
     file: "results.html",
