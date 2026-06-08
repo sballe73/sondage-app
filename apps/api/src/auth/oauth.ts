@@ -27,12 +27,14 @@ export async function issueVoterToken(
   payload: VoterJwtPayload,
   expiresIn = "1h"
 ): Promise<string> {
-  return new SignJWT({
+  const claims: Record<string, string> = {
     sub: payload.subjectId,
-    pollId: payload.pollId,
     platform: payload.platform,
-    displayName: payload.displayName,
-  })
+  };
+  if (payload.pollId) claims.pollId = payload.pollId;
+  if (payload.displayName) claims.displayName = payload.displayName;
+
+  return new SignJWT(claims)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setIssuer(config.jwtIssuer)
@@ -48,11 +50,11 @@ export async function verifyVoterToken(
     issuer: config.jwtIssuer,
     audience: config.jwtAudience,
   });
-  const pollId = payload.pollId as string;
+  const pollId = payload.pollId as string | undefined;
   const platform = payload.platform as Platform;
   const subjectId = payload.sub as string;
   const displayName = payload.displayName as string | undefined;
-  if (!pollId || !platform || !subjectId) {
+  if (!platform || !subjectId) {
     throw new Error("Invalid token payload");
   }
   return { pollId, platform, subjectId, displayName };
@@ -60,12 +62,9 @@ export async function verifyVoterToken(
 
 export function assertTokenMatchesPoll(
   token: VoterJwtPayload,
-  pollId: string,
+  _pollId: string,
   pollPlatform: Platform
 ): void {
-  if (token.pollId !== pollId) {
-    throw new Error("Token not valid for this poll");
-  }
   if (token.platform !== pollPlatform) {
     throw new Error(
       `OAuth provider mismatch: poll requires ${pollPlatform}`

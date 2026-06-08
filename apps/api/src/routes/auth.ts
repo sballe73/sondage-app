@@ -266,7 +266,6 @@ export async function authRoutes(app: FastifyInstance) {
       }
 
       const voterToken = await issueVoterToken({
-        pollId: statePayload.pollId,
         platform: profile.platform,
         subjectId: profile.subjectId,
         displayName: profile.displayName,
@@ -325,7 +324,6 @@ export async function authRoutes(app: FastifyInstance) {
     );
 
     const token = await issueVoterToken({
-      pollId: body.pollId,
       platform: profile.platform,
       subjectId: profile.subjectId,
       displayName: profile.displayName,

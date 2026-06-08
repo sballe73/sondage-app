@@ -130,7 +130,8 @@ export interface PollResultsSnapshot {
 }
 
 export interface VoterJwtPayload {
-  pollId: string;
+  /** Présent sur les anciens jetons ; non requis pour voter sur un autre sondage. */
+  pollId?: string;
   platform: Platform;
   subjectId: string;
   displayName?: string;

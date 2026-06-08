@@ -65,8 +65,8 @@
       this.load();
     }
 
-    tokenStorageKey() {
-      return `sondage_token_${this.pollId}`;
+    _authStorage() {
+      return window.SondageAuthStorage;
     }
 
     consumeOAuthHash() {
@@ -84,7 +84,6 @@
       }
       const accessToken = params.get("access_token");
       if (!accessToken) return null;
-      sessionStorage.setItem(this.tokenStorageKey(), accessToken);
       history.replaceState(
         null,
         "",
@@ -94,11 +93,46 @@
     }
 
     readStoredToken() {
-      return (
-        this.consumeOAuthHash() ||
-        sessionStorage.getItem(this.tokenStorageKey()) ||
-        null
+      const storage = this._authStorage();
+      const hashToken = this.consumeOAuthHash();
+      if (hashToken) return hashToken;
+
+      if (!this.platform || !storage) return null;
+
+      const platformToken = storage.readToken(this.platform);
+      if (platformToken) return platformToken;
+
+      const migrated = storage.migrateLegacyPollToken(
+        this.pollId,
+        this.platform
       );
+      if (migrated) return migrated;
+
+      const legacy = storage.findAnyLegacyToken();
+      if (legacy) {
+        this._legacyTokenKey = legacy.legacyKey;
+        return legacy.token;
+      }
+
+      return null;
+    }
+
+    persistToken() {
+      const storage = this._authStorage();
+      if (storage && this.platform && this.token) {
+        storage.writeToken(this.platform, this.token);
+        if (this._legacyTokenKey) {
+          storage.clearLegacyKey(this._legacyTokenKey);
+          this._legacyTokenKey = null;
+        }
+      }
+    }
+
+    clearStoredToken() {
+      const storage = this._authStorage();
+      if (storage && this.platform) {
+        storage.clearToken(this.platform);
+      }
     }
 
     async load() {
@@ -141,10 +175,16 @@
     async ensureToken() {
       if (this.token) return true;
 
+      const pollPlatform = this.platform;
       this.token = this.readStoredToken();
       if (this.token) {
         await this.loadSession();
-        return true;
+        if (this.platform !== pollPlatform) {
+          this.token = null;
+        } else {
+          this.persistToken();
+          return true;
+        }
       }
 
       if (this.platform === "mock") {
@@ -178,6 +218,7 @@
       const data = await res.json();
       this.token = data.accessToken;
       this.subjectId = subjectId;
+      this.persistToken();
       return true;
     }
 
@@ -189,13 +230,17 @@
         },
       });
       if (!res.ok) {
-        sessionStorage.removeItem(this.tokenStorageKey());
+        this.clearStoredToken();
         this.token = null;
         throw new Error("Session expirée — reconnectez-vous.");
       }
       const data = await res.json();
       this.subjectId = data.session.subjectId;
       this.displayName = data.session.displayName;
+      if (data.session.platform) {
+        this.platform = data.session.platform;
+      }
+      this.persistToken();
     }
 
     renderLoginPrompt() {

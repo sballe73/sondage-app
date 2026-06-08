@@ -1,5 +1,5 @@
 /**
- * Barre de navigation commune + état de session OAuth (par sondage).
+ * Barre de navigation commune + état de session OAuth (par plateforme).
  */
 (function () {
   const ACTIVE_POLL_KEY = "sondage_active_poll_id";
@@ -212,26 +212,25 @@
     document.head.appendChild(style);
   }
 
-  function tokenKey(pollId) {
-    return "sondage_token_" + pollId;
+  function authStorage() {
+    return window.SondageAuthStorage;
   }
 
-  function readToken(pollId) {
-    if (!pollId) return null;
-    return sessionStorage.getItem(tokenKey(pollId));
+  function readToken(platform, pollId) {
+    const storage = authStorage();
+    if (!storage || !platform) return null;
+    const direct =
+      storage.readToken(platform) ||
+      storage.migrateLegacyPollToken(pollId, platform);
+    if (direct) return direct;
+    const legacy = storage.findAnyLegacyToken();
+    return legacy ? legacy.token : null;
   }
 
-  function clearToken(pollId) {
-    if (pollId) {
-      sessionStorage.removeItem(tokenKey(pollId));
-      return;
-    }
-    const keys = [];
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const k = sessionStorage.key(i);
-      if (k && k.startsWith("sondage_token_")) keys.push(k);
-    }
-    keys.forEach((k) => sessionStorage.removeItem(k));
+  function clearToken(platform) {
+    const storage = authStorage();
+    if (!storage) return;
+    storage.clearToken(platform);
   }
 
   function initials(name) {
@@ -332,7 +331,7 @@
     });
 
     logout.addEventListener("click", () => {
-      clearToken(pollId);
+      clearToken(session.platform || platform);
       window.location.reload();
     });
   }
@@ -364,7 +363,7 @@
         : "";
     }
 
-    const token = readToken(pollId);
+    const token = readToken(platform, pollId);
     if (!token) {
       renderGuest(
         sessionEl,
@@ -380,10 +379,18 @@
       /* ignore */
     }
 
-    if (!session) {
-      clearToken(pollId);
+    if (!session || session.platform !== platform) {
+      if (session && session.platform !== platform) {
+        renderGuest(sessionEl, "Non connecté");
+        return;
+      }
+      clearToken(platform);
       renderGuest(sessionEl, "Session expirée");
       return;
+    }
+
+    if (authStorage()) {
+      authStorage().writeToken(session.platform, token);
     }
 
     mountUserMenu(sessionEl, session, pollId, platform);
@@ -401,18 +408,12 @@
     }
   }
 
-  function clearActivePoll(pollId) {
+  function clearActivePoll() {
     sessionStorage.removeItem(ACTIVE_POLL_KEY);
-    if (pollId) {
-      sessionStorage.removeItem(tokenKey(pollId));
-    }
   }
 
   function goToPollPicker(targetPage) {
-    const pollId =
-      new URLSearchParams(window.location.search).get("pollId") ||
-      getActivePollId();
-    clearActivePoll(pollId || undefined);
+    clearActivePoll();
     const base = targetPage.split("?")[0];
     window.location.href = base;
   }
@@ -462,7 +463,10 @@
       refreshSession(apiBase, pollId);
 
       window.SondageShell.refresh = function () {
-        return refreshSession(apiBase, pollId);
+        const currentPollId =
+          new URLSearchParams(window.location.search).get("pollId") ||
+          getActivePollId();
+        return refreshSession(apiBase, currentPollId);
       };
     },
   };
