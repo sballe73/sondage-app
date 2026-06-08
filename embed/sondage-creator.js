@@ -335,6 +335,9 @@
         }
         this.createdPoll = body;
         this.pollId = body.id;
+        if (window.SondageShell && window.SondageShell.setActivePollId) {
+          window.SondageShell.setActivePollId(body.id);
+        }
         if (body.dataRegion) this.dataRegion = body.dataRegion;
         await this.refreshStatus();
         this.renderCreated();
@@ -409,7 +412,7 @@
     renderCreated() {
       const poll = this.createdPoll;
       const embedBase = this._embedBase();
-      const voteUrl = `${embedBase}/demo.html?pollId=${poll.id}`;
+      const voteUrl = `${embedBase}/vote.html?pollId=${poll.id}`;
       const resultsUrl = `${embedBase}/results.html?pollId=${poll.id}`;
       const snippet = `<sondage-poll-widget
   data-poll-id="${poll.id}"
@@ -417,6 +420,8 @@
   data-platform="${poll.platform}">
 </sondage-poll-widget>
 <script src="${embedBase}/sondage-datetime.js"><\/script>
+<script src="${embedBase}/vote-form-validate.js"><\/script>
+<script src="${embedBase}/vote-candidate-order.js"><\/script>
 <script src="${embedBase}/sondage-widget.js"><\/script>`;
 
       this.innerHTML = `

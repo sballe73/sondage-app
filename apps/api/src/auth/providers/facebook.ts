@@ -5,8 +5,8 @@ import type { OAuthProvider } from "./types.js";
 const FB_GRAPH_VERSION = "v21.0";
 const FB_DIALOG_URL = `https://www.facebook.com/${FB_GRAPH_VERSION}/dialog/oauth`;
 const FB_GRAPH_URL = `https://graph.facebook.com/${FB_GRAPH_VERSION}`;
-/** Profil votant : id stable + nom (email optionnel). */
-const FB_SCOPES = "public_profile,email";
+/** Pilote Meta : public_profile seul (id + nom). Pas d’email (accès Avancé / Business). */
+const FB_SCOPES = "public_profile";
 
 export class FacebookOAuthProvider implements OAuthProvider {
   readonly platform = "facebook" as const;
@@ -44,7 +44,7 @@ export class FacebookOAuthProvider implements OAuthProvider {
 
   async fetchProfile(accessToken: string) {
     const params = new URLSearchParams({
-      fields: "id,name,email",
+      fields: "id,name",
       access_token: accessToken,
     });
     const res = await fetch(`${FB_GRAPH_URL}/me?${params}`);

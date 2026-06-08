@@ -2,6 +2,13 @@
   "name": "@sondage/worker",
   "version": "0.1.0",
   "type": "module",
+  "exports": {
+    "./processor": {
+      "types": "./dist/processor.d.ts",
+      "import": "./dist/processor.js",
+      "default": "./dist/processor.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/worker.ts",

@@ -15,6 +15,13 @@ import {
 import { signOAuthState, verifyOAuthState } from "../auth/oauth-state.js";
 import { generateCodeVerifier } from "../auth/pkce.js";
 import { handleFacebookDataDeletionCallback } from "../auth/facebook-data-deletion.js";
+import {
+  acquireOAuthCodeLock,
+  cacheOAuthVoterToken,
+  getCachedOAuthVoterToken,
+  releaseOAuthCodeLock,
+  waitForCachedOAuthVoterToken,
+} from "../auth/oauth-callback-cache.js";
 
 const oauthPlatformSchema = z.enum(REAL_OAUTH_PLATFORMS);
 
@@ -22,7 +29,7 @@ function resolveReturnTo(
   returnTo: string | undefined,
   pollId: string
 ): string {
-  const fallback = `${config.publicBaseUrl}/embed/demo.html?pollId=${pollId}`;
+  const fallback = `${config.publicBaseUrl}/embed/vote.html?pollId=${pollId}`;
   if (!returnTo) return fallback;
 
   let url: URL;
@@ -223,10 +230,33 @@ export async function authRoutes(app: FastifyInstance) {
 
     await assertPollAcceptsPlatform(statePayload.pollId, platform);
 
+    const oauthCode = query.code;
+    const cachedToken = await getCachedOAuthVoterToken(platform, oauthCode);
+    if (cachedToken) {
+      return reply.redirect(redirectWithToken(returnTo, cachedToken, 3600));
+    }
+
+    const lockAcquired = await acquireOAuthCodeLock(platform, oauthCode);
+    if (!lockAcquired) {
+      const waitedToken = await waitForCachedOAuthVoterToken(
+        platform,
+        oauthCode
+      );
+      if (waitedToken) {
+        return reply.redirect(redirectWithToken(returnTo, waitedToken, 3600));
+      }
+      return reply.redirect(
+        redirectWithOAuthError(
+          returnTo,
+          "Connexion en cours — réessayez dans quelques secondes."
+        )
+      );
+    }
+
     try {
       const provider = getOAuthProvider(platform);
       const { accessToken } = await provider.exchangeCode(
-        query.code,
+        oauthCode,
         statePayload.codeVerifier
       );
       const profile = await provider.fetchProfile(accessToken);
@@ -242,11 +272,14 @@ export async function authRoutes(app: FastifyInstance) {
         displayName: profile.displayName,
       });
 
+      await cacheOAuthVoterToken(platform, oauthCode, voterToken);
       return reply.redirect(redirectWithToken(returnTo, voterToken, 3600));
     } catch (e) {
       const message =
         e instanceof Error ? e.message : "OAuth login failed";
       return reply.redirect(redirectWithOAuthError(returnTo, message));
+    } finally {
+      await releaseOAuthCodeLock(platform, oauthCode);
     }
   });
 

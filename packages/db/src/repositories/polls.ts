@@ -1,4 +1,4 @@
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, desc, gt, ilike, isNull, lte, sql } from "drizzle-orm";
 import type { CreatePollInput, Platform } from "@sondage/shared";
 import { normalizeCreatePoll } from "@sondage/shared";
 import { getDb, schema } from "../client.js";
@@ -71,6 +71,53 @@ export async function getPollById(pollId: string) {
 export async function listPollsByCreator(creatorId: string) {
   const db = getDb();
   return db.select().from(polls).where(eq(polls.creatorId, creatorId));
+}
+
+export type SearchPollsOptions = {
+  search?: string;
+  activeOnly?: boolean;
+  offset?: number;
+  limit?: number;
+};
+
+export async function searchPolls(options: SearchPollsOptions = {}) {
+  const db = getDb();
+  const limit = Math.min(Math.max(options.limit ?? 10, 1), 50);
+  const offset = Math.max(options.offset ?? 0, 0);
+  const now = new Date();
+
+  const conditions = [];
+  const term = options.search?.trim();
+  if (term) {
+    conditions.push(ilike(polls.name, `%${term}%`));
+  }
+  if (options.activeOnly) {
+    conditions.push(isNull(polls.closedAt));
+    conditions.push(lte(polls.startsAt, now));
+    conditions.push(gt(polls.endsAt, now));
+  }
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const rows = await db
+    .select()
+    .from(polls)
+    .where(where)
+    .orderBy(desc(polls.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  const [countRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(polls)
+    .where(where);
+
+  return {
+    polls: rows,
+    total: countRow?.count ?? 0,
+    offset,
+    limit,
+  };
 }
 
 export async function assertPlatformImmutable(
