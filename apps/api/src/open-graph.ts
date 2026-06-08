@@ -3,6 +3,7 @@ import {
   META_FACEBOOK_APP_ID,
   legalPagePath,
   legalPageUrl,
+  publicPageUrl,
   type LegalPage,
 } from "./meta-constants.js";
 
@@ -13,7 +14,7 @@ export function buildFbAppIdTag(
   appId = config.oauthFacebookAppId || META_FACEBOOK_APP_ID
 ): string {
   if (!appId) return "";
-  return `<meta property="fb:app_id" content="${appId}">`;
+  return `<meta property="fb:app_id" content="${appId}" />`;
 }
 
 export function buildOpenGraphHead(options: {
@@ -24,7 +25,7 @@ export function buildOpenGraphHead(options: {
 }): string {
   const base = config.publicBaseUrl;
   const description = options.description ?? DEFAULT_DESCRIPTION;
-  const pageUrl = options.absoluteUrl ?? `${base}${options.urlPath}`;
+  const pageUrl = options.absoluteUrl ?? publicPageUrl(base, options.urlPath);
   const ogImage = `${base}/embed/og-image.png`;
   const appId = config.oauthFacebookAppId || META_FACEBOOK_APP_ID;
   const fbAppId = buildFbAppIdTag(appId);
@@ -105,4 +106,4 @@ export function injectLegalOpenGraphMeta(
   return html.replace(/<head>\s*\n/i, `<head>\n${tags}`);
 }
 
-export { legalPagePath, legalPageUrl };
+export { legalPagePath, legalPageUrl, publicPageUrl };

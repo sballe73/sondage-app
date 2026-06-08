@@ -1,10 +1,13 @@
 import { buildOpenGraphHead } from "./open-graph.js";
+import { config } from "./config.js";
+import { publicPageUrl } from "./meta-constants.js";
 
 const TITLE = "Sondage MJ — Jugement majoritaire";
 const DESCRIPTION =
   "Application de sondages par jugement majoritaire avec authentification Meta (Facebook) pour garantir un vote par personne.";
 
 export function buildHomeHtml(): string {
+  const canonicalUrl = publicPageUrl(config.publicBaseUrl, "/");
   const ogHead = buildOpenGraphHead({
     title: TITLE,
     description: DESCRIPTION,
@@ -14,8 +17,8 @@ export function buildHomeHtml(): string {
   return `<!DOCTYPE html>
 <html lang="fr">
   <head>
-    <meta charset="UTF-8" />
-${ogHead}    <meta name="viewport" content="width=device-width, initial-scale=1" />
+${ogHead}    <meta charset="UTF-8" />
+    <link rel="canonical" href="${canonicalUrl}" />    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${TITLE}</title>
     <meta name="description" content="${DESCRIPTION}" />    <style>
       body {
