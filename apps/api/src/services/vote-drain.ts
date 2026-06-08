@@ -2,10 +2,12 @@ import type { VoteSubmittedEvent } from "@sondage/shared";
 import { config } from "../config.js";
 import { getRedis } from "../redis.js";
 import {
+  getVoteCount,
   isEventProcessed,
   markEventProcessed,
+  processVoteEvent,
 } from "@sondage/db";
-import { processVoteEvent } from "@sondage/worker/processor";
+import { syncVoteCountFromDb } from "../redis.js";
 
 function parseStreamPayload(fields: string[]): string | null {
   const payloadIdx = fields.indexOf("payload");
@@ -52,6 +54,11 @@ export async function drainVoteEventsForPoll(
       }
       throw err;
     }
+  }
+
+  if (processed > 0) {
+    const dbCount = await getVoteCount(pollId);
+    await syncVoteCountFromDb(pollId, dbCount);
   }
 
   return processed;
