@@ -15,9 +15,10 @@
     "test:unit": "npm run build -w @sondage/shared && node --import tsx --test packages/shared/src/*.test.ts",
     "test:integration:generate": "npx tsx scripts/generate-integration-fixture.ts",
     "test:integration:print": "npx tsx scripts/print-integration-checkpoints.ts",
+    "test:build": "node --import tsx --test tests/integration/render-build.test.ts",
     "test:integration": "npm run build && node --test-force-exit --import tsx --import ./tests/integration/setup-redis-env.ts --test tests/integration/*.test.ts",
     "test:api": "npm run build -w @sondage/api && node --import tsx --test --test-force-exit apps/api/src/*.test.ts",
-    "test:all": "npm run test:unit && npm run test:api && npm run test:integration"
+    "test:all": "npm run test:unit && npm run test:build && npm run test:api && npm run test:integration"
   },
   "devDependencies": {
     "@sondage/db": "*",

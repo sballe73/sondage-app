@@ -118,7 +118,18 @@
         const ready = await this.ensureToken();
         if (!ready) return;
 
-        this.renderForm();
+        await this.loadParticipation();
+        if (this.participation?.voted) {
+          if (
+            this.participation.pendingAggregation &&
+            !this._participationVotedAt()
+          ) {
+            await this._syncParticipationRecord();
+          }
+          this.renderAlreadyVoted();
+        } else {
+          this.renderForm();
+        }
         if (window.SondageShell && window.SondageShell.refresh) {
           await window.SondageShell.refresh();
         }
@@ -212,15 +223,56 @@
       this.innerHTML = "<p>Chargement du sondage…</p>";
     }
 
-    renderForm() {
-      const sourceItems = this.poll.items || [];
-      const items = window.SondageVoteCandidateOrder
-        ? window.SondageVoteCandidateOrder.shuffleItems(sourceItems)
-        : sourceItems;
+    _authHeaders() {
+      return {
+        Authorization: `Bearer ${this.token}`,
+        "X-Data-Region": "EU",
+      };
+    }
+
+    async loadParticipation() {
+      const res = await fetch(
+        `${this.apiBase}/polls/${this.pollId}/participation`,
+        { headers: this._authHeaders() }
+      );
+      if (!res.ok) throw new Error(await res.text());
+      this.participation = await res.json();
+    }
+
+    async _syncParticipationRecord(maxWaitMs) {
+      const limit = maxWaitMs ?? 8000;
+      const start = Date.now();
+      do {
+        await this.loadParticipation();
+        if (!this.participation?.voted) return;
+        if (this._participationVotedAt()) return;
+        if (!this.participation.pendingAggregation) return;
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      } while (Date.now() - start < limit);
+    }
+
+    _formatVotedAt(iso) {
+      if (!iso) return null;
+      if (window.SondageDateTime && window.SondageDateTime.formatDateTime) {
+        return window.SondageDateTime.formatDateTime(iso);
+      }
+      return String(iso);
+    }
+
+    _participationVotedAt() {
+      const p = this.participation || {};
+      const raw =
+        p.participatedAt ||
+        (p.ballot && (p.ballot.votedAt || p.ballot.voted_at));
+      if (raw == null || raw === "") return null;
+      if (raw instanceof Date) return raw.toISOString();
+      return raw;
+    }
+
+    _widgetMetaLines() {
       const min = this.poll.gradeMin;
       const max = this.poll.gradeMax;
       const labels = this.poll.gradeLabels || [];
-      const grades = Array.from({ length: max - min + 1 }, (_, i) => min + i);
       const gradeHint =
         labels.length > 0
           ? `${labels[0]} (1) … ${labels[labels.length - 1]} (${max})`
@@ -230,8 +282,18 @@
       const voterLine = this.displayName
         ? ` · Connecté : ${escapeHtml(this.displayName)}`
         : "";
-
       const windowLine = formatPollWindow(this.poll);
+      return { gradeHint, platformLabel, voterLine, windowLine };
+    }
+
+    _buildVoteGridHtml(items, options) {
+      const readonly = options && options.readonly;
+      const gradesByItemId =
+        (options && options.gradesByItemId) || Object.create(null);
+      const min = this.poll.gradeMin;
+      const max = this.poll.gradeMax;
+      const labels = this.poll.gradeLabels || [];
+      const grades = Array.from({ length: max - min + 1 }, (_, i) => min + i);
 
       const headerCells = grades
         .map((g) => {
@@ -246,9 +308,13 @@
 
       const bodyRows = items
         .map((item) => {
+          const selected = gradesByItemId[item.id];
           const cells = grades
-            .map((g, idx) => {
+            .map((g) => {
               const lab = labels[g - min] || String(g);
+              const checked = selected === g;
+              const checkedAttr = checked ? " checked" : "";
+              const disabledAttr = readonly ? " disabled" : "";
               return `
                 <td class="grade-cell grade-${g}">
                   <label class="grade-cell-label" title="${escapeHtml(lab)}">
@@ -257,6 +323,7 @@
                       name="item-${item.id}"
                       value="${g}"
                       aria-label="${escapeHtml(item.label)} — ${escapeHtml(lab)}"
+                      ${checkedAttr}${disabledAttr}
                     />
                     <span class="grade-cell-mark" aria-hidden="true"></span>
                   </label>
@@ -272,6 +339,125 @@
         })
         .join("");
 
+      const gridClass = readonly ? "vote-grid vote-grid--readonly" : "vote-grid";
+      return `
+        <div class="vote-grid-wrap">
+          <table class="${gridClass}">
+            <thead>
+              <tr>
+                <th scope="col" class="candidate-col">Candidat</th>
+                ${headerCells}
+              </tr>
+            </thead>
+            <tbody>
+              ${bodyRows}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    renderAlreadyVoted() {
+      const { gradeHint, platformLabel, voterLine, windowLine } =
+        this._widgetMetaLines();
+      const votedAtRaw = this._participationVotedAt();
+      const votedAtFormatted = votedAtRaw
+        ? this._formatVotedAt(votedAtRaw)
+        : null;
+      const isPublic = this.poll.voterMode === "public";
+      const ballot = this.participation && this.participation.ballot;
+      const pending = this.participation && this.participation.pendingAggregation;
+
+      const noticeHtml = votedAtFormatted
+        ? isPublic && this.participation && this.participation.voted
+          ? `Votre vote en date du <strong>${escapeHtml(votedAtFormatted)}</strong>`
+          : `Vous avez déjà voté en date du <strong>${escapeHtml(votedAtFormatted)}</strong>`
+        : pending
+          ? "Votre vote est enregistré — synchronisation du détail en cours…"
+          : isPublic && this.participation && this.participation.voted
+            ? "Votre vote a bien été enregistré."
+            : "Vous avez déjà voté.";
+
+      let body = "";
+      if (
+        isPublic &&
+        ballot &&
+        Array.isArray(ballot.grades) &&
+        ballot.grades.length > 0
+      ) {
+        const gradesByItemId = Object.fromEntries(
+          ballot.grades.map((g) => [g.itemId, g.grade])
+        );
+        const items = this.poll.items || [];
+        body = `
+          ${this._buildVoteGridHtml(items, {
+            readonly: true,
+            gradesByItemId,
+          })}
+          <p class="vote-already-notice" role="status">
+            ${noticeHtml}
+          </p>`;
+      } else {
+        body = `
+          <p class="vote-already-notice" role="status">
+            ${noticeHtml}
+          </p>`;
+      }
+
+      this.innerHTML = `
+        <article class="sondage-widget sondage-widget--already-voted">
+          <h2>${escapeHtml(this.poll.name)}</h2>
+          ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
+          <p class="meta">Plateforme : <strong>${escapeHtml(platformLabel)}</strong>${voterLine} · ${escapeHtml(gradeHint)}</p>
+          ${body}
+        </article>
+      `;
+
+      if (pending && !votedAtFormatted) {
+        this._pollParticipationSync();
+      } else {
+        this._stopParticipationPoll();
+      }
+    }
+
+    _stopParticipationPoll() {
+      if (this._participationPollTimer) {
+        clearInterval(this._participationPollTimer);
+        this._participationPollTimer = null;
+      }
+    }
+
+    _pollParticipationSync() {
+      this._stopParticipationPoll();
+      let attempts = 0;
+      this._participationPollTimer = setInterval(async () => {
+        attempts += 1;
+        if (attempts > 20) {
+          this._stopParticipationPoll();
+          return;
+        }
+        try {
+          await this.loadParticipation();
+          if (
+            this._participationVotedAt() ||
+            !this.participation?.pendingAggregation
+          ) {
+            this._stopParticipationPoll();
+            this.renderAlreadyVoted();
+          }
+        } catch {
+          this._stopParticipationPoll();
+        }
+      }, 500);
+    }
+
+    renderForm() {
+      const sourceItems = this.poll.items || [];
+      const items = window.SondageVoteCandidateOrder
+        ? window.SondageVoteCandidateOrder.shuffleItems(sourceItems)
+        : sourceItems;
+      const { gradeHint, platformLabel, voterLine, windowLine } =
+        this._widgetMetaLines();
+
       this.innerHTML = `
         <article class="sondage-widget">
           <h2>${escapeHtml(this.poll.name)}</h2>
@@ -279,19 +465,7 @@
           <p class="meta">Plateforme : <strong>${escapeHtml(platformLabel)}</strong>${voterLine} · ${escapeHtml(gradeHint)}</p>
           <p class="hint">Attribuez une note à chaque candidat (1 = meilleure note).</p>
           <form id="vote-form" novalidate>
-            <div class="vote-grid-wrap">
-              <table class="vote-grid">
-                <thead>
-                  <tr>
-                    <th scope="col" class="candidate-col">Candidat</th>
-                    ${headerCells}
-                  </tr>
-                </thead>
-                <tbody>
-                  ${bodyRows}
-                </tbody>
-              </table>
-            </div>
+            ${this._buildVoteGridHtml(items, { readonly: false })}
             <div class="vote-submit-row">
               <button type="submit">Envoyer mon jugement</button>
               <p id="vote-form-error" class="vote-form-error" role="alert" aria-live="polite"></p>
@@ -348,15 +522,21 @@
         body: JSON.stringify({ grades }),
       });
       if (res.status === 409) {
-        status.textContent = "Vous avez déjà voté.";
+        await this._syncParticipationRecord();
+        if (this.participation && this.participation.voted) {
+          this.renderAlreadyVoted();
+        } else {
+          status.textContent =
+            "Vote déjà enregistré — actualisation des résultats en cours…";
+        }
         return;
       }
       if (!res.ok) {
         status.textContent = `Erreur : ${await res.text()}`;
         return;
       }
-      status.textContent =
-        "Vote enregistré. Résultats selon la politique du sondage.";
+      await this._syncParticipationRecord();
+      this.renderAlreadyVoted();
     }
   }
 

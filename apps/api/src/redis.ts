@@ -71,6 +71,14 @@ export async function checkVoteRateLimit(
   return { allowed: true };
 }
 
+export async function hasParticipationClaim(
+  pollId: string,
+  subjectId: string
+): Promise<boolean> {
+  const val = await getRedis().get(participationKey(pollId, subjectId));
+  return val === "1";
+}
+
 export async function tryClaimVote(
   pollId: string,
   subjectId: string,

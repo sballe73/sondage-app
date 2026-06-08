@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { Platform, ResultPolicy } from "@sondage/shared";
+import { hashSubjectForParticipation } from "@sondage/shared";
 import {
   getLatestVisibleSnapshot,
   getSnapshotByVersion,
@@ -16,10 +17,11 @@ import {
   isResultsVisible,
   shouldPublishSnapshot,
 } from "../services/results-policy.js";
-import { getLiveVoteCount } from "../redis.js";
+import { getLiveVoteCount, hasParticipationClaim } from "../redis.js";
 import { drainVoteEventsForPoll } from "../services/vote-drain.js";
 import { requireVoterAuth } from "./auth.js";
 import { AppError } from "../errors.js";
+import { toIsoString } from "../serialize-timestamp.js";
 
 const CACHE_MAX_AGE_VISIBLE = 60;
 const CACHE_MAX_AGE_HIDDEN = 15;
@@ -184,20 +186,50 @@ export async function resultsRoutes(app: FastifyInstance) {
     const { getBallotBySubject: getBallot } = await import("@sondage/db");
     if (regionData.poll.voterMode === "public") {
       const ballot = await getBallot(pollId, auth.token.subjectId);
-      return { voted: !!ballot, ballot: ballot ?? undefined };
+      if (ballot) {
+        const votedAt = toIsoString(ballot.votedAt);
+        return {
+          voted: true,
+          participatedAt: votedAt,
+          ballot: { ...ballot, votedAt: votedAt ?? ballot.votedAt },
+        };
+      }
+      const claimed = await hasParticipationClaim(
+        pollId,
+        auth.token.subjectId
+      );
+      if (claimed) {
+        return { voted: true, pendingAggregation: true };
+      }
+      return { voted: false };
     }
     const { schema, getDb } = await import("@sondage/db");
     const { eq, and } = await import("drizzle-orm");
     const db = getDb();
+    const participationSubject = hashSubjectForParticipation(
+      pollId,
+      auth.token.subjectId,
+      process.env.PARTICIPATION_HASH_SALT ?? "dev-salt"
+    );
     const [row] = await db
       .select()
       .from(schema.voteParticipation)
       .where(
         and(
           eq(schema.voteParticipation.pollId, pollId),
-          eq(schema.voteParticipation.subjectId, auth.token.subjectId)
+          eq(schema.voteParticipation.subjectId, participationSubject)
         )
       );
-    return { voted: !!row };
+    if (row) {
+      return {
+        voted: true,
+        participatedAt: toIsoString(row.participatedAt),
+      };
+    }
+    const claimed = await hasParticipationClaim(pollId, auth.token.subjectId);
+    if (claimed) {
+      return { voted: true, pendingAggregation: true };
+    }
+    return { voted: false };
   });
 }
