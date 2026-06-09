@@ -22,10 +22,11 @@ import {
 } from "@sondage/db";
 import { AppError } from "../errors.js";
 import { getLiveVoteCount } from "../redis.js";
+import { requirePlatformAuth } from "./auth.js";
 
 const createPollSchema = z.object({
   name: z.string().min(1).max(500),
-  creatorId: z.string().min(1),
+  creatorId: z.string().min(1).optional(),
   platform: z.enum(PLATFORMS),
   items: z
     .array(
@@ -64,12 +65,31 @@ export async function pollRoutes(app: FastifyInstance) {
 
   app.post("/polls", async (request, reply) => {
     const parsed = createPollSchema.parse(request.body);
+    let creatorId = parsed.creatorId;
+
+    if (parsed.platform === "mock") {
+      if (!creatorId) {
+        throw new AppError(
+          400,
+          "VALIDATION_ERROR",
+          "creatorId is required for mock platform"
+        );
+      }
+    } else {
+      const token = await requirePlatformAuth(
+        parsed.platform,
+        request.headers.authorization
+      );
+      creatorId = token.subjectId;
+    }
+
+    const pollInput = { ...parsed, creatorId: creatorId! };
     try {
-      validateCreatePoll(parsed);
+      validateCreatePoll(pollInput);
     } catch (e) {
       throw new AppError(400, "INVALID_POLL", (e as Error).message);
     }
-    const input = normalizeCreatePoll(parsed);
+    const input = normalizeCreatePoll(pollInput);
     const { poll, items } = await createPoll(input);
     return reply.status(201).send({
       ...poll,

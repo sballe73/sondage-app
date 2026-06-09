@@ -163,7 +163,39 @@
         gap: 0.75rem;
         flex-wrap: wrap;
       }
+      .sondage-creator .date-edit-row input[type="datetime-local"] {
+        margin-bottom: 0.5rem;
+      }
+      .sondage-creator .date-now-option {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+      }
+      .sondage-creator .date-now-option input {
+        width: auto;
+        margin: 0;
+      }
+      .sondage-creator .btn-save-date {
+        margin-bottom: 0.35rem;
+      }
+      .sondage-creator .oauth-login-btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        color: #fff;
+      }
+      .sondage-creator .oauth-login-btn--google {
+        background: #4285f4;
+      }
+      .sondage-creator .oauth-login-btn--facebook {
+        background: #1877f2;
+      }
     </style>
+    <script src="sondage-auth-storage.js"></script>
     <script src="sondage-shell.js"></script>
     <script src="sondage-datetime.js"></script>
     <script src="sondage-creator.js"></script>
@@ -171,8 +203,9 @@
   <body>
     <h1>Créer un sondage</h1>
     <p class="hint">
-      Configurez un sondage MJ sans curl. L’identifiant créateur est libre en dev
-      (<code>local-dev</code> par défaut) — auth créateur en Phase 2.
+      Configurez un sondage MJ sans curl. L’identifiant créateur est libre en
+      mode <strong>mock</strong> uniquement (<code>local-dev</code> par défaut) ;
+      pour les autres plateformes, connectez-vous via OAuth.
     </p>
     <div id="creator-host"></div>
     <script>

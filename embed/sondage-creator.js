@@ -24,6 +24,17 @@
     threshold_1000: "Seuil de 1000 votes",
   };
 
+  const PLATFORM_LABELS = {
+    mock: "mock (dev)",
+    google: "Google",
+    apple: "Apple",
+    facebook: "Meta (Facebook)",
+    linkedin: "LinkedIn",
+    x: "X",
+  };
+
+  const REAL_OAUTH_PLATFORMS = new Set(["facebook", "google"]);
+
   class SondageCreatorWidget extends HTMLElement {
     static get observedAttributes() {
       return ["data-api-base", "data-poll-id", "data-data-region"];
@@ -76,6 +87,124 @@
       };
     }
 
+    _authHeaders() {
+      const headers = this._headers();
+      if (this.token) {
+        headers.Authorization = `Bearer ${this.token}`;
+      }
+      return headers;
+    }
+
+    _authStorage() {
+      return window.SondageAuthStorage;
+    }
+
+    consumeOAuthHash() {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (!hash) return null;
+      const params = new URLSearchParams(hash);
+      const oauthError = params.get("oauth_error");
+      if (oauthError) {
+        history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search
+        );
+        throw new Error(decodeURIComponent(oauthError));
+      }
+      const accessToken = params.get("access_token");
+      if (!accessToken) return null;
+      history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+      return accessToken;
+    }
+
+    readStoredToken(platform) {
+      const storage = this._authStorage();
+      if (!storage || !platform) return null;
+      return storage.readToken(platform);
+    }
+
+    persistToken(platform) {
+      const storage = this._authStorage();
+      if (storage && platform && this.token) {
+        storage.writeToken(platform, this.token);
+      }
+    }
+
+    clearStoredToken(platform) {
+      const storage = this._authStorage();
+      if (storage && platform) {
+        storage.clearToken(platform);
+      }
+    }
+
+    async loadSession() {
+      if (!this.token) return null;
+      const res = await fetch(`${this.apiBase}/auth/session`, {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "X-Data-Region": this.dataRegion,
+        },
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.session;
+    }
+
+    async ensureAuth(platform) {
+      const hashToken = this.consumeOAuthHash();
+      if (hashToken) {
+        this.token = hashToken;
+      } else {
+        this.token = this.readStoredToken(platform);
+      }
+
+      if (!this.token) {
+        this.session = null;
+        return false;
+      }
+
+      const session = await this.loadSession();
+      if (!session || session.platform !== platform) {
+        this.clearStoredToken(platform);
+        this.token = null;
+        this.session = null;
+        return false;
+      }
+
+      this.session = session;
+      this.persistToken(platform);
+      return true;
+    }
+
+    _isRealOAuth(platform) {
+      return REAL_OAUTH_PLATFORMS.has(platform);
+    }
+
+    _oauthLoginUrl(platform, pollId) {
+      const returnTo = window.location.href.split("#")[0];
+      let url =
+        `${this.apiBase}/auth/${encodeURIComponent(platform)}/login` +
+        `?returnTo=${encodeURIComponent(returnTo)}`;
+      if (pollId) {
+        url += `&pollId=${encodeURIComponent(pollId)}`;
+      }
+      return url;
+    }
+
+    _isPollCreator() {
+      const poll = this.createdPoll;
+      if (!poll || !this.session) return false;
+      return (
+        this.session.platform === poll.platform &&
+        this.session.subjectId === poll.creatorId
+      );
+    }
+
     _embedBase() {
       const origin = window.location.origin;
       if (origin && origin !== "null") {
@@ -95,6 +224,7 @@
         if (this.createdPoll.dataRegion) {
           this.dataRegion = this.createdPoll.dataRegion;
         }
+        await this.ensureAuth(this.createdPoll.platform);
         await this.refreshStatus();
         this.renderCreated();
       } catch (e) {
@@ -118,12 +248,9 @@
       this.innerHTML = `
         <article class="sondage-creator">
           <form id="creator-form" class="creator-form">
-            <fieldset>
+            <fieldset id="organizer-fieldset">
               <legend>Organisateur</legend>
-              <label>
-                Identifiant créateur
-                <input type="text" name="creatorId" value="local-dev" required />
-              </label>
+              <div id="organizer-content"></div>
             </fieldset>
 
             <fieldset>
@@ -226,8 +353,86 @@
           threshold1Option.remove();
         }
       };
-      platformSelect.addEventListener("change", syncMockOnlyOptions);
+      const onPlatformChange = () => {
+        syncMockOnlyOptions();
+        this._syncOrganizerUi();
+      };
+      platformSelect.addEventListener("change", onPlatformChange);
       syncMockOnlyOptions();
+      this._syncOrganizerUi();
+    }
+
+    _updateSubmitState(enabled) {
+      const submitBtn = this.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = !enabled;
+      }
+    }
+
+    async _syncOrganizerUi() {
+      const platformSelect = this.querySelector('select[name="platform"]');
+      const container = this.querySelector("#organizer-content");
+      if (!platformSelect || !container) return;
+
+      const platform = platformSelect.value;
+
+      if (platform === "mock") {
+        container.innerHTML = `
+          <label>
+            Identifiant créateur
+            <input type="text" name="creatorId" value="local-dev" required />
+          </label>
+          <p class="hint">Identifiant libre en dev (mock uniquement).</p>
+        `;
+        this._updateSubmitState(true);
+        if (window.SondageShell && window.SondageShell.setCreatorPlatform) {
+          window.SondageShell.setCreatorPlatform(null);
+        }
+        return;
+      }
+
+      try {
+        await this.ensureAuth(platform);
+      } catch (e) {
+        container.innerHTML = `<p class="error">${escapeHtml(e.message)}</p>`;
+        this._updateSubmitState(false);
+        return;
+      }
+
+      const label = PLATFORM_LABELS[platform] || platform;
+
+      if (this.session) {
+        const display = this.session.displayName || this.session.subjectId;
+        container.innerHTML = `
+          <label>
+            Identifiant créateur
+            <input type="text" readonly value="${escapeAttr(display)}" />
+          </label>
+          <p class="hint">Connecté en tant que <strong>${escapeHtml(display)}</strong> (${escapeHtml(label)}).</p>
+        `;
+        this._updateSubmitState(true);
+      } else if (this._isRealOAuth(platform)) {
+        const loginUrl = this._oauthLoginUrl(platform);
+        container.innerHTML = `
+          <p class="hint">Connexion <strong>${escapeHtml(label)}</strong> requise pour créer un sondage sur cette plateforme.</p>
+          <p><a class="oauth-login-btn oauth-login-btn--${escapeAttr(platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a></p>
+        `;
+        this._updateSubmitState(false);
+      } else {
+        container.innerHTML = `
+          <p class="hint">La plateforme ${escapeHtml(label)} n'est pas encore disponible pour la création.</p>
+        `;
+        this._updateSubmitState(false);
+      }
+
+      if (window.SondageShell) {
+        if (window.SondageShell.setCreatorPlatform) {
+          window.SondageShell.setCreatorPlatform(platform);
+        }
+        if (window.SondageShell.refresh) {
+          window.SondageShell.refresh();
+        }
+      }
     }
 
     _addCandidateRow(list) {
@@ -270,7 +475,11 @@
 
     _validateForm(data) {
       const errors = [];
-      if (!data.creatorId) errors.push("Identifiant créateur requis.");
+      if (data.platform === "mock") {
+        if (!data.creatorId) errors.push("Identifiant créateur requis.");
+      } else if (!this.session) {
+        errors.push("Connexion à la plateforme requise.");
+      }
       if (!data.name) errors.push("Nom du sondage requis.");
       if (data.candidates.length < MIN_CANDIDATES) {
         errors.push(`Au moins ${MIN_CANDIDATES} candidat requis.`);
@@ -312,7 +521,6 @@
 
       const payload = {
         name: data.name,
-        creatorId: data.creatorId,
         platform: data.platform,
         items: data.candidates.map((label, i) => ({ label, sortOrder: i })),
         startsAt: datetimeLocalToIso(data.startsAt),
@@ -322,11 +530,14 @@
         resultPolicy: data.resultPolicy,
         dataRegion: this.dataRegion,
       };
+      if (data.platform === "mock") {
+        payload.creatorId = data.creatorId;
+      }
 
       try {
         const res = await fetch(`${this.apiBase}/polls`, {
           method: "POST",
-          headers: this._headers(),
+          headers: this._authHeaders(),
           body: JSON.stringify(payload),
         });
         const body = await res.json().catch(() => ({}));
@@ -474,7 +685,39 @@
         this.renderForm();
       });
 
+      this._bindStatusPanelHandlers();
       this._maybeStartStatusPolling();
+    }
+
+    _renderDateRow(field, pollDate, canEdit) {
+      if (!canEdit) {
+        return `<dd>${formatDateTime(pollDate)}</dd>`;
+      }
+      const localValue = toDatetimeLocal(new Date(pollDate));
+      const label = field === "startsAt" ? "le début" : "la fin";
+      return `
+        <dd class="date-edit-row" data-field="${field}">
+          <input type="datetime-local" value="${escapeAttr(localValue)}" />
+          <label class="date-now-option">
+            <input type="checkbox" data-now-toggle="${field}" /> Maintenant
+          </label>
+          <button type="button" class="btn-secondary btn-save-date" data-save="${field}">Enregistrer ${label}</button>
+          <p class="date-edit-error error" hidden></p>
+        </dd>`;
+    }
+
+    _renderCreatorAuthHint(poll) {
+      if (poll.platform === "mock" || this._isPollCreator()) return "";
+      const label = PLATFORM_LABELS[poll.platform] || poll.platform;
+      if (this.session) return "";
+      if (!this._isRealOAuth(poll.platform)) {
+        return `<p class="hint">Seul le créateur peut modifier les dates de ce sondage.</p>`;
+      }
+      const loginUrl = this._oauthLoginUrl(poll.platform, poll.id);
+      return `
+        <p class="hint">Connectez-vous avec <strong>${escapeHtml(label)}</strong> pour gérer ce sondage.</p>
+        <p><a class="oauth-login-btn oauth-login-btn--${escapeAttr(poll.platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a></p>
+      `;
     }
 
     renderStatusHtml() {
@@ -482,6 +725,10 @@
       const info = this.statusInfo || {};
       const policyLabel =
         POLICY_LABELS[poll.resultPolicy] || poll.resultPolicy;
+      const now = new Date();
+      const isCreator = this._isPollCreator();
+      const canEditStarts = isCreator && new Date(poll.startsAt) > now;
+      const canEditEnds = isCreator && new Date(poll.endsAt) > now;
 
       let resultsLine = "—";
       if (info.resultsState === "visible") {
@@ -510,20 +757,129 @@
           <dt>Politique résultats</dt><dd>${escapeHtml(policyLabel)}</dd>
           <dt>Votes</dt><dd>${escapeHtml(voteLine)}</dd>
           <dt>Résultats</dt><dd>${resultsLine}</dd>
-          <dt>Début</dt><dd>${formatDateTime(poll.startsAt)}</dd>
-          <dt>Fin</dt><dd>${formatDateTime(poll.endsAt)}</dd>
+          <dt>Début</dt>${this._renderDateRow("startsAt", poll.startsAt, canEditStarts)}
+          <dt>Fin</dt>${this._renderDateRow("endsAt", poll.endsAt, canEditEnds)}
           <dt>Candidats</dt><dd>${(poll.items || []).length}</dd>
         </dl>
+        ${this._renderCreatorAuthHint(poll)}
         <p class="hint">Rafraîchissement automatique toutes les 30 s.</p>
       `;
+    }
+
+    _bindStatusPanelHandlers() {
+      this.querySelectorAll(".btn-save-date").forEach((btn) => {
+        btn.addEventListener("click", () =>
+          this._savePollDate(btn.getAttribute("data-save"))
+        );
+      });
+      this.querySelectorAll("[data-now-toggle]").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          const field = cb.getAttribute("data-now-toggle");
+          const row = this.querySelector(`[data-field="${field}"]`);
+          const input = row && row.querySelector('input[type="datetime-local"]');
+          if (input) input.disabled = cb.checked;
+        });
+      });
+    }
+
+    _showDateEditError(field, message) {
+      const row = this.querySelector(`[data-field="${field}"]`);
+      const el = row && row.querySelector(".date-edit-error");
+      if (!el) return;
+      if (message) {
+        el.textContent = message;
+        el.hidden = false;
+      } else {
+        el.textContent = "";
+        el.hidden = true;
+      }
+    }
+
+    async _savePollDate(field) {
+      const row = this.querySelector(`[data-field="${field}"]`);
+      if (!row) return;
+
+      this._showDateEditError(field, "");
+      const nowCb = row.querySelector(`[data-now-toggle="${field}"]`);
+      const input = row.querySelector('input[type="datetime-local"]');
+      const btn = row.querySelector(".btn-save-date");
+
+      let value;
+      if (nowCb && nowCb.checked) {
+        value = "now";
+      } else {
+        value = datetimeLocalToIso(input.value);
+        if (!value) {
+          this._showDateEditError(field, "Date invalide.");
+          return;
+        }
+        if (new Date(value) < new Date()) {
+          this._showDateEditError(field, "La date ne peut pas être dans le passé.");
+          return;
+        }
+      }
+
+      const poll = this.createdPoll;
+      const nextStarts =
+        field === "startsAt" && value !== "now"
+          ? new Date(value)
+          : field === "startsAt"
+            ? new Date()
+            : new Date(poll.startsAt);
+      const nextEnds =
+        field === "endsAt" && value !== "now"
+          ? new Date(value)
+          : field === "endsAt"
+            ? new Date()
+            : new Date(poll.endsAt);
+
+      if (nextEnds <= nextStarts) {
+        this._showDateEditError(
+          field,
+          "La date de fin doit être postérieure au début."
+        );
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        const res = await fetch(
+          `${this.apiBase}/polls/${this.pollId}/dates`,
+          {
+            method: "PATCH",
+            headers: this._authHeaders(),
+            body: JSON.stringify({ [field]: value }),
+          }
+        );
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(formatApiError(body, res.status));
+        }
+        this.createdPoll = body;
+        const panel = this.querySelector("#status-panel");
+        if (panel) {
+          panel.innerHTML = this.renderStatusHtml();
+          this._bindStatusPanelHandlers();
+        }
+      } catch (e) {
+        this._showDateEditError(field, e.message);
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     async refreshStatusAndRender() {
       const panel = this.querySelector("#status-panel");
       if (panel) panel.innerHTML = "<p class='status'>Actualisation…</p>";
       try {
+        if (this.createdPoll) {
+          await this.ensureAuth(this.createdPoll.platform);
+        }
         await this.refreshStatus();
-        if (panel) panel.innerHTML = this.renderStatusHtml();
+        if (panel) {
+          panel.innerHTML = this.renderStatusHtml();
+          this._bindStatusPanelHandlers();
+        }
       } catch (e) {
         if (panel) {
           panel.innerHTML = `<p class="error">${escapeHtml(e.message)}</p>`;
