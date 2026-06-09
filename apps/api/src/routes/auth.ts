@@ -2,7 +2,12 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { PLATFORMS } from "@sondage/shared";
 import { getPollById } from "@sondage/db";
-import { mockOAuthLogin, issueVoterToken } from "../auth/oauth.js";
+import {
+  mockOAuthLogin,
+  issueVoterToken,
+  verifyVoterToken,
+  assertTokenMatchesPoll,
+} from "../auth/oauth.js";
 import { AppError } from "../errors.js";
 import { config } from "../config.js";
 import {
@@ -350,7 +355,6 @@ export async function authRoutes(app: FastifyInstance) {
     if (!auth?.startsWith("Bearer ")) {
       throw new AppError(401, "UNAUTHORIZED", "Missing bearer token");
     }
-    const { verifyVoterToken } = await import("../auth/oauth.js");
     try {
       const payload = await verifyVoterToken(auth.slice(7));
       return { session: payload };
@@ -367,9 +371,6 @@ export async function requireVoterAuth(
   if (!authorization?.startsWith("Bearer ")) {
     throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
   }
-  const { verifyVoterToken, assertTokenMatchesPoll } = await import(
-    "../auth/oauth.js"
-  );
   let token;
   try {
     token = await verifyVoterToken(authorization.slice(7));
@@ -401,7 +402,6 @@ export async function requirePlatformAuth(
   if (!authorization?.startsWith("Bearer ")) {
     throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
   }
-  const { verifyVoterToken } = await import("../auth/oauth.js");
   let token;
   try {
     token = await verifyVoterToken(authorization.slice(7));
@@ -420,7 +420,6 @@ export async function requirePollCreatorAuth(
   pollId: string,
   authorization: string | undefined
 ) {
-  const { verifyVoterToken } = await import("../auth/oauth.js");
   if (!authorization?.startsWith("Bearer ")) {
     throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
   }

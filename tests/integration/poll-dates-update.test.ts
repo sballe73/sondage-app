@@ -53,8 +53,6 @@ describe("PATCH /polls/:pollId/dates", { skip: !hasEnv }, () => {
     if (!hasEnv) return;
     process.env.MOCK_OAUTH = "true";
     process.env.RATE_LIMIT_ENABLED = "false";
-    process.env.JWT_SECRET =
-      process.env.JWT_SECRET || "test-jwt-secret-at-least-32-chars!!";
 
     app = await buildApiApp();
     creatorToken = await mockToken(app, "poll-dates-creator");
@@ -104,7 +102,10 @@ describe("PATCH /polls/:pollId/dates", { skip: !hasEnv }, () => {
       payload: { startsAt: newStart },
     });
     assert.equal(res.statusCode, 200, res.body);
-    assert.equal(res.json().startsAt, newStart);
+    assert.equal(
+      new Date(res.json().startsAt).toISOString(),
+      new Date(newStart).toISOString()
+    );
   });
 
   it("allows creator to set endsAt to now when poll has started", async () => {
@@ -188,8 +189,6 @@ describe("POST /polls creator auth", { skip: !hasEnv }, () => {
   before(async () => {
     if (!hasEnv) return;
     process.env.MOCK_OAUTH = "true";
-    process.env.JWT_SECRET =
-      process.env.JWT_SECRET || "test-jwt-secret-at-least-32-chars!!";
     app = await buildApiApp();
   });
 
