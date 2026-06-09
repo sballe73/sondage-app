@@ -5,6 +5,7 @@ import { pollRoutes } from "../../apps/api/dist/routes/polls.js";
 import { authRoutes } from "../../apps/api/dist/routes/auth.js";
 import { voteRoutes } from "../../apps/api/dist/routes/votes.js";
 import { resultsRoutes } from "../../apps/api/dist/routes/results.js";
+import { adminRoutes } from "../../apps/api/dist/routes/admin.js";
 
 /** API Fastify pour tests d'intégration (sans écoute réseau). */
 export async function buildApiApp() {
@@ -15,5 +16,6 @@ export async function buildApiApp() {
   await app.register(authRoutes);
   await app.register(voteRoutes);
   await app.register(resultsRoutes);
+  await app.register(adminRoutes);
   return app;
 }

@@ -45,6 +45,81 @@ export function validatePollWindow(startsAt: Date, endsAt: Date): void {
   }
 }
 
+export type PollDateUpdateErrorCode =
+  | "POLL_CLOSED"
+  | "POLL_ALREADY_STARTED"
+  | "POLL_ALREADY_ENDED"
+  | "DATE_IN_PAST"
+  | "INVALID_POLL_WINDOW"
+  | "NO_FIELDS";
+
+export class PollDateUpdateError extends Error {
+  readonly code: PollDateUpdateErrorCode;
+
+  constructor(code: PollDateUpdateErrorCode, message: string) {
+    super(message);
+    this.name = "PollDateUpdateError";
+    this.code = code;
+  }
+}
+
+export interface PollDateUpdateContext {
+  startsAt: Date;
+  endsAt: Date;
+  closedAt: Date | null;
+}
+
+export function validatePollDateUpdate(
+  poll: PollDateUpdateContext,
+  update: { startsAt?: Date; endsAt?: Date },
+  now: Date = new Date()
+): { startsAt: Date; endsAt: Date } {
+  if (poll.closedAt != null) {
+    throw new PollDateUpdateError("POLL_CLOSED", "Poll is closed");
+  }
+
+  const hasStarts = update.startsAt !== undefined;
+  const hasEnds = update.endsAt !== undefined;
+  if (!hasStarts && !hasEnds) {
+    throw new PollDateUpdateError("NO_FIELDS", "At least one date field required");
+  }
+
+  if (hasStarts && poll.startsAt <= now) {
+    throw new PollDateUpdateError(
+      "POLL_ALREADY_STARTED",
+      "Poll has already started; startsAt cannot be changed"
+    );
+  }
+
+  if (hasEnds && poll.endsAt <= now) {
+    throw new PollDateUpdateError(
+      "POLL_ALREADY_ENDED",
+      "Poll has already ended; endsAt cannot be changed"
+    );
+  }
+
+  const nextStarts = hasStarts ? update.startsAt! : poll.startsAt;
+  const nextEnds = hasEnds ? update.endsAt! : poll.endsAt;
+
+  if (hasStarts && nextStarts < now) {
+    throw new PollDateUpdateError(
+      "DATE_IN_PAST",
+      "startsAt cannot be in the past"
+    );
+  }
+
+  if (hasEnds && nextEnds < now) {
+    throw new PollDateUpdateError(
+      "DATE_IN_PAST",
+      "endsAt cannot be in the past"
+    );
+  }
+
+  validatePollWindow(nextStarts, nextEnds);
+
+  return { startsAt: nextStarts, endsAt: nextEnds };
+}
+
 export function normalizeCreatePoll(input: CreatePollInput): CreatePollInput & {
   gradeMin: number;
   gradeMax: number;

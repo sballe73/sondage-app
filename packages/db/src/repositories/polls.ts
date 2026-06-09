@@ -142,6 +142,23 @@ export async function closePoll(pollId: string) {
     .where(eq(polls.id, pollId));
 }
 
+export async function updatePollDates(
+  pollId: string,
+  dates: { startsAt: Date; endsAt: Date }
+) {
+  const db = getDb();
+  const [poll] = await db
+    .update(polls)
+    .set({
+      startsAt: dates.startsAt,
+      endsAt: dates.endsAt,
+    })
+    .where(eq(polls.id, pollId))
+    .returning();
+  if (!poll) throw new Error("Poll not found");
+  return poll;
+}
+
 export async function createCampaign(name: string, creatorId: string) {
   const db = getDb();
   const [row] = await db

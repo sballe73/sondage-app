@@ -3,6 +3,7 @@
  */
 (function () {
   const ACTIVE_POLL_KEY = "sondage_active_poll_id";
+  let creatorPlatformOverride = null;
 
   const PLATFORM_LABELS = {
     mock: "mock (dev)",
@@ -336,31 +337,15 @@
     });
   }
 
-  async function refreshSession(apiBase, pollId) {
+  async function refreshSessionForPlatform(apiBase, pollId, platform) {
     const sessionEl = document.getElementById("sondage-shell-session");
     const authLabelEl = document.getElementById("sondage-shell-auth-label");
     if (!sessionEl) return;
 
-    if (!pollId) {
-      if (authLabelEl) {
-        authLabelEl.innerHTML =
-          "Connexion <strong>selon le sondage</strong> (OAuth)";
-      }
-      renderGuest(sessionEl, "Non connecté");
-      return;
-    }
-
-    let platform = null;
-    try {
-      platform = await loadPollPlatform(apiBase, pollId);
-    } catch {
-      /* ignore */
-    }
-
     if (authLabelEl) {
       authLabelEl.innerHTML = platform
         ? "Connexion <strong>" + escapeHtml(platformLabel(platform)) + "</strong>"
-        : "";
+        : "Connexion <strong>selon le sondage</strong> (OAuth)";
     }
 
     const token = readToken(platform, pollId);
@@ -396,6 +381,37 @@
     mountUserMenu(sessionEl, session, pollId, platform);
   }
 
+  async function refreshSession(apiBase, pollId) {
+    const sessionEl = document.getElementById("sondage-shell-session");
+    const authLabelEl = document.getElementById("sondage-shell-auth-label");
+    if (!sessionEl) return;
+
+    if (!pollId) {
+      if (creatorPlatformOverride) {
+        return refreshSessionForPlatform(
+          apiBase,
+          null,
+          creatorPlatformOverride
+        );
+      }
+      if (authLabelEl) {
+        authLabelEl.innerHTML =
+          "Connexion <strong>selon le sondage</strong> (OAuth)";
+      }
+      renderGuest(sessionEl, "Non connecté");
+      return;
+    }
+
+    let platform = null;
+    try {
+      platform = await loadPollPlatform(apiBase, pollId);
+    } catch {
+      /* ignore */
+    }
+
+    return refreshSessionForPlatform(apiBase, pollId, platform);
+  }
+
   function getActivePollId() {
     return sessionStorage.getItem(ACTIVE_POLL_KEY);
   }
@@ -426,9 +442,14 @@
     return pollId;
   }
 
+  function setCreatorPlatform(platform) {
+    creatorPlatformOverride = platform || null;
+  }
+
   window.SondageShell = {
     getActivePollId,
     setActivePollId,
+    setCreatorPlatform,
     clearActivePoll,
     goToPollPicker,
     syncActivePollFromUrl,

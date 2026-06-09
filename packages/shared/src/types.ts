@@ -34,6 +34,11 @@ export interface PollItemInput {
   sortOrder?: number;
 }
 
+export interface UpdatePollDatesInput {
+  startsAt?: string | "now";
+  endsAt?: string | "now";
+}
+
 export interface CreatePollInput {
   name: string;
   creatorId: string;
