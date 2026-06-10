@@ -17,9 +17,6 @@ export async function mockOAuthLogin(
   subjectId: string,
   displayName?: string
 ): Promise<OAuthProfile> {
-  if (!config.mockOAuthEnabled && platform === "mock") {
-    throw new Error("Mock OAuth disabled");
-  }
   return { platform, subjectId, displayName };
 }
 

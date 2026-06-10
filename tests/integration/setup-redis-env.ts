@@ -1,7 +1,6 @@
 /** Isolation Redis + env de test pour les tests d'intégration. */
 process.env.JWT_SECRET ??= "test-jwt-secret-at-least-32-chars!!";
 process.env.PARTICIPATION_HASH_SALT ??= "integration-test-hash-salt";
-process.env.MOCK_OAUTH ??= "true";
 process.env.COMPLIANCE_MODE ??= "prototype";
 process.env.ENABLED_PLATFORMS ??= "mock,facebook,google";
 process.env.OAUTH_FACEBOOK_APP_ID ??= "integration-test-fb-app-id";

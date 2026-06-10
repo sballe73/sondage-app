@@ -22,7 +22,6 @@ COMPLIANCE_MODE=production npm run check:compliance
    - `COMPLIANCE_MODE=production`
    - `GDPR_MANUAL_ATTESTATION_VERSION=2026-06-09` (doit correspondre à `manualAttestationVersion` dans `gdpr-checklist.json`)
    - `ENABLED_PLATFORMS=facebook` (sans `mock`)
-   - `MOCK_OAUTH=false`
 
 ## Checklist manuelle (avant attestation)
 

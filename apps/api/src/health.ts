@@ -10,9 +10,7 @@ import { PLATFORMS, type Platform } from "@sondage/shared";
 function platformHealthEntry(platform: Platform) {
   const inList = config.enabledPlatforms.includes(platform);
   const configured =
-    platform === "mock"
-      ? config.mockOAuthEnabled
-      : isOAuthConfiguredForPlatform(platform);
+    platform === "mock" ? inList : isOAuthConfiguredForPlatform(platform);
   return {
     enabled: inList && isPlatformUsable(platform),
     configured,

@@ -38,7 +38,6 @@ export const config = {
     | "GLOBAL",
   regionHeader: "x-data-region",
   voteEventsStream: "vote:events",
-  mockOAuthEnabled: process.env.MOCK_OAUTH !== "false",
   enabledPlatforms: parseEnabledPlatforms(process.env.ENABLED_PLATFORMS),
   participationHashSalt:
     process.env.PARTICIPATION_HASH_SALT ?? "dev-salt",

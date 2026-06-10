@@ -28,7 +28,6 @@ export const DEV_HASH_SALTS = new Set([
 
 export interface ComplianceEnv {
   complianceMode: ComplianceMode;
-  mockOauthEnabled: boolean;
   jwtSecret: string;
   participationHashSalt: string;
   defaultDataRegion: string;
@@ -105,15 +104,6 @@ export function runComplianceChecks(
   const mode = env.complianceMode;
   const severity = mode === "production" ? "error" : "warning";
   const platforms = enabledPlatforms(env);
-
-  results.push({
-    id: "mock_oauth_disabled",
-    ok: !env.mockOauthEnabled,
-    message: env.mockOauthEnabled
-      ? "MOCK_OAUTH must be false in production"
-      : "MOCK_OAUTH is disabled",
-    severity,
-  });
 
   results.push({
     id: "enabled_platforms_no_mock",
@@ -283,7 +273,6 @@ export function complianceEnvFromProcess(
 ): ComplianceEnv {
   return {
     complianceMode: parseComplianceMode(env.COMPLIANCE_MODE),
-    mockOauthEnabled: env.MOCK_OAUTH !== "false",
     jwtSecret: env.JWT_SECRET ?? "dev-secret-change-in-production",
     participationHashSalt:
       env.PARTICIPATION_HASH_SALT ?? "dev-salt",
@@ -335,11 +324,10 @@ export function assertComplianceOrThrow(
 /** Plateformes utilisables sur cette instance (enabled + opérationnelles). */
 export function resolveUsablePlatforms(env: {
   enabledPlatforms: readonly Platform[];
-  mockOauthEnabled: boolean;
   isOAuthConfigured: (platform: Platform) => boolean;
 }): Platform[] {
   return env.enabledPlatforms.filter((platform) => {
-    if (platform === "mock") return env.mockOauthEnabled;
+    if (platform === "mock") return true;
     if (isRealOAuthPlatform(platform)) {
       return env.isOAuthConfigured(platform);
     }

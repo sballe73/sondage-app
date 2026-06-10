@@ -19,7 +19,7 @@ export function isOAuthConfiguredForPlatform(platform: Platform): boolean {
 /** Plateforme listée dans ENABLED_PLATFORMS et opérationnelle sur l'instance. */
 export function isPlatformUsable(platform: Platform): boolean {
   if (!config.enabledPlatforms.includes(platform)) return false;
-  if (platform === "mock") return config.mockOAuthEnabled;
+  if (platform === "mock") return true;
   if (isRealOAuthPlatform(platform)) {
     return isOAuthConfiguredForPlatform(platform);
   }
@@ -35,15 +35,6 @@ export function assertPlatformUsable(platform: Platform): void {
       "PLATFORM_NOT_ENABLED",
       `Platform ${platform} is not enabled on this instance`,
       { platform, enabledPlatforms: config.enabledPlatforms }
-    );
-  }
-
-  if (platform === "mock" && !config.mockOAuthEnabled) {
-    throw new AppError(
-      403,
-      "PLATFORM_NOT_ENABLED",
-      "Mock OAuth is disabled on this server",
-      { platform: "mock" }
     );
   }
 

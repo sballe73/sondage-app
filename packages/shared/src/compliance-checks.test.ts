@@ -13,7 +13,6 @@ const ROOT = join(import.meta.dirname, "../../..");
 function productionEnv(overrides: Record<string, string> = {}) {
   return complianceEnvFromProcess({
     COMPLIANCE_MODE: "production",
-    MOCK_OAUTH: "false",
     JWT_SECRET: "prod-secret-value-32chars-minimum!!",
     PARTICIPATION_HASH_SALT: "prod-salt-value-32chars-minimum!!",
     DEFAULT_DATA_REGION: "EU",

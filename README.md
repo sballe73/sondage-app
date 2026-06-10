@@ -208,7 +208,7 @@ Fichier [`render.yaml`](render.yaml) : Postgres (Frankfurt), Redis, service web 
 |----------|--------|
 | `OAUTH_FACEBOOK_APP_ID` | App ID Meta |
 | `OAUTH_FACEBOOK_APP_SECRET` | App Secret Meta |
-| `MOCK_OAUTH` | `false` (déjà dans le blueprint) |
+| `ENABLED_PLATFORMS` | `facebook` (déjà dans le blueprint ; exclure `mock` en prod) |
 
 `PUBLIC_BASE_URL` est **optionnel** : l’API utilise `RENDER_EXTERNAL_URL` si absent.  
 Callback OAuth dérivé : `{PUBLIC_BASE_URL ou RENDER_EXTERNAL_URL}/auth/facebook/callback`.

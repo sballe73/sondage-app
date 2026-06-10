@@ -40,8 +40,6 @@ services:
           property: connectionString
       - key: DEFAULT_DATA_REGION
         value: EU
-      - key: MOCK_OAUTH
-        value: "false"
       - key: COMPLIANCE_MODE
         value: prototype
       - key: ENABLED_PLATFORMS

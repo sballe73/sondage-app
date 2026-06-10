@@ -41,7 +41,6 @@ jobs:
       - name: Production compliance gate (simulated env)
         env:
           COMPLIANCE_MODE: production
-          MOCK_OAUTH: "false"
           JWT_SECRET: prod-secret-value-32chars-minimum!!
           PARTICIPATION_HASH_SALT: prod-salt-value-32chars-minimum!!
           DEFAULT_DATA_REGION: EU

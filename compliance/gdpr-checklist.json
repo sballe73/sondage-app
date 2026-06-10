@@ -3,13 +3,6 @@
   "manualAttestationVersion": "2026-06-09",
   "items": [
     {
-      "id": "mock_oauth_disabled",
-      "label": "MOCK_OAUTH=false en production",
-      "source": "extension",
-      "type": "automated",
-      "check": "mockOauthDisabled"
-    },
-    {
       "id": "enabled_platforms_no_mock",
       "label": "mock absent de ENABLED_PLATFORMS",
       "source": "extension",
