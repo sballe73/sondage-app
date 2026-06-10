@@ -154,6 +154,21 @@ export async function countParticipationClaims(pollId: string): Promise<number> 
   return count;
 }
 
+/** Purge clés Redis de participation pour un votant (demande suppression RGPD). */
+export async function purgeUserParticipationRedis(
+  pollIds: string[],
+  subjectId: string
+): Promise<number> {
+  if (pollIds.length === 0) return 0;
+  const r = getRedis();
+  const keys = pollIds.flatMap((pollId) => [
+    participationKey(pollId, subjectId),
+    voteRateLimitKey(pollId, subjectId),
+  ]);
+  if (keys.length === 0) return 0;
+  return r.del(...keys);
+}
+
 /** max(Postgres traités, compteur Redis, participations enregistrées). */
 export async function getLiveVoteCount(
   pollId: string,

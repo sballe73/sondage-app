@@ -3,3 +3,4 @@ set -euo pipefail
 
 npm ci
 npm run build
+npm run check:compliance

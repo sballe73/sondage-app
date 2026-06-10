@@ -23,6 +23,7 @@ import {
 import { AppError } from "../errors.js";
 import { getLiveVoteCount } from "../redis.js";
 import { requirePlatformAuth } from "./auth.js";
+import { assertPlatformUsable } from "../platform-gate.js";
 
 const createPollSchema = z.object({
   name: z.string().min(1).max(500),
@@ -65,6 +66,7 @@ export async function pollRoutes(app: FastifyInstance) {
 
   app.post("/polls", async (request, reply) => {
     const parsed = createPollSchema.parse(request.body);
+    assertPlatformUsable(parsed.platform);
     let creatorId = parsed.creatorId;
 
     if (parsed.platform === "mock") {

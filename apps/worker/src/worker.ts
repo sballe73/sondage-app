@@ -1,6 +1,7 @@
 import type { VoteSubmittedEvent } from "@sondage/shared";
 import { closeDb } from "@sondage/db";
 import { workerConfig } from "./config.js";
+import { assertStartupCompliance } from "./startup-compliance.js";
 import {
   ensureConsumerGroupWithRetry,
   claimStalePendingEvents,
@@ -12,6 +13,8 @@ import {
 import { processVoteEvent } from "./processor.js";
 
 console.log(`Worker ${workerConfig.consumerName} starting...`);
+
+assertStartupCompliance();
 
 await ensureConsumerGroupWithRetry();
 

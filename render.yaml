@@ -42,6 +42,10 @@ services:
         value: EU
       - key: MOCK_OAUTH
         value: "false"
+      - key: COMPLIANCE_MODE
+        value: prototype
+      - key: ENABLED_PLATFORMS
+        value: facebook
       - key: JWT_SECRET
         generateValue: true
       - key: PARTICIPATION_HASH_SALT

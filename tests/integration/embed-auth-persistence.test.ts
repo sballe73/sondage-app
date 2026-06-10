@@ -68,6 +68,20 @@ describe("Embed auth persistence across polls", () => {
     assert.match(js, /\/polls\/\$\{this\.pollId\}\/dates/);
   });
 
+  it("creator loads platform options from /health usablePlatforms", () => {
+    const js = readFileSync(CREATOR_JS, "utf8");
+    assert.match(js, /\/health/);
+    assert.match(js, /usablePlatforms/);
+    assert.match(js, /_buildPlatformOptionsHtml/);
+  });
+
+  it("vote widget shows legal notice and checks instance platforms", () => {
+    const js = readFileSync(WIDGET_JS, "utf8");
+    assert.match(js, /_legalNoticeHtml/);
+    assert.match(js, /legal\/privacy\.html/);
+    assert.match(js, /usablePlatforms/);
+  });
+
   it("shell supports creator platform override without pollId", () => {
     const js = readFileSync(SHELL_JS, "utf8");
     assert.match(js, /setCreatorPlatform/);

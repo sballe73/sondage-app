@@ -1,5 +1,10 @@
 import type { Platform } from "@sondage/shared";
 import {
+  REAL_OAUTH_PLATFORMS,
+  isRealOAuthPlatform,
+  type RealOAuthPlatform,
+} from "@sondage/shared";
+import {
   isFacebookOAuthConfigured,
   isGoogleOAuthConfigured,
 } from "../../config.js";
@@ -7,17 +12,8 @@ import { FacebookOAuthProvider } from "./facebook.js";
 import { GoogleOAuthProvider } from "./google.js";
 import type { OAuthProvider } from "./types.js";
 
-/** Plateformes OAuth réellement implémentées. Meta (facebook) en pilote ; Google quand projet GCP disponible. */
-export const REAL_OAUTH_PLATFORMS = ["facebook", "google"] as const;
-export type RealOAuthPlatform = (typeof REAL_OAUTH_PLATFORMS)[number];
-
-export const PLANNED_OAUTH_PLATFORMS = ["apple"] as const;
-
-export function isRealOAuthPlatform(
-  platform: Platform
-): platform is RealOAuthPlatform {
-  return REAL_OAUTH_PLATFORMS.includes(platform as RealOAuthPlatform);
-}
+export { REAL_OAUTH_PLATFORMS, isRealOAuthPlatform };
+export type { RealOAuthPlatform };
 
 export function isOAuthPlatformConfigured(
   platform: RealOAuthPlatform

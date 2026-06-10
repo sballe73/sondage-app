@@ -20,7 +20,7 @@
   <body>
     <h1>Politique de confidentialité</h1>
     <p><strong>Application :</strong> Sondage MJ (jugement majoritaire)</p>
-    <p><em>Dernière mise à jour : mai 2026</em></p>
+    <p><em>Dernière mise à jour : juin 2026</em></p>
 
     <h2>1. Responsable du traitement</h2>
     <p>
@@ -32,10 +32,10 @@
     <h2>2. Données collectées</h2>
     <ul>
       <li>
-        <strong>Connexion Meta (Facebook) :</strong> identifiant utilisateur
-        Facebook (<code>id</code>), nom affiché et, le cas échéant, adresse
-        e-mail fournie par Meta — uniquement pour authentifier un vote et
-        empêcher les doubles votes.
+        <strong>Connexion Meta (Facebook) ou Google :</strong> identifiant
+        utilisateur technique (<code>id</code> / <code>sub</code>), nom affiché —
+        uniquement pour authentifier un vote et empêcher les doubles votes.
+        Scope Meta minimal : <code>public_profile</code> (identifiant et nom).
       </li>
       <li>
         <strong>Vote :</strong> notes attribuées aux candidats, horodatage,
@@ -47,7 +47,8 @@
       </li>
       <li>
         <strong>Mode anonyme :</strong> l’identifiant plateforme est stocké sous
-        forme pseudonymisée (hachage) ; le nom n’est pas conservé.
+        forme pseudonymisée (hachage SHA-256 avec sel serveur) ; le nom n’est
+        pas conservé.
       </li>
     </ul>
 
@@ -66,26 +67,37 @@
 
     <h2>5. Durée de conservation</h2>
     <p>
-      Les données sont conservées pendant la durée du sondage et le temps
-      nécessaire à l’agrégation des résultats, sauf demande de suppression
-      (voir page dédiée).
+      Les données d’identification et de participation sont conservées pendant
+      la durée du sondage et le temps nécessaire à l’agrégation des résultats.
+      Les totaux agrégés (histogrammes) restent anonymes après une demande de
+      suppression individuelle.
     </p>
 
-    <h2>6. Destinataires</h2>
+    <h2>6. Suppression des données</h2>
     <p>
-      Hébergement et bases de données de l’application. Aucune revente de
-      données personnelles. Meta/Facebook traite la connexion OAuth selon sa
-      propre politique.
+      Vous pouvez demander la suppression de votre droit de vote via la page
+      <a href="data-deletion.html">Suppression des données</a>, depuis les
+      paramètres de votre application Meta (Facebook), ou via l’endpoint
+      <code>POST /auth/me/delete-data</code> lorsque vous êtes connecté.
+      La suppression retire vos enregistrements de participation et bulletins ;
+      les compteurs agrégés anonymes sont conservés.
     </p>
 
-    <h2>7. Vos droits</h2>
+    <h2>7. Destinataires</h2>
+    <p>
+      Hébergement et bases de données de l’application (région UE par défaut).
+      Aucune revente de données personnelles. Meta/Facebook et Google traitent
+      la connexion OAuth selon leurs propres politiques.
+    </p>
+
+    <h2>8. Vos droits</h2>
     <p>
       Accès, rectification, suppression, limitation et opposition selon le
       RGPD. Procédure de suppression :
       <a href="data-deletion.html">instructions de suppression des données</a>.
     </p>
 
-    <h2>8. Cookies et stockage local</h2>
+    <h2>9. Cookies et stockage local</h2>
     <p>
       Le widget de vote peut stocker un jeton de session dans le
       <code>sessionStorage</code> du navigateur pour maintenir votre connexion

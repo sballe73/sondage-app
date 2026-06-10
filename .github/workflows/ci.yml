@@ -27,6 +27,33 @@ jobs:
       - run: npm ci
       - run: npm run test:build
 
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run check:compliance
+      - run: npm run test:compliance
+      - name: Production compliance gate (simulated env)
+        env:
+          COMPLIANCE_MODE: production
+          MOCK_OAUTH: "false"
+          JWT_SECRET: prod-secret-value-32chars-minimum!!
+          PARTICIPATION_HASH_SALT: prod-salt-value-32chars-minimum!!
+          DEFAULT_DATA_REGION: EU
+          PUBLIC_BASE_URL: https://sondage.example.com
+          RATE_LIMIT_ENABLED: "true"
+          ENABLED_PLATFORMS: facebook
+          LOG_PII: "false"
+          GDPR_MANUAL_ATTESTATION_VERSION: "2026-06-09"
+          OAUTH_FACEBOOK_APP_ID: fb-app-id
+          OAUTH_FACEBOOK_APP_SECRET: fb-app-secret
+        run: npm run check:compliance
+
   integration:
     runs-on: ubuntu-latest
     services:
