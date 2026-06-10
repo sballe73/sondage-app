@@ -5,6 +5,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
 import { buildHealthPayload } from "./health.js";
+import { assertStartupCompliance } from "./startup-compliance.js";
 import { buildHomeHtml } from "./home-page.js";
 import { registerEmbedHtmlRoutes } from "./embed-pages.js";
 import { errorHandlerPlugin } from "./plugins/error-handler.js";
@@ -50,6 +51,8 @@ await app.register(authRoutes);
 await app.register(voteRoutes);
 await app.register(resultsRoutes);
 await app.register(adminRoutes);
+
+assertStartupCompliance();
 
 const shutdown = async () => {
   await app.close();

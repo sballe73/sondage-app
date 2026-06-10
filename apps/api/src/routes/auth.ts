@@ -27,6 +27,8 @@ import {
   releaseOAuthCodeLock,
   waitForCachedOAuthVoterToken,
 } from "../auth/oauth-callback-cache.js";
+import { assertPlatformUsable } from "../platform-gate.js";
+import { purgeUserData } from "../user-data-deletion.js";
 
 const oauthPlatformSchema = z.enum(REAL_OAUTH_PLATFORMS);
 
@@ -129,6 +131,8 @@ export async function authRoutes(app: FastifyInstance) {
       (request.params as { platform: string }).platform
     );
 
+    assertPlatformUsable(platform);
+
     if (!isOAuthPlatformConfigured(platform)) {
       throw new AppError(
         503,
@@ -181,10 +185,12 @@ export async function authRoutes(app: FastifyInstance) {
       .parse(request.body ?? {});
 
     try {
-      const result = handleFacebookDataDeletionCallback(body.signed_request);
+      const result = await handleFacebookDataDeletionCallback(
+        body.signed_request
+      );
       request.log.info(
         { confirmation_code: result.confirmation_code },
-        "Meta data deletion callback received"
+        "Meta data deletion callback received and user data purged"
       );
       return result;
     } catch (e) {
@@ -222,6 +228,8 @@ export async function authRoutes(app: FastifyInstance) {
     if (statePayload.platform !== platform) {
       throw new AppError(403, "FORBIDDEN", "OAuth state platform mismatch");
     }
+
+    assertPlatformUsable(platform);
 
     const returnTo = statePayload.returnTo;
 
@@ -303,6 +311,8 @@ export async function authRoutes(app: FastifyInstance) {
       })
       .parse(request.body);
 
+    assertPlatformUsable(body.platform);
+
     if (body.pollId) {
       const data = await getPollById(body.pollId);
       if (!data) {
@@ -362,6 +372,32 @@ export async function authRoutes(app: FastifyInstance) {
       throw new AppError(401, "UNAUTHORIZED", "Invalid token");
     }
   });
+
+  app.post("/auth/me/delete-data", async (request, reply) => {
+    const auth = request.headers.authorization;
+    if (!auth?.startsWith("Bearer ")) {
+      throw new AppError(401, "UNAUTHORIZED", "Missing bearer token");
+    }
+
+    let token;
+    try {
+      token = await verifyVoterToken(auth.slice(7));
+    } catch {
+      throw new AppError(401, "UNAUTHORIZED", "Invalid token");
+    }
+
+    assertPlatformUsable(token.platform);
+
+    const result = await purgeUserData(token.platform, token.subjectId);
+
+    return reply.status(200).send({
+      status: "deleted",
+      message:
+        "Votre droit de vote a été supprimé. Les totaux agrégés anonymes sont conservés.",
+      pollsAffected: result.pollsAffected,
+      platform: result.platform,
+    });
+  });
 }
 
 export async function requireVoterAuth(
@@ -380,6 +416,16 @@ export async function requireVoterAuth(
   const data = await getPollById(pollId);
   if (!data) {
     throw new AppError(404, "NOT_FOUND", "Poll not found");
+  }
+  try {
+    assertPlatformUsable(data.poll.platform as typeof token.platform);
+  } catch (e) {
+    if (e instanceof AppError) throw e;
+    throw new AppError(
+      403,
+      "PLATFORM_NOT_ENABLED",
+      `Poll platform ${data.poll.platform} is not enabled on this instance`
+    );
   }
   try {
     assertTokenMatchesPoll(token, pollId, data.poll.platform as typeof token.platform);

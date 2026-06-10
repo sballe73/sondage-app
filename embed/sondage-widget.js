@@ -137,6 +137,10 @@
 
     async load() {
       try {
+        const healthRes = await fetch(`${this.apiBase}/health`);
+        if (!healthRes.ok) throw new Error(await healthRes.text());
+        this.instanceHealth = await healthRes.json();
+
         const res = await fetch(`${this.apiBase}/polls/${this.pollId}`, {
           headers: { "X-Data-Region": "EU" },
         });
@@ -148,6 +152,19 @@
           );
         }
         this.platform = this.poll.platform;
+
+        const usable =
+          (this.instanceHealth && this.instanceHealth.usablePlatforms) || [];
+        if (!usable.includes(this.platform)) {
+          const label =
+            PLATFORM_LABELS[this.platform] || this.platform;
+          throw new Error(
+            `Cette instance n'accepte pas les votes via ${label}. ` +
+              (usable.length
+                ? `Plateformes disponibles : ${usable.join(", ")}`
+                : "Aucune plateforme de vote n'est activée.")
+          );
+        }
 
         const ready = await this.ensureToken();
         if (!ready) return;
@@ -243,6 +260,11 @@
       this.persistToken();
     }
 
+    _legalNoticeHtml() {
+      const privacyUrl = `${this.apiBase.replace(/\/$/, "")}/legal/privacy.html`;
+      return `<p class="legal-notice">Nous vérifions via votre compte que vous votez une seule fois ; les totaux restent anonymes. <a href="${escapeAttr(privacyUrl)}" target="_blank" rel="noopener">Politique de confidentialité</a></p>`;
+    }
+
     renderLoginPrompt() {
       const label =
         PLATFORM_LABELS[this.platform] || this.platform;
@@ -259,6 +281,7 @@
           <h2>${escapeHtml(this.poll.name)}</h2>
           ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
           <p class="meta">Connexion <strong>${escapeHtml(label)}</strong> requise pour voter.</p>
+          ${this._legalNoticeHtml()}
           <p><a class="oauth-login-btn oauth-login-btn--${escapeAttr(this.platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a></p>
         </article>
       `;
@@ -509,6 +532,7 @@
           ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
           <p class="meta">Plateforme : <strong>${escapeHtml(platformLabel)}</strong>${voterLine} · ${escapeHtml(gradeHint)}</p>
           <p class="hint">Attribuez une note à chaque candidat (1 = meilleure note).</p>
+          ${this._legalNoticeHtml()}
           <form id="vote-form" novalidate>
             ${this._buildVoteGridHtml(items, { readonly: false })}
             <div class="vote-submit-row">

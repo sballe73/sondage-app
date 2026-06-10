@@ -1,0 +1,111 @@
+{
+  "version": "2026-06-09",
+  "manualAttestationVersion": "2026-06-09",
+  "items": [
+    {
+      "id": "enabled_platforms_no_mock",
+      "label": "mock absent de ENABLED_PLATFORMS",
+      "source": "extension",
+      "type": "automated",
+      "check": "enabledPlatformsNoMock"
+    },
+    {
+      "id": "oauth_credentials",
+      "label": "Credentials OAuth pour chaque plateforme activée",
+      "source": "extension",
+      "type": "automated",
+      "check": "oauthCredentialsForEnabled"
+    },
+    {
+      "id": "real_oauth_platform",
+      "label": "Au moins une plateforme OAuth réelle activée",
+      "source": "extension",
+      "type": "automated",
+      "check": "realOAuthPlatformEnabled"
+    },
+    {
+      "id": "jwt_secret",
+      "label": "JWT_SECRET production (non-défaut)",
+      "source": "extension",
+      "type": "automated",
+      "check": "jwtSecretStrong"
+    },
+    {
+      "id": "participation_hash_salt",
+      "label": "PARTICIPATION_HASH_SALT production (non-défaut)",
+      "source": "Meta §3 pseudonymisation",
+      "type": "automated",
+      "check": "participationHashSaltStrong"
+    },
+    {
+      "id": "data_region_eu",
+      "label": "DEFAULT_DATA_REGION=EU",
+      "source": "Meta §3 hébergement UE",
+      "type": "automated",
+      "check": "dataRegionEu"
+    },
+    {
+      "id": "https_public_url",
+      "label": "URL publique HTTPS",
+      "source": "extension",
+      "type": "automated",
+      "check": "httpsPublicUrl"
+    },
+    {
+      "id": "rate_limit_enabled",
+      "label": "Rate limiting activé",
+      "source": "Meta §3 sécurité art.32",
+      "type": "automated",
+      "check": "rateLimitEnabled"
+    },
+    {
+      "id": "legal_pages",
+      "label": "Pages légales présentes (privacy, terms, data-deletion)",
+      "source": "Meta §3 information art.13",
+      "type": "automated",
+      "check": "legalPagesExist"
+    },
+    {
+      "id": "facebook_scope_minimal",
+      "label": "Facebook Login scope minimal (public_profile)",
+      "source": "Meta §3 minimisation",
+      "type": "automated",
+      "check": "facebookScopeMinimal"
+    },
+    {
+      "id": "data_deletion_purge",
+      "label": "Callback Meta déclenche une purge des données",
+      "source": "Meta §3 droits + Data Deletion",
+      "type": "automated",
+      "check": "dataDeletionPurgeImplemented"
+    },
+    {
+      "id": "log_pii_disabled",
+      "label": "Pas de log PII (LOG_PII≠true)",
+      "source": "Meta §3 sécurité art.32",
+      "type": "automated",
+      "check": "logPiiDisabled"
+    },
+    {
+      "id": "manual_attestation",
+      "label": "Attestation manuelle RGPD (AIPD, DPO, CNIL, revue légale)",
+      "source": "Meta §3 AIPD + DPO",
+      "type": "manual",
+      "check": "manualAttestation"
+    },
+    {
+      "id": "age_geo_consent",
+      "label": "Consentement tranche d'âge / ville",
+      "source": "Meta §3 base légale",
+      "type": "na",
+      "check": null
+    },
+    {
+      "id": "google_data_deletion",
+      "label": "Callback suppression Google",
+      "source": "extension",
+      "type": "na",
+      "check": null
+    }
+  ]
+}

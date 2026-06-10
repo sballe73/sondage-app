@@ -60,7 +60,6 @@ describe(
 
     before(async () => {
       if (!hasEnv) return;
-      process.env.MOCK_OAUTH = "true";
       process.env.RATE_LIMIT_ENABLED = "false";
 
       const flush = new Redis(process.env.REDIS_URL!);

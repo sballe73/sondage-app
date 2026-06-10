@@ -51,7 +51,6 @@ describe("PATCH /polls/:pollId/dates", { skip: !hasEnv }, () => {
 
   before(async () => {
     if (!hasEnv) return;
-    process.env.MOCK_OAUTH = "true";
     process.env.RATE_LIMIT_ENABLED = "false";
 
     app = await buildApiApp();
@@ -188,7 +187,6 @@ describe("POST /polls creator auth", { skip: !hasEnv }, () => {
 
   before(async () => {
     if (!hasEnv) return;
-    process.env.MOCK_OAUTH = "true";
     app = await buildApiApp();
   });
 

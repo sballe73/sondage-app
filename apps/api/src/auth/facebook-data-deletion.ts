@@ -1,7 +1,9 @@
 import { randomBytes } from "node:crypto";
+import type { Platform } from "@sondage/shared";
 import { config } from "../config.js";
 import { legalPageUrl } from "../meta-constants.js";
 import { parseFacebookSignedRequest } from "./facebook-signed-request.js";
+import { purgeUserData } from "../user-data-deletion.js";
 
 export function buildFacebookDataDeletionResponse(facebookUserId: string) {
   const confirmationCode = randomBytes(12).toString("hex");
@@ -18,7 +20,9 @@ export function buildFacebookDataDeletionResponse(facebookUserId: string) {
   };
 }
 
-export function handleFacebookDataDeletionCallback(signedRequest: string) {
+export async function handleFacebookDataDeletionCallback(
+  signedRequest: string
+) {
   if (!config.oauthFacebookAppSecret) {
     throw new Error("Facebook OAuth is not configured");
   }
@@ -28,5 +32,8 @@ export function handleFacebookDataDeletionCallback(signedRequest: string) {
     config.oauthFacebookAppSecret
   );
 
-  return buildFacebookDataDeletionResponse(payload.user_id!);
+  const userId = payload.user_id!;
+  await purgeUserData("facebook" as Platform, userId);
+
+  return buildFacebookDataDeletionResponse(userId);
 }

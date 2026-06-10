@@ -6,3 +6,5 @@ export * from "./validation.js";
 export * from "./grade-scale.js";
 export * from "./results-policy.js";
 export * from "./privacy.js";
+export * from "./platforms.js";
+export * from "./compliance-checks.js";

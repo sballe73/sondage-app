@@ -107,7 +107,7 @@ export async function voteRoutes(app: FastifyInstance) {
     const voteLogBase = {
       pollId,
       platform: auth.token.platform,
-      subjectId: auth.token.subjectId,
+      ...(config.logPii ? { subjectId: auth.token.subjectId } : {}),
     };
 
     if (claim === "already_voted") {

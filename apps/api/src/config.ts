@@ -8,7 +8,16 @@ export function parseCorsOrigins(
   return origins.length > 0 ? origins : true;
 }
 
+export const DEV_JWT_SECRETS = [
+  "dev-secret-change-in-production",
+  "change-me-in-production",
+] as const;
+
+export const DEV_HASH_SALTS = ["dev-salt", "change-me-for-anonymous-polls"] as const;
+
 const port = Number(process.env.PORT ?? 3000);
+
+import { parseEnabledPlatforms } from "@sondage/shared";
 
 export const config = {
   port,
@@ -29,7 +38,10 @@ export const config = {
     | "GLOBAL",
   regionHeader: "x-data-region",
   voteEventsStream: "vote:events",
-  mockOAuthEnabled: process.env.MOCK_OAUTH !== "false",
+  enabledPlatforms: parseEnabledPlatforms(process.env.ENABLED_PLATFORMS),
+  participationHashSalt:
+    process.env.PARTICIPATION_HASH_SALT ?? "dev-salt",
+  logPii: process.env.LOG_PII === "true",
   corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
   rateLimitEnabled: process.env.RATE_LIMIT_ENABLED !== "false",
   rateLimitGlobalMax: Number(process.env.RATE_LIMIT_GLOBAL_MAX ?? 100),

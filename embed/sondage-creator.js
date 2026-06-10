@@ -35,6 +35,15 @@
 
   const REAL_OAUTH_PLATFORMS = new Set(["facebook", "google"]);
 
+  const PLATFORM_DESCRIPTIONS = {
+    mock: "mock (dev / tests)",
+    facebook: "facebook / Meta — OAuth",
+    google: "google — OAuth",
+    apple: "apple — à venir",
+    linkedin: "linkedin (Phase 2+)",
+    x: "x (abandonné — coût API)",
+  };
+
   class SondageCreatorWidget extends HTMLElement {
     static get observedAttributes() {
       return ["data-api-base", "data-poll-id", "data-data-region"];
@@ -73,11 +82,44 @@
       if (!this.apiBase) return;
 
       this._initialized = true;
+      this._bootstrap();
+    }
+
+    async _bootstrap() {
+      this.renderLoading("Chargement de la configuration…");
+      try {
+        const res = await fetch(`${this.apiBase}/health`);
+        if (!res.ok) throw new Error(await res.text());
+        this.instanceHealth = await res.json();
+      } catch (e) {
+        this.renderError(
+          `Configuration serveur indisponible : ${e.message || e}`
+        );
+        return;
+      }
+
       if (this.pollId) {
-        this.loadExistingPoll();
+        await this.loadExistingPoll();
       } else {
         this.renderForm();
       }
+    }
+
+    _buildPlatformOptionsHtml() {
+      const usable = (this.instanceHealth && this.instanceHealth.usablePlatforms) || [];
+      if (usable.length === 0) {
+        return '<option value="" disabled selected>Aucune plateforme activée sur cette instance</option>';
+      }
+      return usable
+        .map((platform, index) => {
+          const label =
+            PLATFORM_DESCRIPTIONS[platform] ||
+            PLATFORM_LABELS[platform] ||
+            platform;
+          const selected = index === 0 ? " selected" : "";
+          return `<option value="${escapeAttr(platform)}"${selected}>${escapeHtml(label)}</option>`;
+        })
+        .join("");
     }
 
     _headers() {
@@ -286,12 +328,7 @@
               <label>
                 Plateforme OAuth
                 <select name="platform">
-                  <option value="mock" selected>mock (dev / tests)</option>
-                  <option value="facebook">facebook / Meta — OAuth (pilote Lot 3)</option>
-                  <option value="google">google — OAuth (après projet GCP)</option>
-                  <option value="apple">apple — à venir</option>
-                  <option value="linkedin">linkedin (Phase 2+)</option>
-                  <option value="x">x (abandonné — coût API)</option>
+                  ${this._buildPlatformOptionsHtml()}
                 </select>
               </label>
               <label>
