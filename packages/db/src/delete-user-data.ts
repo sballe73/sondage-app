@@ -22,45 +22,70 @@ export async function deleteUserVoteData(
   hashSalt: string
 ): Promise<DeleteUserVoteDataResult> {
   const db = getDb();
-  const platformPolls = await db
-    .select({ id: polls.id, voterMode: polls.voterMode })
+  const pollIds = new Set<string>();
+
+  const ballotRows = await db
+    .select({ pollId: voteBallots.pollId })
+    .from(voteBallots)
+    .where(
+      and(
+        eq(voteBallots.platform, platform),
+        eq(voteBallots.subjectId, subjectId)
+      )
+    );
+  for (const row of ballotRows) {
+    pollIds.add(row.pollId);
+  }
+
+  await db
+    .delete(voteBallots)
+    .where(
+      and(
+        eq(voteBallots.platform, platform),
+        eq(voteBallots.subjectId, subjectId)
+      )
+    );
+
+  const directParticipation = await db
+    .delete(voteParticipation)
+    .where(
+      and(
+        eq(voteParticipation.platform, platform),
+        eq(voteParticipation.subjectId, subjectId)
+      )
+    )
+    .returning({ pollId: voteParticipation.pollId });
+  for (const row of directParticipation) {
+    pollIds.add(row.pollId);
+  }
+
+  const anonymousPolls = await db
+    .select({ id: polls.id })
     .from(polls)
-    .where(eq(polls.platform, platform));
+    .where(eq(polls.voterMode, "anonymous"));
 
-  const pollIds: string[] = [];
-
-  for (const poll of platformPolls) {
-    const participationSubjectIds = new Set<string>([subjectId]);
-    if (poll.voterMode === "anonymous") {
-      participationSubjectIds.add(
-        hashSubjectForParticipation(poll.id, subjectId, hashSalt)
-      );
-    }
-
-    await db
+  for (const poll of anonymousPolls) {
+    const hashed = hashSubjectForParticipation(poll.id, subjectId, hashSalt);
+    const deleted = await db
       .delete(voteParticipation)
       .where(
         and(
           eq(voteParticipation.pollId, poll.id),
-          inArray(voteParticipation.subjectId, [...participationSubjectIds])
+          eq(voteParticipation.platform, platform),
+          eq(voteParticipation.subjectId, hashed)
         )
-      );
-
-    await db
-      .delete(voteBallots)
-      .where(
-        and(
-          eq(voteBallots.pollId, poll.id),
-          eq(voteBallots.subjectId, subjectId)
-        )
-      );
-
-    pollIds.push(poll.id);
+      )
+      .returning({ pollId: voteParticipation.pollId });
+    for (const row of deleted) {
+      pollIds.add(row.pollId);
+    }
   }
 
+  const pollIdList = [...pollIds];
+
   return {
-    pollsAffected: pollIds.length,
-    pollIds,
+    pollsAffected: pollIdList.length,
+    pollIds: pollIdList,
     subjectId,
     platform,
   };

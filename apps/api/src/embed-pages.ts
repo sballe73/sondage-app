@@ -25,6 +25,11 @@ const EMBED_HTML_PAGES = [
     route: "/embed/results.html",
     title: "Résultats — Sondage MJ",
   },
+  {
+    file: "attendance.html",
+    route: "/embed/attendance.html",
+    title: "Feuille d'émargement — Sondage MJ",
+  },
 ] as const;
 
 const LEGAL_HTML_PAGES: ReadonlyArray<{

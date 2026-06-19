@@ -1,5 +1,5 @@
 import { eq, and, asc, desc, sql } from "drizzle-orm";
-import type { PollResultsSnapshot } from "@sondage/shared";
+import type { Platform, PollResultsSnapshot } from "@sondage/shared";
 import { getDb, schema } from "../client.js";
 
 const {
@@ -120,7 +120,11 @@ export async function listBallots(pollId: string) {
     .orderBy(asc(voteBallots.votedAt));
 }
 
-export async function getBallotBySubject(pollId: string, subjectId: string) {
+export async function getBallotBySubject(
+  pollId: string,
+  platform: Platform,
+  subjectId: string
+) {
   const db = getDb();
   const [row] = await db
     .select()
@@ -128,19 +132,44 @@ export async function getBallotBySubject(pollId: string, subjectId: string) {
     .where(
       and(
         eq(voteBallots.pollId, pollId),
+        eq(voteBallots.platform, platform),
         eq(voteBallots.subjectId, subjectId)
       )
     );
   return row ?? null;
 }
 
-export async function recordParticipation(pollId: string, subjectId: string) {
+export async function listParticipation(pollId: string) {
   const db = getDb();
-  await db.insert(voteParticipation).values({ pollId, subjectId });
+  return db
+    .select({
+      displayName: voteParticipation.displayName,
+      participatedAt: voteParticipation.participatedAt,
+      platform: voteParticipation.platform,
+    })
+    .from(voteParticipation)
+    .where(eq(voteParticipation.pollId, pollId))
+    .orderBy(asc(voteParticipation.participatedAt));
+}
+
+export async function recordParticipation(
+  pollId: string,
+  platform: Platform,
+  subjectId: string,
+  displayName?: string
+) {
+  const db = getDb();
+  await db.insert(voteParticipation).values({
+    pollId,
+    platform,
+    subjectId,
+    displayName: displayName ?? null,
+  });
 }
 
 export async function recordBallot(
   pollId: string,
+  platform: Platform,
   subjectId: string,
   displayName: string | undefined,
   grades: { itemId: string; grade: number }[]
@@ -148,6 +177,7 @@ export async function recordBallot(
   const db = getDb();
   await db.insert(voteBallots).values({
     pollId,
+    platform,
     subjectId,
     displayName: displayName ?? null,
     grades,

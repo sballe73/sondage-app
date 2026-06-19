@@ -9,6 +9,6 @@ export async function purgeUserData(platform: Platform, subjectId: string) {
     subjectId,
     config.participationHashSalt
   );
-  await purgeUserParticipationRedis(result.pollIds, subjectId);
+  await purgeUserParticipationRedis(result.pollIds, platform, subjectId);
   return result;
 }

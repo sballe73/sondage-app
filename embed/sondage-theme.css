@@ -1,0 +1,145 @@
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #555555;
+  --text-subtle: #6b7280;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --surface: #f9fafb;
+  --surface-hover: #f1f5f9;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #eff6ff;
+  --error: #b91c1c;
+  --error-bg: #fef2f2;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --info-bg: #eff6ff;
+  --info-border: #bfdbfe;
+  --info-text: #1e40af;
+  --shadow: rgba(0, 0, 0, 0.06);
+  --shell-shadow: rgba(0, 0, 0, 0.1);
+  --input-bg: #ffffff;
+  --input-text: #1a1a1a;
+  --input-border: #d1d5db;
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-text: #1a1a1a;
+  --btn-secondary-border: #d1d5db;
+  --btn-copy-bg: #f3f4f6;
+  --on-primary: #ffffff;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text: #065f46;
+  --code-bg: #f3f4f6;
+  --grid-cell-bg: #fafafa;
+  --table-header-bg: #f9fafb;
+  --cell-empty-bg: #fafafa;
+  --error-border: #fecaca;
+  --error-text: #991b1b;
+  --poll-ended-detail: #7f1d1d;
+  --status-open-bg: #dcfce7;
+  --status-open-text: #166534;
+  --status-soon-bg: #fef9c3;
+  --status-soon-text: #854d0e;
+  --status-ended-bg: #f1f5f9;
+  --status-ended-text: #64748b;
+  --heading-table: #374151;
+  --cell-data-text: #1f2937;
+  --cell-pct-text: #4b5563;
+  --cell-empty-text: #9ca3af;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f172a;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --border: #334155;
+  --border-strong: #475569;
+  --surface: #1e293b;
+  --surface-hover: #334155;
+  --primary: #60a5fa;
+  --primary-hover: #93c5fd;
+  --primary-soft: #1e3a5f;
+  --error: #fca5a5;
+  --error-bg: #450a0a;
+  --warning-bg: #422006;
+  --warning-border: #78350f;
+  --info-bg: #1e3a5f;
+  --info-border: #1d4ed8;
+  --info-text: #bfdbfe;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --shell-shadow: rgba(0, 0, 0, 0.4);
+  --input-bg: #1e293b;
+  --input-text: #f1f5f9;
+  --input-border: #475569;
+  --btn-secondary-bg: #1e293b;
+  --btn-secondary-text: #f1f5f9;
+  --btn-secondary-border: #475569;
+  --btn-copy-bg: #334155;
+  --on-primary: #0f172a;
+  --success-bg: #052e16;
+  --success-border: #166534;
+  --success-text: #86efac;
+  --code-bg: #334155;
+  --grid-cell-bg: #1e293b;
+  --table-header-bg: #1e293b;
+  --cell-empty-bg: #0f172a;
+  --error-border: #7f1d1d;
+  --error-text: #fca5a5;
+  --poll-ended-detail: #fecaca;
+  --status-open-bg: #052e16;
+  --status-open-text: #86efac;
+  --status-soon-bg: #422006;
+  --status-soon-text: #fde68a;
+  --status-ended-bg: #334155;
+  --status-ended-text: #94a3b8;
+  --heading-table: #cbd5e1;
+  --cell-data-text: #e2e8f0;
+  --cell-pct-text: #94a3b8;
+  --cell-empty-text: #64748b;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: var(--primary);
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+.sondage-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.sondage-theme-toggle:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+.sondage-theme-toggle[aria-pressed="true"] {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}

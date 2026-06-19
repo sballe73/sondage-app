@@ -19,7 +19,7 @@
 
   const POLICY_LABELS = {
     end_only: "Fin du sondage uniquement",
-    threshold_1: "Seuil de 1 vote (mock)",
+    threshold_1: "Seuil de 1 vote",
     threshold_10: "Seuil de 10 votes",
     threshold_100: "Seuil de 100 votes",
     threshold_1000: "Seuil de 1000 votes",

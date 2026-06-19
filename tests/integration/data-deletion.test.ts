@@ -81,7 +81,7 @@ describe("Data deletion", { skip: !hasEnv }, () => {
       submittedAt: new Date().toISOString(),
     });
 
-    const ballotBefore = await getBallotBySubject(pollId, subjectId);
+    const ballotBefore = await getBallotBySubject(pollId, "mock", subjectId);
     assert.ok(ballotBefore, "ballot should exist before deletion");
   });
 
@@ -109,7 +109,7 @@ describe("Data deletion", { skip: !hasEnv }, () => {
     assert.equal(delRes.json().status, "deleted");
     assert.ok(delRes.json().pollsAffected >= 1);
 
-    const ballotAfter = await getBallotBySubject(pollId, subjectId);
+    const ballotAfter = await getBallotBySubject(pollId, "mock", subjectId);
     assert.equal(ballotAfter, null);
   });
 

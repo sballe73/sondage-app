@@ -22,6 +22,7 @@ for (const file of [
   "001_init.sql",
   "002_grade_labels.sql",
   "003_mock_snapshot_every_vote.sql",
+  "004_vote_platform.sql",
 ]) {
   const migration = readFileSync(join(dir, file), "utf8");
   await sql.unsafe(migration);

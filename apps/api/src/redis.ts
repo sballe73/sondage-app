@@ -28,8 +28,10 @@ export async function closeRedis() {
   }
 }
 
-function participationKey(pollId: string, subjectId: string) {
-  return `participation:${pollId}:${subjectId}`;
+import type { Platform } from "@sondage/shared";
+
+function participationKey(pollId: string, platform: Platform, subjectId: string) {
+  return `participation:${pollId}:${platform}:${subjectId}`;
 }
 
 function voteCountKey(pollId: string) {
@@ -40,8 +42,8 @@ function idempotencyKey(pollId: string, key: string) {
   return `idempotency:${pollId}:${key}`;
 }
 
-function voteRateLimitKey(pollId: string, subjectId: string) {
-  return `rate:vote:${pollId}:${subjectId}`;
+function voteRateLimitKey(pollId: string, platform: Platform, subjectId: string) {
+  return `rate:vote:${pollId}:${platform}:${subjectId}`;
 }
 
 export type VoteRateLimitResult =
@@ -51,11 +53,12 @@ export type VoteRateLimitResult =
 /** Limite les tentatives de vote par (poll, subject) — fenêtre glissante 60 s. */
 export async function checkVoteRateLimit(
   pollId: string,
+  platform: Platform,
   subjectId: string,
   maxPerMinute: number
 ): Promise<VoteRateLimitResult> {
   const r = getRedis();
-  const key = voteRateLimitKey(pollId, subjectId);
+  const key = voteRateLimitKey(pollId, platform, subjectId);
   const count = await r.incr(key);
   if (count === 1) {
     await r.expire(key, 60);
@@ -73,14 +76,16 @@ export async function checkVoteRateLimit(
 
 export async function hasParticipationClaim(
   pollId: string,
+  platform: Platform,
   subjectId: string
 ): Promise<boolean> {
-  const val = await getRedis().get(participationKey(pollId, subjectId));
+  const val = await getRedis().get(participationKey(pollId, platform, subjectId));
   return val === "1";
 }
 
 export async function tryClaimVote(
   pollId: string,
+  platform: Platform,
   subjectId: string,
   endsAt: Date,
   idempotencyKeyValue?: string
@@ -97,7 +102,7 @@ export async function tryClaimVote(
     if (existing === "accepted") return "idempotent_replay";
   }
 
-  const partKey = participationKey(pollId, subjectId);
+  const partKey = participationKey(pollId, platform, subjectId);
   const set = await r.set(partKey, "1", "EX", ttlSeconds, "NX");
   if (set !== "OK") {
     return "already_voted";
@@ -116,9 +121,13 @@ export async function tryClaimVote(
   return "claimed";
 }
 
-export async function releaseVoteClaim(pollId: string, subjectId: string) {
+export async function releaseVoteClaim(
+  pollId: string,
+  platform: Platform,
+  subjectId: string
+) {
   const r = getRedis();
-  const deleted = await r.del(participationKey(pollId, subjectId));
+  const deleted = await r.del(participationKey(pollId, platform, subjectId));
   if (deleted > 0) {
     const current = await r.decr(voteCountKey(pollId));
     if (current < 0) {
@@ -157,13 +166,14 @@ export async function countParticipationClaims(pollId: string): Promise<number> 
 /** Purge clés Redis de participation pour un votant (demande suppression RGPD). */
 export async function purgeUserParticipationRedis(
   pollIds: string[],
+  platform: Platform,
   subjectId: string
 ): Promise<number> {
   if (pollIds.length === 0) return 0;
   const r = getRedis();
   const keys = pollIds.flatMap((pollId) => [
-    participationKey(pollId, subjectId),
-    voteRateLimitKey(pollId, subjectId),
+    participationKey(pollId, platform, subjectId),
+    voteRateLimitKey(pollId, platform, subjectId),
   ]);
   if (keys.length === 0) return 0;
   return r.del(...keys);

@@ -25,7 +25,10 @@ export async function processVoteEvent(event: VoteSubmittedEvent): Promise<void>
   if (!data) {
     throw new Error(`Poll not found: ${event.pollId}`);
   }
-  if (data.poll.platform !== event.platform) {
+  if (
+    process.env.ALLOW_MULTI_PLATFORM_AUTH !== "true" &&
+    data.poll.platform !== event.platform
+  ) {
     throw new Error("Event platform does not match poll.platform");
   }
 
@@ -43,11 +46,17 @@ export async function processVoteEvent(event: VoteSubmittedEvent): Promise<void>
           process.env.PARTICIPATION_HASH_SALT ?? "dev-salt"
         )
       : event.subjectId;
-  await recordParticipation(event.pollId, participationSubject);
+  await recordParticipation(
+    event.pollId,
+    event.platform,
+    participationSubject,
+    event.displayName
+  );
 
   if (event.voterMode === "public") {
     await recordBallot(
       event.pollId,
+      event.platform,
       event.subjectId,
       event.displayName,
       event.grades

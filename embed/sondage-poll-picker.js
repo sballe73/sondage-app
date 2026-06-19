@@ -19,7 +19,7 @@
       margin: 1rem 0 2rem;
     }
     .sondage-poll-picker .picker-intro {
-      color: #555;
+      color: var(--text-muted);
       margin: 0 0 1rem;
     }
     .sondage-poll-picker .picker-search {
@@ -32,37 +32,39 @@
       flex: 1;
       min-width: 12rem;
       padding: 0.5rem 0.65rem;
-      border: 1px solid #d1d5db;
+      border: 1px solid var(--input-border);
       border-radius: 6px;
       font: inherit;
+      background: var(--input-bg);
+      color: var(--input-text);
     }
     .sondage-poll-picker .picker-search button {
       padding: 0.5rem 1rem;
       border: none;
       border-radius: 6px;
-      background: #2563eb;
-      color: #fff;
+      background: var(--primary);
+      color: var(--on-primary);
       font: inherit;
       cursor: pointer;
     }
     .sondage-poll-picker .picker-search button:hover {
-      background: #1d4ed8;
+      background: var(--primary-hover);
     }
     .sondage-poll-picker .picker-meta {
       font-size: 0.85rem;
-      color: #64748b;
+      color: var(--text-subtle);
       margin: 0 0 0.75rem;
     }
     .sondage-poll-picker .picker-list {
       list-style: none;
       margin: 0;
       padding: 0;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
     }
     .sondage-poll-picker .picker-item {
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--border);
     }
     .sondage-poll-picker .picker-item:last-child {
       border-bottom: none;
@@ -73,21 +75,22 @@
       text-align: left;
       padding: 0.85rem 1rem;
       border: none;
-      background: #fff;
+      background: var(--bg);
+      color: var(--text);
       font: inherit;
       cursor: pointer;
     }
     .sondage-poll-picker .picker-item button:hover {
-      background: #f8fafc;
+      background: var(--surface-hover);
     }
     .sondage-poll-picker .picker-item-name {
       font-weight: 600;
-      color: #1e293b;
+      color: var(--text);
       margin-bottom: 0.25rem;
     }
     .sondage-poll-picker .picker-item-meta {
       font-size: 0.8rem;
-      color: #64748b;
+      color: var(--text-subtle);
       line-height: 1.4;
     }
     .sondage-poll-picker .picker-status {
@@ -99,22 +102,22 @@
       font-weight: 600;
     }
     .sondage-poll-picker .picker-status--open {
-      background: #dcfce7;
-      color: #166534;
+      background: var(--status-open-bg);
+      color: var(--status-open-text);
     }
     .sondage-poll-picker .picker-status--soon {
-      background: #fef9c3;
-      color: #854d0e;
+      background: var(--status-soon-bg);
+      color: var(--status-soon-text);
     }
     .sondage-poll-picker .picker-status--ended {
-      background: #f1f5f9;
-      color: #64748b;
+      background: var(--status-ended-bg);
+      color: var(--status-ended-text);
     }
     .sondage-poll-picker .picker-empty {
       padding: 1.25rem;
       text-align: center;
-      color: #64748b;
-      border: 1px dashed #cbd5e1;
+      color: var(--text-subtle);
+      border: 1px dashed var(--border-strong);
       border-radius: 8px;
     }
     .sondage-poll-picker .picker-pager {
@@ -127,18 +130,22 @@
     }
     .sondage-poll-picker .picker-pager button {
       padding: 0.4rem 0.85rem;
-      border: 1px solid #d1d5db;
+      border: 1px solid var(--btn-secondary-border);
       border-radius: 6px;
-      background: #fff;
+      background: var(--btn-secondary-bg);
+      color: var(--btn-secondary-text);
       font: inherit;
       cursor: pointer;
+    }
+    .sondage-poll-picker .picker-pager button:hover:not(:disabled) {
+      background: var(--surface-hover);
     }
     .sondage-poll-picker .picker-pager button:disabled {
       opacity: 0.45;
       cursor: not-allowed;
     }
     .sondage-poll-picker .picker-error {
-      color: #b91c1c;
+      color: var(--error);
       margin: 0.5rem 0;
     }
   `;

@@ -2,6 +2,8 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <script src="sondage-theme-init.js"></script>
+    <link rel="stylesheet" href="sondage-theme.css" />
     <title>Créateur — Sondage MJ</title>
     <style>
       body {
@@ -9,17 +11,18 @@
         max-width: 720px;
         margin: 2rem auto;
         padding: 0 1rem;
-        color: #1a1a1a;
+        color: var(--text);
+        background: var(--bg);
       }
       .page-nav {
         margin-bottom: 1.5rem;
       }
       .page-nav a {
-        color: #2563eb;
+        color: var(--primary);
         margin-right: 1rem;
       }
       .sondage-creator fieldset {
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border);
         border-radius: 8px;
         padding: 1rem 1.25rem;
         margin: 0 0 1.25rem;
@@ -27,11 +30,13 @@
       .sondage-creator legend {
         font-weight: 600;
         padding: 0 0.25rem;
+        color: var(--text);
       }
       .sondage-creator label {
         display: block;
         margin-bottom: 0.75rem;
         font-size: 0.9rem;
+        color: var(--text);
       }
       .sondage-creator input[type="text"],
       .sondage-creator input[type="datetime-local"],
@@ -41,15 +46,20 @@
         width: 100%;
         margin-top: 0.25rem;
         padding: 0.45rem 0.6rem;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--input-border);
         border-radius: 6px;
         font: inherit;
         box-sizing: border-box;
+        background: var(--input-bg);
+        color: var(--input-text);
       }
       .sondage-creator .hint {
-        color: #6b7280;
+        color: var(--text-muted);
         font-size: 0.85rem;
         margin: 0 0 0.75rem;
+      }
+      body > .hint {
+        color: var(--text-muted);
       }
       .sondage-creator .candidate-row {
         display: flex;
@@ -64,9 +74,10 @@
         width: 2.25rem;
         padding: 0;
         cursor: pointer;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--btn-secondary-border);
         border-radius: 6px;
-        background: #fff;
+        background: var(--btn-secondary-bg);
+        color: var(--btn-secondary-text);
         font-size: 1.1rem;
         line-height: 1;
       }
@@ -79,47 +90,63 @@
         font: inherit;
       }
       .sondage-creator .btn-primary {
-        background: #2563eb;
-        color: #fff;
+        background: var(--primary);
+        color: var(--on-primary);
         border: none;
+      }
+      .sondage-creator .btn-primary:hover {
+        background: var(--primary-hover);
       }
       .sondage-creator .btn-primary:disabled {
         opacity: 0.6;
         cursor: wait;
       }
       .sondage-creator .btn-secondary {
-        background: #fff;
-        border: 1px solid #d1d5db;
+        background: var(--btn-secondary-bg);
+        color: var(--btn-secondary-text);
+        border: 1px solid var(--btn-secondary-border);
+      }
+      .sondage-creator .btn-secondary:hover {
+        background: var(--surface-hover);
       }
       .sondage-creator .error {
-        color: #b91c1c;
+        color: var(--error);
         margin: 0.5rem 0;
       }
       .sondage-creator .success-banner {
-        background: #ecfdf5;
-        border: 1px solid #a7f3d0;
+        background: var(--success-bg);
+        border: 1px solid var(--success-border);
         border-radius: 8px;
         padding: 1rem 1.25rem;
         margin-bottom: 1.25rem;
+        color: var(--success-text);
       }
       .sondage-creator .success-banner h2 {
         margin: 0 0 0.5rem;
+        color: var(--success-text);
       }
       .sondage-creator .poll-id code {
         font-size: 0.85rem;
         word-break: break-all;
+        background: var(--code-bg);
+        color: var(--text);
+        padding: 0.15rem 0.35rem;
+        border-radius: 4px;
       }
       .sondage-creator .links-panel,
       .sondage-creator .status-panel {
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border);
         border-radius: 8px;
         padding: 1rem 1.25rem;
         margin-bottom: 1.25rem;
+        background: var(--surface);
+        color: var(--text);
       }
       .sondage-creator .links-panel h3,
       .sondage-creator .status-panel h3 {
         margin: 0 0 0.75rem;
         font-size: 1rem;
+        color: var(--text);
       }
       .sondage-creator .copy-field {
         margin-bottom: 1rem;
@@ -141,8 +168,9 @@
       }
       .sondage-creator .btn-copy {
         white-space: nowrap;
-        background: #f3f4f6;
-        border: 1px solid #d1d5db;
+        background: var(--btn-copy-bg);
+        color: var(--btn-secondary-text);
+        border: 1px solid var(--btn-secondary-border);
       }
       .sondage-creator .status-dl {
         display: grid;
@@ -152,11 +180,12 @@
         font-size: 0.9rem;
       }
       .sondage-creator .status-dl dt {
-        color: #6b7280;
+        color: var(--text-muted);
         margin: 0;
       }
       .sondage-creator .status-dl dd {
         margin: 0;
+        color: var(--text);
       }
       .sondage-creator .creator-footer {
         display: flex;
@@ -193,6 +222,13 @@
       }
       .sondage-creator .oauth-login-btn--facebook {
         background: #1877f2;
+      }
+      .sondage-creator .oauth-login-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+        margin-top: 0.5rem;
       }
     </style>
     <script src="sondage-auth-storage.js"></script>

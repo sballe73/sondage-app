@@ -37,7 +37,7 @@ export async function createPoll(input: CreatePollInput) {
         mockSnapshotEveryVote: normalized.mockSnapshotEveryVote ?? false,
         dataRegion: normalized.dataRegion ?? "EU",
         campaignId,
-        platformLocked: true,
+        platformLocked: process.env.ALLOW_MULTI_PLATFORM_AUTH !== "true",
       })
       .returning();
 

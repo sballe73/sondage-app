@@ -18,7 +18,7 @@
 
   const POLICY_LABELS = {
     end_only: "Fin du sondage uniquement",
-    threshold_1: "Seuil de 1 vote (mock)",
+    threshold_1: "Seuil de 1 vote",
     threshold_10: "Seuil de 10 votes",
     threshold_100: "Seuil de 100 votes",
     threshold_1000: "Seuil de 1000 votes",
@@ -106,7 +106,7 @@
     }
 
     _buildPlatformOptionsHtml() {
-      const usable = (this.instanceHealth && this.instanceHealth.usablePlatforms) || [];
+      const usable = this._usablePlatforms();
       if (usable.length === 0) {
         return '<option value="" disabled selected>Aucune plateforme activée sur cette instance</option>';
       }
@@ -120,6 +120,22 @@
           return `<option value="${escapeAttr(platform)}"${selected}>${escapeHtml(label)}</option>`;
         })
         .join("");
+    }
+
+    _allowMultiPlatformAuth() {
+      return this.instanceHealth?.allowMultiPlatformAuth === true;
+    }
+
+    _usablePlatforms() {
+      return (this.instanceHealth && this.instanceHealth.usablePlatforms) || [];
+    }
+
+    _oauthPlatforms() {
+      return this._usablePlatforms().filter((p) => this._isRealOAuth(p));
+    }
+
+    _mockPlatformEnabled() {
+      return this._usablePlatforms().includes("mock");
     }
 
     _headers() {
@@ -223,6 +239,38 @@
       return true;
     }
 
+    async _ensureAuthFromAny(platforms) {
+      const hashToken = this.consumeOAuthHash();
+      if (hashToken) {
+        this.token = hashToken;
+        const session = await this.loadSession();
+        if (session && platforms.includes(session.platform)) {
+          this.session = session;
+          this.persistToken(session.platform);
+          return true;
+        }
+        this.token = null;
+        this.session = null;
+      }
+
+      for (const platform of platforms) {
+        if (platform === "mock") continue;
+        this.token = this.readStoredToken(platform);
+        if (!this.token) continue;
+        const session = await this.loadSession();
+        if (session && session.platform === platform) {
+          this.session = session;
+          this.persistToken(platform);
+          return true;
+        }
+        this.clearStoredToken(platform);
+        this.token = null;
+      }
+
+      this.session = null;
+      return false;
+    }
+
     _isRealOAuth(platform) {
       return REAL_OAUTH_PLATFORMS.has(platform);
     }
@@ -241,6 +289,9 @@
     _isPollCreator() {
       const poll = this.createdPoll;
       if (!poll || !this.session) return false;
+      if (this._allowMultiPlatformAuth() || poll.platformLocked === false) {
+        return this.session.subjectId === poll.creatorId;
+      }
       return (
         this.session.platform === poll.platform &&
         this.session.subjectId === poll.creatorId
@@ -266,7 +317,7 @@
         if (this.createdPoll.dataRegion) {
           this.dataRegion = this.createdPoll.dataRegion;
         }
-        await this.ensureAuth(this.createdPoll.platform);
+        await this._ensureAuthForPoll(this.createdPoll.platform);
         await this.refreshStatus();
         this.renderCreated();
       } catch (e) {
@@ -282,10 +333,70 @@
       this.innerHTML = `<article class="sondage-creator"><p class="error">${escapeHtml(message)}</p></article>`;
     }
 
+    async _ensureMockCreatorAuth(creatorId) {
+      if (!creatorId) return false;
+      const res = await fetch(`${this.apiBase}/auth/mock/login`, {
+        method: "POST",
+        headers: this._headers(),
+        body: JSON.stringify({
+          ...(this.pollId ? { pollId: this.pollId } : {}),
+          platform: "mock",
+          subjectId: creatorId,
+          displayName: creatorId,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      this.token = data.accessToken;
+      this.persistToken("mock");
+      this.session = await this.loadSession();
+      if (window.SondageShell) {
+        if (window.SondageShell.setCreatorPlatform) {
+          window.SondageShell.setCreatorPlatform("mock");
+        }
+        if (window.SondageShell.refresh) {
+          await window.SondageShell.refresh();
+        }
+      }
+      return !!this.session;
+    }
+
+    async _ensureAuthForPoll(platform) {
+      const creatorId = this.createdPoll?.creatorId;
+      if (!creatorId) return false;
+
+      if (this._allowMultiPlatformAuth()) {
+        await this._ensureAuthFromAny(this._usablePlatforms());
+      } else if (platform !== "mock") {
+        await this.ensureAuth(platform);
+      }
+
+      if (this.session?.subjectId === creatorId) return true;
+
+      if (platform === "mock") {
+        return this._ensureMockCreatorAuth(creatorId);
+      }
+
+      if (!this._allowMultiPlatformAuth()) {
+        return this.ensureAuth(platform);
+      }
+
+      return false;
+    }
+
     renderForm() {
       const now = new Date();
       const starts = new Date(now.getTime() - 60 * 60 * 1000);
       const ends = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const multiAuth = this._allowMultiPlatformAuth();
+      const platformField = multiAuth
+        ? `<p class="hint">Les votants pourront se connecter via toute plateforme OAuth activée sur cette instance.</p>`
+        : `<label>
+                Plateforme OAuth
+                <select name="platform">
+                  ${this._buildPlatformOptionsHtml()}
+                </select>
+              </label>`;
 
       this.innerHTML = `
         <article class="sondage-creator">
@@ -325,12 +436,7 @@
 
             <fieldset>
               <legend>Configuration</legend>
-              <label>
-                Plateforme OAuth
-                <select name="platform">
-                  ${this._buildPlatformOptionsHtml()}
-                </select>
-              </label>
+              ${platformField}
               <label>
                 Mode votant
                 <select name="voterMode">
@@ -341,6 +447,7 @@
               <label>
                 Politique de résultats
                 <select name="resultPolicy">
+                  <option value="threshold_1">threshold_1 (dès 1 vote)</option>
                   <option value="threshold_10" selected>threshold_10 (dès 10 votes)</option>
                   <option value="threshold_100">threshold_100</option>
                   <option value="threshold_1000">threshold_1000</option>
@@ -369,33 +476,9 @@
       );
 
       const platformSelect = this.querySelector('select[name="platform"]');
-      const resultPolicySelect = this.querySelector('select[name="resultPolicy"]');
-      const syncMockOnlyOptions = () => {
-        const isMock = platformSelect.value === "mock";
-        let threshold1Option = resultPolicySelect.querySelector(
-          'option[value="threshold_1"]'
-        );
-        if (isMock && !threshold1Option) {
-          threshold1Option = document.createElement("option");
-          threshold1Option.value = "threshold_1";
-          threshold1Option.textContent = "threshold_1 (dès 1 vote)";
-          resultPolicySelect.insertBefore(
-            threshold1Option,
-            resultPolicySelect.firstChild
-          );
-        } else if (!isMock && threshold1Option) {
-          if (resultPolicySelect.value === "threshold_1") {
-            resultPolicySelect.value = "threshold_10";
-          }
-          threshold1Option.remove();
-        }
-      };
-      const onPlatformChange = () => {
-        syncMockOnlyOptions();
-        this._syncOrganizerUi();
-      };
-      platformSelect.addEventListener("change", onPlatformChange);
-      syncMockOnlyOptions();
+      if (platformSelect) {
+        platformSelect.addEventListener("change", () => this._syncOrganizerUi());
+      }
       this._syncOrganizerUi();
     }
 
@@ -407,6 +490,10 @@
     }
 
     async _syncOrganizerUi() {
+      if (this._allowMultiPlatformAuth()) {
+        return this._syncOrganizerUiMultiAuth();
+      }
+
       const platformSelect = this.querySelector('select[name="platform"]');
       const container = this.querySelector("#organizer-content");
       if (!platformSelect || !container) return;
@@ -472,6 +559,84 @@
       }
     }
 
+    async _syncOrganizerUiMultiAuth() {
+      const container = this.querySelector("#organizer-content");
+      if (!container) return;
+
+      const oauthPlatforms = this._oauthPlatforms();
+      const mockEnabled = this._mockPlatformEnabled();
+
+      try {
+        await this._ensureAuthFromAny(this._usablePlatforms());
+      } catch (e) {
+        container.innerHTML = `<p class="error">${escapeHtml(e.message)}</p>`;
+        this._updateSubmitState(false);
+        return;
+      }
+
+      if (this.session) {
+        const display = this.session.displayName || this.session.subjectId;
+        const label =
+          PLATFORM_LABELS[this.session.platform] || this.session.platform;
+        container.innerHTML = `
+          <label>
+            Identifiant créateur
+            <input type="text" readonly value="${escapeAttr(display)}" />
+          </label>
+          <p class="hint">Connecté en tant que <strong>${escapeHtml(display)}</strong> (${escapeHtml(label)}).</p>
+        `;
+        this._updateSubmitState(true);
+        if (window.SondageShell?.setCreatorPlatform) {
+          window.SondageShell.setCreatorPlatform(this.session.platform);
+        }
+        if (window.SondageShell?.refresh) {
+          await window.SondageShell.refresh();
+        }
+        return;
+      }
+
+      const returnTo = window.location.href.split("#")[0];
+      let html = "";
+
+      if (mockEnabled) {
+        html += `
+          <label>
+            Identifiant créateur (mock)
+            <input type="text" name="creatorId" value="local-dev" />
+          </label>
+          <p class="hint">En dev, laissez un identifiant libre ou connectez-vous ci-dessous.</p>
+        `;
+      }
+
+      if (oauthPlatforms.length > 0) {
+        html += `<p class="hint">Connectez-vous pour créer le sondage (une seule connexion suffit).</p><div class="oauth-login-buttons">`;
+        for (const platform of oauthPlatforms) {
+          const label = PLATFORM_LABELS[platform] || platform;
+          const loginUrl =
+            `${this.apiBase}/auth/${encodeURIComponent(platform)}/login` +
+            `?returnTo=${encodeURIComponent(returnTo)}`;
+          html += `<a class="oauth-login-btn oauth-login-btn--${escapeAttr(platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a>`;
+        }
+        html += `</div>`;
+      }
+
+      if (!mockEnabled && oauthPlatforms.length === 0) {
+        html = `<p class="error">Aucune plateforme de connexion n'est activée sur cette instance.</p>`;
+        this._updateSubmitState(false);
+      } else {
+        this._updateSubmitState(mockEnabled);
+      }
+
+      container.innerHTML = html;
+
+      if (window.SondageShell?.setCreatorPlatform) {
+        window.SondageShell.setCreatorPlatform(null);
+      }
+      if (window.SondageShell?.refresh) {
+        await window.SondageShell.refresh();
+      }
+    }
+
     _addCandidateRow(list) {
       if (this._candidateCount >= MAX_CANDIDATES) return;
       this._candidateCount += 1;
@@ -496,7 +661,9 @@
         .map((el) => el.value.trim())
         .filter(Boolean);
 
-      const platform = String(fd.get("platform") || "mock");
+      const platform = this._allowMultiPlatformAuth()
+        ? this.session?.platform || "mock"
+        : String(fd.get("platform") || "mock");
 
       return {
         creatorId: String(fd.get("creatorId") || "").trim(),
@@ -512,7 +679,16 @@
 
     _validateForm(data) {
       const errors = [];
-      if (data.platform === "mock") {
+      if (this._allowMultiPlatformAuth()) {
+        if (!this.session && !data.creatorId) {
+          errors.push(
+            "Connexion OAuth ou identifiant créateur mock requis."
+          );
+        }
+        if (!this.session && data.creatorId && !this._mockPlatformEnabled()) {
+          errors.push("Connexion OAuth requise sur cette instance.");
+        }
+      } else if (data.platform === "mock") {
         if (!data.creatorId) errors.push("Identifiant créateur requis.");
       } else if (!this.session) {
         errors.push("Connexion à la plateforme requise.");
@@ -558,7 +734,6 @@
 
       const payload = {
         name: data.name,
-        platform: data.platform,
         items: data.candidates.map((label, i) => ({ label, sortOrder: i })),
         startsAt: datetimeLocalToIso(data.startsAt),
         endsAt: datetimeLocalToIso(data.endsAt),
@@ -567,8 +742,15 @@
         resultPolicy: data.resultPolicy,
         dataRegion: this.dataRegion,
       };
-      if (data.platform === "mock") {
-        payload.creatorId = data.creatorId;
+      if (this._allowMultiPlatformAuth()) {
+        if (!this.session && data.creatorId) {
+          payload.creatorId = data.creatorId;
+        }
+      } else {
+        payload.platform = data.platform;
+        if (data.platform === "mock") {
+          payload.creatorId = data.creatorId;
+        }
       }
 
       try {
@@ -583,13 +765,16 @@
         }
         this.createdPoll = body;
         this.pollId = body.id;
+        this._updateUrl(body.id);
         if (window.SondageShell && window.SondageShell.setActivePollId) {
           window.SondageShell.setActivePollId(body.id);
         }
         if (body.dataRegion) this.dataRegion = body.dataRegion;
+        if (body.platform === "mock" && body.creatorId) {
+          await this._ensureMockCreatorAuth(body.creatorId);
+        }
         await this.refreshStatus();
         this.renderCreated();
-        this._updateUrl(body.id);
       } catch (e) {
         this._showFormError(e.message);
         submitBtn.disabled = false;
@@ -662,6 +847,7 @@
       const embedBase = this._embedBase();
       const voteUrl = `${embedBase}/vote.html?pollId=${poll.id}`;
       const resultsUrl = `${embedBase}/results.html?pollId=${poll.id}`;
+      const attendanceUrl = `${embedBase}/attendance.html?pollId=${poll.id}`;
       const snippet = `<sondage-poll-widget
   data-poll-id="${poll.id}"
   data-api-base="${this.apiBase}"
@@ -683,6 +869,7 @@
             <h3>Liens à partager</h3>
             ${copyField("Lien vote", voteUrl)}
             ${copyField("Lien résultats", resultsUrl)}
+            ${copyField("Feuille d'émargement", attendanceUrl)}
             ${copyField("Snippet embed", snippet, true)}
           </section>
 
@@ -719,6 +906,9 @@
         } catch {
           /* ignore */
         }
+        if (window.SondageShell && window.SondageShell.clearActivePoll) {
+          window.SondageShell.clearActivePoll();
+        }
         this.renderForm();
       });
 
@@ -745,15 +935,39 @@
 
     _renderCreatorAuthHint(poll) {
       if (poll.platform === "mock" || this._isPollCreator()) return "";
-      const label = PLATFORM_LABELS[poll.platform] || poll.platform;
       if (this.session) return "";
-      if (!this._isRealOAuth(poll.platform)) {
+
+      const multiAuth =
+        this._allowMultiPlatformAuth() || poll.platformLocked === false;
+      const oauthPlatforms = multiAuth
+        ? this._oauthPlatforms()
+        : this._isRealOAuth(poll.platform)
+          ? [poll.platform]
+          : [];
+
+      if (oauthPlatforms.length === 0) {
         return `<p class="hint">Seul le créateur peut modifier les dates de ce sondage.</p>`;
       }
-      const loginUrl = this._oauthLoginUrl(poll.platform, poll.id);
+
+      const returnTo = window.location.href.split("#")[0];
+      const buttons = oauthPlatforms
+        .map((platform) => {
+          const label = PLATFORM_LABELS[platform] || platform;
+          const loginUrl =
+            `${this.apiBase}/auth/${encodeURIComponent(platform)}/login` +
+            `?pollId=${encodeURIComponent(poll.id)}` +
+            `&returnTo=${encodeURIComponent(returnTo)}`;
+          return `<a class="oauth-login-btn oauth-login-btn--${escapeAttr(platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a>`;
+        })
+        .join("");
+
+      const intro = multiAuth
+        ? "Connectez-vous avec le compte utilisé à la création du sondage."
+        : `Connectez-vous avec <strong>${escapeHtml(PLATFORM_LABELS[poll.platform] || poll.platform)}</strong> pour gérer ce sondage.`;
+
       return `
-        <p class="hint">Connectez-vous avec <strong>${escapeHtml(label)}</strong> pour gérer ce sondage.</p>
-        <p><a class="oauth-login-btn oauth-login-btn--${escapeAttr(poll.platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a></p>
+        <p class="hint">${intro}</p>
+        <div class="oauth-login-buttons">${buttons}</div>
       `;
     }
 
@@ -766,6 +980,10 @@
       const isCreator = this._isPollCreator();
       const canEditStarts = isCreator && new Date(poll.startsAt) > now;
       const canEditEnds = isCreator && new Date(poll.endsAt) > now;
+      const platformLabel =
+        this._allowMultiPlatformAuth() || poll.platformLocked === false
+          ? "Multi-plateforme (toutes OAuth activées)"
+          : PLATFORM_LABELS[poll.platform] || poll.platform;
 
       let resultsLine = "—";
       if (info.resultsState === "visible") {
@@ -790,7 +1008,7 @@
         <h3>État du sondage</h3>
         <dl class="status-dl">
           <dt>Nom</dt><dd>${escapeHtml(poll.name)}</dd>
-          <dt>Plateforme</dt><dd>${escapeHtml(poll.platform)}</dd>
+          <dt>Plateforme</dt><dd>${escapeHtml(platformLabel)}</dd>
           <dt>Politique résultats</dt><dd>${escapeHtml(policyLabel)}</dd>
           <dt>Votes</dt><dd>${escapeHtml(voteLine)}</dd>
           <dt>Résultats</dt><dd>${resultsLine}</dd>
@@ -910,7 +1128,7 @@
       if (panel) panel.innerHTML = "<p class='status'>Actualisation…</p>";
       try {
         if (this.createdPoll) {
-          await this.ensureAuth(this.createdPoll.platform);
+          await this._ensureAuthForPoll(this.createdPoll.platform);
         }
         await this.refreshStatus();
         if (panel) {

@@ -9,7 +9,7 @@ import {
   assertTokenMatchesPoll,
 } from "../auth/oauth.js";
 import { AppError } from "../errors.js";
-import { config } from "../config.js";
+import { config, isMultiPlatformAuthAllowed } from "../config.js";
 import {
   REAL_OAUTH_PLATFORMS,
   getOAuthProvider,
@@ -94,7 +94,10 @@ async function assertPollAcceptsPlatform(
   if (!data) {
     throw new AppError(404, "NOT_FOUND", "Poll not found");
   }
-  if (data.poll.platform !== platform) {
+  if (
+    !isMultiPlatformAuthAllowed() &&
+    data.poll.platform !== platform
+  ) {
     throw new AppError(
       403,
       "PLATFORM_MISMATCH",
@@ -319,7 +322,10 @@ export async function authRoutes(app: FastifyInstance) {
         throw new AppError(404, "NOT_FOUND", "Poll not found");
       }
 
-      if (body.platform !== data.poll.platform) {
+      if (
+        !isMultiPlatformAuthAllowed() &&
+        body.platform !== data.poll.platform
+      ) {
         throw new AppError(
           403,
           "PLATFORM_MISMATCH",
@@ -332,7 +338,10 @@ export async function authRoutes(app: FastifyInstance) {
       }
     }
 
-    if (isRealOAuthPlatform(body.platform)) {
+    if (
+      isRealOAuthPlatform(body.platform) &&
+      !isMultiPlatformAuthAllowed()
+    ) {
       throw new AppError(
         400,
         "VALIDATION_ERROR",
@@ -418,25 +427,31 @@ export async function requireVoterAuth(
     throw new AppError(404, "NOT_FOUND", "Poll not found");
   }
   try {
-    assertPlatformUsable(data.poll.platform as typeof token.platform);
+    assertPlatformUsable(token.platform);
   } catch (e) {
     if (e instanceof AppError) throw e;
     throw new AppError(
       403,
       "PLATFORM_NOT_ENABLED",
-      `Poll platform ${data.poll.platform} is not enabled on this instance`
+      `Platform ${token.platform} is not enabled on this instance`
     );
   }
-  try {
-    assertTokenMatchesPoll(token, pollId, data.poll.platform as typeof token.platform);
-  } catch (e) {
-    const message = (e as Error).message;
-    if (message.includes("OAuth provider mismatch")) {
-      throw new AppError(403, "PLATFORM_MISMATCH", message, {
-        requiredPlatform: data.poll.platform,
-      });
+  if (!isMultiPlatformAuthAllowed()) {
+    try {
+      assertTokenMatchesPoll(
+        token,
+        pollId,
+        data.poll.platform as typeof token.platform
+      );
+    } catch (e) {
+      const message = (e as Error).message;
+      if (message.includes("OAuth provider mismatch")) {
+        throw new AppError(403, "PLATFORM_MISMATCH", message, {
+          requiredPlatform: data.poll.platform,
+        });
+      }
+      throw new AppError(403, "FORBIDDEN", message);
     }
-    throw new AppError(403, "FORBIDDEN", message);
   }
   return { token, poll: data.poll, items: data.items };
 }
@@ -480,7 +495,10 @@ export async function requirePollCreatorAuth(
     throw new AppError(404, "NOT_FOUND", "Poll not found");
   }
   const poll = data.poll;
-  if (token.platform !== poll.platform) {
+  if (
+    !isMultiPlatformAuthAllowed() &&
+    token.platform !== poll.platform
+  ) {
     throw new AppError(403, "PLATFORM_MISMATCH", "Platform mismatch", {
       requiredPlatform: poll.platform,
     });
