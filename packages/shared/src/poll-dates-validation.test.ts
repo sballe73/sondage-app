@@ -93,6 +93,20 @@ describe("validatePollDateUpdate", () => {
     assert.equal(result.endsAt.getTime(), futureEnd.getTime());
   });
 
+  it("accepts now as endsAt when poll is open", () => {
+    const result = validatePollDateUpdate(
+      {
+        startsAt: pastStart,
+        endsAt: futureEnd,
+        closedAt: null,
+      },
+      { endsAt: baseNow },
+      baseNow
+    );
+    assert.equal(result.startsAt.getTime(), pastStart.getTime());
+    assert.equal(result.endsAt.getTime(), baseNow.getTime());
+  });
+
   it("rejects invalid poll window after merge", () => {
     assert.throws(
       () =>

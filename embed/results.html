@@ -2,6 +2,8 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <script src="sondage-theme-init.js"></script>
+    <link rel="stylesheet" href="sondage-theme.css" />
     <title>Résultats — Sondage MJ</title>
     <style>
       body {
@@ -9,63 +11,69 @@
         max-width: 960px;
         margin: 2rem auto;
         padding: 0 1rem;
-        color: #1a1a1a;
+        color: var(--text);
+        background: var(--bg);
       }
       .nav-links {
         margin-bottom: 1.5rem;
       }
       .nav-links a {
-        color: #2563eb;
+        color: var(--primary);
       }
       .sondage-results .results-header h2 {
         margin: 0 0 0.25rem;
+        color: var(--text);
       }
       .sondage-results .meta {
-        color: #555;
+        color: var(--text-muted);
         margin: 0 0 1rem;
       }
       .sondage-results .notice {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: var(--surface);
+        border: 1px solid var(--border);
         border-radius: 8px;
         padding: 1rem 1.25rem;
         margin: 1rem 0;
+        color: var(--text);
       }
       .sondage-results .notice h3 {
         margin: 0 0 0.5rem;
         font-size: 1.1rem;
+        color: var(--text);
       }
       .sondage-results .notice p {
         margin: 0.35rem 0;
+        color: var(--text-muted);
       }
       .sondage-results .tie-break-info {
-        background: #fffbeb;
-        border: 1px solid #fde68a;
+        background: var(--warning-bg);
+        border: 1px solid var(--warning-border);
         border-radius: 8px;
         padding: 0.75rem 1rem;
         margin: 1rem 0;
         font-size: 0.9rem;
         line-height: 1.45;
+        color: var(--text);
       }
       .sondage-results .live-vote-notice {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
+        background: var(--info-bg);
+        border: 1px solid var(--info-border);
         border-radius: 8px;
         padding: 0.75rem 1rem;
         margin: 0 0 1rem;
         font-size: 0.9rem;
         line-height: 1.45;
-        color: #1e40af;
+        color: var(--info-text);
       }
       .sondage-results .poll-ended-banner {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
+        background: var(--error-bg);
+        border: 1px solid var(--error-border);
         border-radius: 8px;
         padding: 0.85rem 1rem;
         margin: 0 0 1rem;
         font-size: 0.95rem;
         line-height: 1.45;
-        color: #991b1b;
+        color: var(--error-text);
       }
       .sondage-results .poll-ended-label {
         display: block;
@@ -73,43 +81,45 @@
         margin-bottom: 0.25rem;
       }
       .sondage-results .poll-ended-detail {
-        color: #7f1d1d;
+        color: var(--poll-ended-detail);
       }
       .sondage-results .ranking-table {
         width: 100%;
         border-collapse: collapse;
         margin: 0.5rem 0 1.5rem;
+        color: var(--text);
       }
       .sondage-results .ranking-table th,
       .sondage-results .ranking-table td {
         text-align: left;
         padding: 0.5rem 0.75rem;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border);
       }
       .sondage-results .ranking-table th {
         font-weight: 600;
-        color: #374151;
+        color: var(--heading-table);
       }
       .sondage-results .ranking-table .rank {
         width: 3rem;
         font-weight: 700;
-        color: #2563eb;
+        color: var(--primary);
       }
       .sondage-results .ranking-table .median {
         font-size: 0.92rem;
       }
       .sondage-results .distribution-section h3 {
         margin-top: 2rem;
+        color: var(--text);
       }
       .sondage-results .hint {
-        color: #6b7280;
+        color: var(--text-subtle);
         font-size: 0.875rem;
         margin: 0 0 1rem;
       }
       .sondage-results .distribution-grid-wrap {
         overflow-x: auto;
         margin: 0 0 1.5rem;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border);
         border-radius: 8px;
       }
       .sondage-results .distribution-grid {
@@ -117,17 +127,19 @@
         border-collapse: collapse;
         font-size: 0.85rem;
         min-width: 36rem;
+        color: var(--text);
       }
       .sondage-results .distribution-grid th,
       .sondage-results .distribution-grid td {
         padding: 0.5rem 0.45rem;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border);
         vertical-align: middle;
       }
       .sondage-results .distribution-grid thead th {
-        background: #f9fafb;
+        background: var(--table-header-bg);
         font-weight: 600;
         text-align: center;
+        color: var(--text);
       }
       .sondage-results .distribution-grid .candidate-col {
         text-align: left;
@@ -136,7 +148,8 @@
       .sondage-results .distribution-grid .candidate-label {
         text-align: left;
         font-weight: 600;
-        background: #fff;
+        background: var(--surface);
+        color: var(--text);
         min-width: 9rem;
       }
       .sondage-results .distribution-grid .candidate-name {
@@ -147,7 +160,7 @@
         margin-top: 0.2rem;
         font-size: 0.78rem;
         font-weight: 400;
-        color: #6b7280;
+        color: var(--text-subtle);
       }
       .sondage-results .distribution-grid .grade-col {
         min-width: 4.5rem;
@@ -161,7 +174,7 @@
         display: block;
         font-size: 0.68rem;
         font-weight: 500;
-        color: #6b7280;
+        color: var(--text-subtle);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -170,19 +183,19 @@
       .sondage-results .distribution-grid .distribution-cell {
         text-align: center;
         font-variant-numeric: tabular-nums;
-        color: #1f2937;
+        color: var(--cell-data-text);
         transition: background-color 0.2s ease;
       }
       .sondage-results .distribution-grid .distribution-cell.is-empty {
-        color: #9ca3af;
-        background: #fafafa !important;
+        color: var(--cell-empty-text);
+        background: var(--cell-empty-bg) !important;
       }
       .sondage-results .distribution-grid .cell-sep {
-        color: #9ca3af;
+        color: var(--cell-empty-text);
       }
       .sondage-results .distribution-grid .cell-pct {
         font-size: 0.78rem;
-        color: #4b5563;
+        color: var(--cell-pct-text);
       }
       .sondage-results .distribution-grid thead .grade-1 { color: #16a34a; }
       .sondage-results .distribution-grid thead .grade-2 { color: #22c55e; }
@@ -197,18 +210,26 @@
         gap: 1rem;
         margin-top: 1.5rem;
         padding-top: 1rem;
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid var(--border);
       }
       .sondage-results .results-footer button {
         padding: 0.45rem 1rem;
         cursor: pointer;
+        font: inherit;
+        border-radius: 6px;
+        border: 1px solid var(--btn-secondary-border);
+        background: var(--btn-secondary-bg);
+        color: var(--btn-secondary-text);
+      }
+      .sondage-results .results-footer button:hover {
+        background: var(--surface-hover);
       }
       .sondage-results .auto-hint {
         font-size: 0.8rem;
-        color: #6b7280;
+        color: var(--text-subtle);
       }
       .sondage-results .error {
-        color: #b91c1c;
+        color: var(--error);
       }
     </style>
     <script src="sondage-auth-storage.js"></script>

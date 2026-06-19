@@ -2,6 +2,8 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <script src="sondage-theme-init.js"></script>
+    <link rel="stylesheet" href="sondage-theme.css" />
     <title>Voter — Sondage MJ</title>
     <style>
       body {
@@ -9,21 +11,26 @@
         max-width: 960px;
         margin: 2rem auto;
         padding: 0 1rem;
-        color: #1a1a1a;
+        color: var(--text);
+        background: var(--bg);
+      }
+      .sondage-widget h2 {
+        color: var(--text);
       }
       .sondage-widget .meta {
-        color: #555;
+        color: var(--text-muted);
         margin: 0 0 0.75rem;
       }
-      .sondage-widget .hint {
-        color: #6b7280;
+      .sondage-widget .hint,
+      .sondage-widget .legal-notice {
+        color: var(--text-subtle);
         font-size: 0.875rem;
         margin: 0 0 1rem;
       }
       .sondage-widget .vote-grid-wrap {
         overflow-x: auto;
         margin: 0 0 1rem;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border);
         border-radius: 8px;
       }
       .sondage-widget .vote-grid {
@@ -31,18 +38,20 @@
         border-collapse: collapse;
         font-size: 0.85rem;
         min-width: 36rem;
+        color: var(--text);
       }
       .sondage-widget .vote-grid th,
       .sondage-widget .vote-grid td {
         padding: 0;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border);
         vertical-align: middle;
       }
       .sondage-widget .vote-grid thead th {
-        background: #f9fafb;
+        background: var(--table-header-bg);
         font-weight: 600;
         text-align: center;
         padding: 0.5rem 0.45rem;
+        color: var(--text);
       }
       .sondage-widget .vote-grid .candidate-col {
         text-align: left;
@@ -51,7 +60,8 @@
       .sondage-widget .vote-grid .candidate-label {
         text-align: left;
         font-weight: 600;
-        background: #fff;
+        background: var(--surface);
+        color: var(--text);
         padding: 0.65rem 0.75rem;
         min-width: 9rem;
       }
@@ -67,7 +77,7 @@
         display: block;
         font-size: 0.68rem;
         font-weight: 500;
-        color: #6b7280;
+        color: var(--text-subtle);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -76,7 +86,7 @@
       .sondage-widget .vote-grid .grade-cell {
         width: 4.5rem;
         height: 2.75rem;
-        background: #fafafa;
+        background: var(--grid-cell-bg);
       }
       .sondage-widget .vote-grid .grade-cell-label {
         display: flex;
@@ -100,12 +110,12 @@
         width: 1rem;
         height: 1rem;
         border-radius: 50%;
-        border: 2px solid #d1d5db;
-        background: #fff;
+        border: 2px solid var(--border-strong);
+        background: var(--input-bg);
         transition: background-color 0.15s ease, border-color 0.15s ease;
       }
       .sondage-widget .vote-grid .grade-cell-label:hover .grade-cell-mark {
-        border-color: #9ca3af;
+        border-color: var(--text-subtle);
       }
       .sondage-widget .vote-grid .grade-cell.grade-1 { background: rgba(22, 163, 74, 0.06); }
       .sondage-widget .vote-grid .grade-cell.grade-2 { background: rgba(34, 197, 94, 0.06); }
@@ -146,18 +156,18 @@
         font: inherit;
         border-radius: 6px;
         border: none;
-        background: #2563eb;
-        color: #fff;
+        background: var(--primary);
+        color: var(--on-primary);
       }
       .sondage-widget .vote-submit-row button:hover {
-        background: #1d4ed8;
+        background: var(--primary-hover);
       }
       .sondage-widget .vote-form-error:not(:empty) {
         margin: 0;
         padding: 0.35rem 0.5rem;
-        color: #991b1b;
-        background: #fef2f2;
-        border: 1px solid #fecaca;
+        color: var(--error-text);
+        background: var(--error-bg);
+        border: 1px solid var(--error-border);
         border-radius: 6px;
         font-size: 0.9rem;
         font-weight: 500;
@@ -168,10 +178,10 @@
       .sondage-widget .vote-already-notice {
         margin: 1rem 0 0;
         padding: 0.75rem 1rem;
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
+        background: var(--success-bg);
+        border: 1px solid var(--success-border);
         border-radius: 8px;
-        color: #166534;
+        color: var(--success-text);
         font-size: 0.95rem;
       }
       .sondage-widget--already-voted .vote-grid--readonly .grade-cell-label {
@@ -179,7 +189,10 @@
         pointer-events: none;
       }
       .sondage-widget--already-voted .vote-grid--readonly .grade-cell-label:hover .grade-cell-mark {
-        border-color: #d1d5db;
+        border-color: var(--border-strong);
+      }
+      .sondage-widget .error {
+        color: var(--error);
       }
       .sondage-widget .oauth-login-btn {
         display: inline-block;
@@ -206,6 +219,62 @@
       }
       .sondage-widget .oauth-login-btn--facebook:hover {
         background: #166fe5;
+      }
+      .sondage-widget .oauth-login-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+      .sondage-widget .oauth-login-btn--mock {
+        background: #64748b;
+        border: none;
+        cursor: pointer;
+        font: inherit;
+      }
+      .sondage-widget .oauth-login-btn--mock:hover {
+        background: #475569;
+      }
+      .sondage-widget .mock-login-form {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.65rem;
+        max-width: 22rem;
+        margin-top: 0.5rem;
+      }
+      .sondage-widget .mock-login-label {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .sondage-widget .mock-login-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.5rem 0.65rem;
+        font: inherit;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--input-bg);
+        color: var(--text);
+      }
+      .sondage-widget .mock-login-error:not(:empty) {
+        margin: 0;
+      }
+      .sondage-widget .mock-change-name-wrap {
+        margin: 1rem 0 0;
+      }
+      .sondage-widget .mock-change-name-btn {
+        padding: 0.35rem 0.75rem;
+        font: inherit;
+        cursor: pointer;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-muted);
+      }
+      .sondage-widget .mock-change-name-btn:hover {
+        background: var(--surface-hover);
+        color: var(--text);
       }
     </style>
     <script src="sondage-auth-storage.js"></script>

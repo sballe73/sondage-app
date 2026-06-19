@@ -85,14 +85,17 @@ export const voteParticipation = pgTable(
     pollId: uuid("poll_id")
       .notNull()
       .references(() => polls.id, { onDelete: "cascade" }),
+    platform: text("platform").notNull(),
     subjectId: text("subject_id").notNull(),
+    displayName: text("display_name"),
     participatedAt: timestamp("participated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (t) => [
-    uniqueIndex("vote_participation_poll_subject_uidx").on(
+    uniqueIndex("vote_participation_poll_platform_subject_uidx").on(
       t.pollId,
+      t.platform,
       t.subjectId
     ),
   ]
@@ -105,13 +108,18 @@ export const voteBallots = pgTable(
     pollId: uuid("poll_id")
       .notNull()
       .references(() => polls.id, { onDelete: "cascade" }),
+    platform: text("platform").notNull(),
     subjectId: text("subject_id").notNull(),
     displayName: text("display_name"),
     grades: jsonb("grades").notNull().$type<{ itemId: string; grade: number }[]>(),
     votedAt: timestamp("voted_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("vote_ballots_poll_subject_uidx").on(t.pollId, t.subjectId),
+    uniqueIndex("vote_ballots_poll_platform_subject_uidx").on(
+      t.pollId,
+      t.platform,
+      t.subjectId
+    ),
     index("vote_ballots_poll_display_idx").on(t.pollId, t.displayName),
   ]
 );

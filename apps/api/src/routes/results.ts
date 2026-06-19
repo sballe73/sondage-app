@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { Platform, ResultPolicy } from "@sondage/shared";
-import { hashSubjectForParticipation } from "@sondage/shared";
+import { hashSubjectForParticipation, labelForGrade } from "@sondage/shared";
 import {
   getLatestVisibleSnapshot,
   getSnapshotByVersion,
@@ -10,7 +10,9 @@ import {
   getNextSnapshotVersion,
   listBallots,
   getBallotBySubject,
+  listParticipation,
   computeAndSaveSnapshot,
+  getPollById,
 } from "@sondage/db";
 import { enforcePollRegion } from "../middleware/region.js";
 import {
@@ -158,10 +160,54 @@ export async function resultsRoutes(app: FastifyInstance) {
     return { ballots };
   });
 
+  app.get("/polls/:pollId/attendance", async (request, reply) => {
+    const { pollId } = z.object({ pollId: z.string().uuid() }).parse(request.params);
+    const { poll } = await enforcePollRegion(request, pollId);
+    const data = await getPollById(pollId);
+    if (!data) {
+      throw new AppError(404, "NOT_FOUND", "Poll not found");
+    }
+
+    if (poll.voterMode === "anonymous") {
+      const rows = await listParticipation(pollId);
+      return {
+        voterMode: poll.voterMode,
+        voters: rows.map((row) => ({
+          displayName: row.displayName ?? "Anonyme",
+          platform: row.platform,
+          participatedAt: toIsoString(row.participatedAt),
+        })),
+      };
+    }
+
+    const ballots = await listBallots(pollId);
+    const itemLabels = new Map(data.items.map((item) => [item.id, item.label]));
+    const gradeLabels = data.poll.gradeLabels;
+    const gradeMin = data.poll.gradeMin;
+
+    return {
+      voterMode: poll.voterMode,
+      voters: ballots.map((ballot) => ({
+        displayName: ballot.displayName ?? "Anonyme",
+        platform: ballot.platform,
+        participatedAt: toIsoString(ballot.votedAt),
+        grades: ballot.grades.map((g) => ({
+          itemId: g.itemId,
+          itemLabel: itemLabels.get(g.itemId) ?? g.itemId,
+          grade: g.grade,
+          gradeLabel: labelForGrade(g.grade, gradeLabels, gradeMin),
+        })),
+      })),
+    };
+  });
+
   app.get("/polls/:pollId/ballots/:subjectId", async (request, reply) => {
     const params = z
       .object({ pollId: z.string().uuid(), subjectId: z.string() })
       .parse(request.params);
+    const query = z
+      .object({ platform: z.enum(["facebook", "x", "linkedin", "google", "apple", "mock"]).optional() })
+      .parse(request.query ?? {});
     const { poll } = await enforcePollRegion(request, params.pollId);
 
     if (poll.voterMode !== "public") {
@@ -172,7 +218,12 @@ export async function resultsRoutes(app: FastifyInstance) {
       );
     }
 
-    const ballot = await getBallotBySubject(params.pollId, params.subjectId);
+    const platform = (query.platform ?? poll.platform) as Platform;
+    const ballot = await getBallotBySubject(
+      params.pollId,
+      platform,
+      params.subjectId
+    );
     if (!ballot) {
       throw new AppError(404, "NOT_FOUND", "Ballot not found");
     }
@@ -185,7 +236,11 @@ export async function resultsRoutes(app: FastifyInstance) {
     const auth = await requireVoterAuth(pollId, request.headers.authorization);
     const { getBallotBySubject: getBallot } = await import("@sondage/db");
     if (regionData.poll.voterMode === "public") {
-      const ballot = await getBallot(pollId, auth.token.subjectId);
+      const ballot = await getBallot(
+        pollId,
+        auth.token.platform,
+        auth.token.subjectId
+      );
       if (ballot) {
         const votedAt = toIsoString(ballot.votedAt);
         return {
@@ -196,6 +251,7 @@ export async function resultsRoutes(app: FastifyInstance) {
       }
       const claimed = await hasParticipationClaim(
         pollId,
+        auth.token.platform,
         auth.token.subjectId
       );
       if (claimed) {
@@ -217,6 +273,7 @@ export async function resultsRoutes(app: FastifyInstance) {
       .where(
         and(
           eq(schema.voteParticipation.pollId, pollId),
+          eq(schema.voteParticipation.platform, auth.token.platform),
           eq(schema.voteParticipation.subjectId, participationSubject)
         )
       );
@@ -226,7 +283,11 @@ export async function resultsRoutes(app: FastifyInstance) {
         participatedAt: toIsoString(row.participatedAt),
       };
     }
-    const claimed = await hasParticipationClaim(pollId, auth.token.subjectId);
+    const claimed = await hasParticipationClaim(
+      pollId,
+      auth.token.platform,
+      auth.token.subjectId
+    );
     if (claimed) {
       return { voted: true, pendingAggregation: true };
     }

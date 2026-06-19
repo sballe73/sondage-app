@@ -26,6 +26,7 @@
   };
 
   const REAL_OAUTH_PLATFORMS = new Set(["facebook", "google"]);
+  const MOCK_LAST_NAME_KEY = "sondage_mock_last_name";
 
   class SondagePollWidget extends HTMLElement {
     static get observedAttributes() {
@@ -59,6 +60,11 @@
       this.displayName = this.getAttribute("data-display-name");
 
       if (!this.pollId || !this.apiBase) return;
+
+      const storage = this._authStorage();
+      if (storage && !this.getAttribute("data-subject-id")) {
+        storage.clearToken("mock");
+      }
 
       this._initialized = true;
       this.render();
@@ -97,16 +103,32 @@
       const hashToken = this.consumeOAuthHash();
       if (hashToken) return hashToken;
 
-      if (!this.platform || !storage) return null;
+      if (!storage) return null;
 
-      const platformToken = storage.readToken(this.platform);
-      if (platformToken) return platformToken;
+      if (this.platform) {
+        if (this.platform === "mock" && !this.getAttribute("data-subject-id")) {
+          return null;
+        }
+        const platformToken = storage.readToken(this.platform);
+        if (platformToken) return platformToken;
 
-      const migrated = storage.migrateLegacyPollToken(
-        this.pollId,
-        this.platform
-      );
-      if (migrated) return migrated;
+        const migrated = storage.migrateLegacyPollToken(
+          this.pollId,
+          this.platform
+        );
+        if (migrated) return migrated;
+      } else if (this.allowMultiPlatformAuth && this.loginPlatforms) {
+        for (const platform of this.loginPlatforms) {
+          if (platform === "mock" && !this.getAttribute("data-subject-id")) {
+            continue;
+          }
+          const platformToken = storage.readToken(platform);
+          if (platformToken) {
+            this.platform = platform;
+            return platformToken;
+          }
+        }
+      }
 
       const legacy = storage.findAnyLegacyToken();
       if (legacy) {
@@ -135,6 +157,124 @@
       }
     }
 
+    _needsMockNamePrompt() {
+      return this.platform === "mock" && !this.getAttribute("data-subject-id");
+    }
+
+    _mockLastNamePrefill() {
+      try {
+        return sessionStorage.getItem(MOCK_LAST_NAME_KEY) || "";
+      } catch {
+        return "";
+      }
+    }
+
+    _rememberMockName(name) {
+      try {
+        sessionStorage.setItem(MOCK_LAST_NAME_KEY, name);
+      } catch {
+        /* ignore */
+      }
+    }
+
+    renderMockLoginPrompt() {
+      const windowLine = formatPollWindow(this.poll);
+      const prefill = escapeAttr(this._mockLastNamePrefill());
+
+      this.innerHTML = `
+        <article class="sondage-widget">
+          <h2>${escapeHtml(this.poll.name)}</h2>
+          ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
+          <p class="meta">Mode <strong>mock (dev)</strong> — indiquez votre nom pour voter.</p>
+          ${this._legalNoticeHtml()}
+          <form id="mock-login-form" class="mock-login-form">
+            <label class="mock-login-label" for="mock-voter-name">Votre nom</label>
+            <input
+              id="mock-voter-name"
+              name="mock-voter-name"
+              type="text"
+              class="mock-login-input"
+              required
+              minlength="1"
+              maxlength="80"
+              autocomplete="nickname"
+              placeholder="Ex. Alice"
+              value="${prefill}"
+            />
+            <button type="submit" class="oauth-login-btn oauth-login-btn--mock">Continuer</button>
+            <p id="mock-login-error" class="error mock-login-error" role="alert"></p>
+          </form>
+        </article>
+      `;
+
+      const form = this.querySelector("#mock-login-form");
+      const nameInput = this.querySelector("#mock-voter-name");
+      form.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const errorEl = this.querySelector("#mock-login-error");
+        if (errorEl) errorEl.textContent = "";
+        const name = (nameInput && nameInput.value ? nameInput.value : "").trim();
+        if (!name) {
+          if (errorEl) errorEl.textContent = "Indiquez un nom.";
+          nameInput?.focus();
+          return;
+        }
+        const submitBtn = form.querySelector('[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Connexion…";
+        }
+        try {
+          await this.mockLoginWithName(name);
+          await this.loadParticipation();
+          if (this.participation?.voted) {
+            this.renderAlreadyVoted();
+          } else {
+            this.renderForm();
+          }
+          if (window.SondageShell && window.SondageShell.refresh) {
+            await window.SondageShell.refresh();
+          }
+        } catch (e) {
+          if (errorEl) errorEl.textContent = e.message;
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Continuer";
+          }
+        }
+      });
+      nameInput?.focus();
+    }
+
+    async mockLoginWithName(name) {
+      const trimmed = name.trim();
+      if (!trimmed) throw new Error("Indiquez un nom.");
+      this.subjectId = trimmed;
+      this.displayName = trimmed;
+      this._rememberMockName(trimmed);
+      return this.mockLogin();
+    }
+
+    _mockChangeNameHtml() {
+      if (!this._needsMockNamePrompt()) return "";
+      return `<p class="mock-change-name-wrap"><button type="button" class="mock-change-name-btn">Changer de nom</button></p>`;
+    }
+
+    _bindMockChangeName() {
+      const btn = this.querySelector(".mock-change-name-btn");
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        this.clearStoredToken();
+        this.token = null;
+        this.subjectId = null;
+        this.displayName = null;
+        this.renderMockLoginPrompt();
+        if (window.SondageShell && window.SondageShell.refresh) {
+          window.SondageShell.refresh();
+        }
+      });
+    }
+
     async load() {
       try {
         const healthRes = await fetch(`${this.apiBase}/health`);
@@ -146,24 +286,43 @@
         });
         if (!res.ok) throw new Error(await res.text());
         this.poll = await res.json();
-        if (this.platform && this.poll.platform !== this.platform) {
+        this.allowMultiPlatformAuth =
+          this.instanceHealth.allowMultiPlatformAuth === true;
+
+        if (
+          !this.allowMultiPlatformAuth &&
+          this.platform &&
+          this.poll.platform !== this.platform
+        ) {
           throw new Error(
             `Platform mismatch: widget=${this.platform}, poll=${this.poll.platform}`
           );
         }
-        this.platform = this.poll.platform;
+
+        if (!this.allowMultiPlatformAuth || !this.platform) {
+          this.platform = this.platform || this.poll.platform;
+        }
 
         const usable =
           (this.instanceHealth && this.instanceHealth.usablePlatforms) || [];
-        if (!usable.includes(this.platform)) {
-          const label =
-            PLATFORM_LABELS[this.platform] || this.platform;
-          throw new Error(
-            `Cette instance n'accepte pas les votes via ${label}. ` +
-              (usable.length
-                ? `Plateformes disponibles : ${usable.join(", ")}`
-                : "Aucune plateforme de vote n'est activée.")
+        if (!this.allowMultiPlatformAuth) {
+          if (!usable.includes(this.platform)) {
+            const label =
+              PLATFORM_LABELS[this.platform] || this.platform;
+            throw new Error(
+              `Cette instance n'accepte pas les votes via ${label}. ` +
+                (usable.length
+                  ? `Plateformes disponibles : ${usable.join(", ")}`
+                  : "Aucune plateforme de vote n'est activée.")
+            );
+          }
+        } else {
+          this.loginPlatforms = usable.filter(
+            (p) => p === "mock" || REAL_OAUTH_PLATFORMS.has(p)
           );
+          if (this.loginPlatforms.length === 0) {
+            throw new Error("Aucune plateforme de vote n'est activée.");
+          }
         }
 
         const ready = await this.ensureToken();
@@ -192,11 +351,22 @@
     async ensureToken() {
       if (this.token) return true;
 
-      const pollPlatform = this.platform;
+      const pollPlatform = this.allowMultiPlatformAuth
+        ? this.platform
+        : this.platform || this.poll.platform;
       this.token = this.readStoredToken();
       if (this.token) {
         await this.loadSession();
-        if (this.platform !== pollPlatform) {
+        if (
+          !this.allowMultiPlatformAuth &&
+          this.platform !== pollPlatform
+        ) {
+          this.token = null;
+        } else if (
+          this.allowMultiPlatformAuth &&
+          this.loginPlatforms &&
+          !this.loginPlatforms.includes(this.platform)
+        ) {
           this.token = null;
         } else {
           this.persistToken();
@@ -204,23 +374,42 @@
         }
       }
 
-      if (this.platform === "mock") {
-        return this.mockLogin();
+      if (this.allowMultiPlatformAuth && this.loginPlatforms.length > 1) {
+        this.renderMultiLoginPrompt();
+        return false;
       }
 
-      if (REAL_OAUTH_PLATFORMS.has(this.platform)) {
+      const loginPlatform =
+        this.platform ||
+        (this.allowMultiPlatformAuth && this.loginPlatforms
+          ? this.loginPlatforms[0]
+          : this.poll.platform);
+      this.platform = loginPlatform;
+
+      if (loginPlatform === "mock") {
+        if (this.getAttribute("data-subject-id") || this.subjectId) {
+          return this.mockLogin();
+        }
+        this.renderMockLoginPrompt();
+        return false;
+      }
+
+      if (REAL_OAUTH_PLATFORMS.has(loginPlatform)) {
         this.renderLoginPrompt();
         return false;
       }
 
       throw new Error(
-        `OAuth pour ${this.platform} (${PLATFORM_LABELS[this.platform] || this.platform}) n'est pas encore disponible dans le widget — plateformes prévues : Google, Apple, Meta`
+        `OAuth pour ${loginPlatform} (${PLATFORM_LABELS[loginPlatform] || loginPlatform}) n'est pas encore disponible dans le widget — plateformes prévues : Google, Apple, Meta`
       );
     }
 
     async mockLogin() {
       const subjectId =
-        this.subjectId || `guest-${Math.random().toString(36).slice(2, 10)}`;
+        this.subjectId || this.getAttribute("data-subject-id");
+      if (!subjectId) {
+        throw new Error("Indiquez un nom.");
+      }
       const res = await fetch(`${this.apiBase}/auth/mock/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Data-Region": "EU" },
@@ -285,6 +474,42 @@
           <p><a class="oauth-login-btn oauth-login-btn--${escapeAttr(this.platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a></p>
         </article>
       `;
+    }
+
+    renderMultiLoginPrompt() {
+      const returnTo = window.location.href.split("#")[0];
+      const windowLine = formatPollWindow(this.poll);
+      const buttons = this.loginPlatforms
+        .map((platform) => {
+          const label = PLATFORM_LABELS[platform] || platform;
+          if (platform === "mock") {
+            return `<button type="button" class="oauth-login-btn oauth-login-btn--mock" data-platform="mock">Connexion mock (dev)</button>`;
+          }
+          const loginUrl =
+            `${this.apiBase}/auth/${encodeURIComponent(platform)}/login` +
+            `?pollId=${encodeURIComponent(this.pollId)}` +
+            `&returnTo=${encodeURIComponent(returnTo)}`;
+          return `<a class="oauth-login-btn oauth-login-btn--${escapeAttr(platform)}" href="${escapeAttr(loginUrl)}">Se connecter avec ${escapeHtml(label)}</a>`;
+        })
+        .join("");
+
+      this.innerHTML = `
+        <article class="sondage-widget">
+          <h2>${escapeHtml(this.poll.name)}</h2>
+          ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
+          <p class="meta">Choisissez une méthode de connexion pour voter.</p>
+          ${this._legalNoticeHtml()}
+          <div class="oauth-login-buttons">${buttons}</div>
+        </article>
+      `;
+
+      const mockBtn = this.querySelector('[data-platform="mock"]');
+      if (mockBtn) {
+        mockBtn.addEventListener("click", () => {
+          this.platform = "mock";
+          this.renderMockLoginPrompt();
+        });
+      }
     }
 
     render() {
@@ -477,8 +702,11 @@
           ${windowLine ? `<p class="meta poll-window">${escapeHtml(windowLine)}</p>` : ""}
           <p class="meta">Plateforme : <strong>${escapeHtml(platformLabel)}</strong>${voterLine} · ${escapeHtml(gradeHint)}</p>
           ${body}
+          ${this._mockChangeNameHtml()}
         </article>
       `;
+
+      this._bindMockChangeName();
 
       if (pending && !votedAtFormatted) {
         this._pollParticipationSync();
@@ -541,9 +769,11 @@
             </div>
           </form>
           <p id="status"></p>
+          ${this._mockChangeNameHtml()}
         </article>
       `;
 
+      this._bindMockChangeName();
       const form = this.querySelector("#vote-form");
       form.addEventListener("submit", (ev) => this.submitVote(ev));
       form.addEventListener("change", () => {

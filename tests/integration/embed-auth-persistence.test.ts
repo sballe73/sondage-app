@@ -82,6 +82,20 @@ describe("Embed auth persistence across polls", () => {
     assert.match(js, /usablePlatforms/);
   });
 
+  it("vote widget prompts for mock voter name instead of auto guest login", () => {
+    const js = readFileSync(WIDGET_JS, "utf8");
+    assert.match(js, /renderMockLoginPrompt/);
+    assert.match(js, /mockLoginWithName/);
+    assert.doesNotMatch(js, /guest-\$\{Math\.random/);
+  });
+
+  it("creator restores mock creator session when managing a mock poll", () => {
+    const js = readFileSync(CREATOR_JS, "utf8");
+    assert.match(js, /_ensureMockCreatorAuth/);
+    assert.match(js, /platform === "mock"/);
+    assert.match(js, /auth\/mock\/login/);
+  });
+
   it("shell supports creator platform override without pollId", () => {
     const js = readFileSync(SHELL_JS, "utf8");
     assert.match(js, /setCreatorPlatform/);

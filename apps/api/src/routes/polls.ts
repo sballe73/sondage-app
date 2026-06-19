@@ -23,12 +23,14 @@ import {
 import { AppError } from "../errors.js";
 import { getLiveVoteCount } from "../redis.js";
 import { requirePlatformAuth } from "./auth.js";
+import { verifyVoterToken } from "../auth/oauth.js";
 import { assertPlatformUsable } from "../platform-gate.js";
+import { isMultiPlatformAuthAllowed } from "../config.js";
 
 const createPollSchema = z.object({
   name: z.string().min(1).max(500),
   creatorId: z.string().min(1).optional(),
-  platform: z.enum(PLATFORMS),
+  platform: z.enum(PLATFORMS).optional(),
   items: z
     .array(
       z.object({
@@ -66,26 +68,55 @@ export async function pollRoutes(app: FastifyInstance) {
 
   app.post("/polls", async (request, reply) => {
     const parsed = createPollSchema.parse(request.body);
-    assertPlatformUsable(parsed.platform);
     let creatorId = parsed.creatorId;
+    let platform = parsed.platform;
 
-    if (parsed.platform === "mock") {
-      if (!creatorId) {
+    if (isMultiPlatformAuthAllowed()) {
+      const authHeader = request.headers.authorization;
+      if (authHeader?.startsWith("Bearer ")) {
+        let token;
+        try {
+          token = await verifyVoterToken(authHeader.slice(7));
+        } catch {
+          throw new AppError(401, "UNAUTHORIZED", "Invalid token");
+        }
+        assertPlatformUsable(token.platform);
+        creatorId = token.subjectId;
+        platform = token.platform;
+      } else if (parsed.creatorId) {
+        platform = "mock";
+        assertPlatformUsable("mock");
+      } else {
         throw new AppError(
           400,
           "VALIDATION_ERROR",
-          "creatorId is required for mock platform"
+          "creatorId (mock) or Authorization bearer is required"
         );
       }
     } else {
-      const token = await requirePlatformAuth(
-        parsed.platform,
-        request.headers.authorization
-      );
-      creatorId = token.subjectId;
+      if (!platform) {
+        throw new AppError(400, "VALIDATION_ERROR", "platform is required");
+      }
+      assertPlatformUsable(platform);
+
+      if (platform === "mock") {
+        if (!creatorId) {
+          throw new AppError(
+            400,
+            "VALIDATION_ERROR",
+            "creatorId is required for mock platform"
+          );
+        }
+      } else {
+        const token = await requirePlatformAuth(
+          platform,
+          request.headers.authorization
+        );
+        creatorId = token.subjectId;
+      }
     }
 
-    const pollInput = { ...parsed, creatorId: creatorId! };
+    const pollInput = { ...parsed, platform: platform!, creatorId: creatorId! };
     try {
       validateCreatePoll(pollInput);
     } catch (e) {
@@ -96,8 +127,9 @@ export async function pollRoutes(app: FastifyInstance) {
     return reply.status(201).send({
       ...poll,
       items,
-      platformNote:
-        "platform is immutable; all voters must authenticate via this platform only",
+      platformNote: isMultiPlatformAuthAllowed()
+        ? "Voters may authenticate via any enabled platform on this instance"
+        : "platform is immutable; all voters must authenticate via this platform only",
     });
   });
 

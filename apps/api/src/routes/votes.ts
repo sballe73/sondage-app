@@ -42,6 +42,7 @@ export async function voteRoutes(app: FastifyInstance) {
 
     const rateLimit = await checkVoteRateLimit(
       pollId,
+      auth.token.platform,
       auth.token.subjectId,
       config.rateLimitVotesPerMinute
     );
@@ -99,6 +100,7 @@ export async function voteRoutes(app: FastifyInstance) {
 
     const claim = await tryClaimVote(
       pollId,
+      auth.token.platform,
       auth.token.subjectId,
       poll.endsAt,
       idempotencyKey
@@ -144,7 +146,11 @@ export async function voteRoutes(app: FastifyInstance) {
     try {
       await publishVoteEvent(event);
     } catch (e) {
-      await releaseVoteClaim(pollId, auth.token.subjectId);
+      await releaseVoteClaim(
+        pollId,
+        auth.token.platform,
+        auth.token.subjectId
+      );
       throw e;
     }
 

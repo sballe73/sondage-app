@@ -4,6 +4,7 @@
 (function () {
   const ACTIVE_POLL_KEY = "sondage_active_poll_id";
   let creatorPlatformOverride = null;
+  let activeNavId = "";
 
   const PLATFORM_LABELS = {
     mock: "mock (dev)",
@@ -19,6 +20,7 @@
     { id: "creator", label: "Créer", href: "/embed/creator.html" },
     { id: "vote", label: "Voter", href: "/embed/vote.html" },
     { id: "results", label: "Résultats", href: "/embed/results.html" },
+    { id: "attendance", label: "Émargement", href: "/embed/attendance.html" },
   ];
 
   const CSS = `
@@ -36,21 +38,21 @@
       gap: 1rem;
       min-height: 3.25rem;
       padding: 0 1rem;
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 3px var(--shadow);
       font-family: system-ui, sans-serif;
       font-size: 0.9rem;
     }
     .sondage-shell-brand {
       font-weight: 700;
-      color: #1e293b;
+      color: var(--text);
       text-decoration: none;
       white-space: nowrap;
       margin-right: 0.25rem;
     }
     .sondage-shell-brand:hover {
-      color: #2563eb;
+      color: var(--primary);
     }
     .sondage-shell-nav {
       display: flex;
@@ -59,18 +61,18 @@
       flex: 1;
     }
     .sondage-shell-nav a {
-      color: #475569;
+      color: var(--text-muted);
       text-decoration: none;
       padding: 0.35rem 0.55rem;
       border-radius: 6px;
     }
     .sondage-shell-nav a:hover {
-      background: #f1f5f9;
-      color: #1e293b;
+      background: var(--surface-hover);
+      color: var(--text);
     }
     .sondage-shell-nav a.is-active {
-      background: #eff6ff;
-      color: #2563eb;
+      background: var(--primary-soft);
+      color: var(--primary);
       font-weight: 600;
     }
     .sondage-shell-session {
@@ -81,7 +83,7 @@
       flex-shrink: 0;
     }
     .sondage-shell-auth-label {
-      color: #64748b;
+      color: var(--text-subtle);
       font-size: 0.8rem;
       text-align: right;
       line-height: 1.3;
@@ -94,7 +96,7 @@
       }
     }
     .sondage-shell-auth-label strong {
-      color: #334155;
+      color: var(--text);
       font-weight: 600;
     }
     .sondage-shell-user-wrap {
@@ -105,22 +107,22 @@
       align-items: center;
       gap: 0.4rem;
       padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--border);
       border-radius: 999px;
-      background: #fff;
+      background: var(--bg);
       cursor: pointer;
       font: inherit;
-      color: #1e293b;
+      color: var(--text);
     }
     .sondage-shell-user-btn:hover {
-      border-color: #cbd5e1;
-      background: #f8fafc;
+      border-color: var(--border-strong);
+      background: var(--surface);
     }
     .sondage-shell-avatar {
       width: 1.75rem;
       height: 1.75rem;
       border-radius: 50%;
-      background: #2563eb;
+      background: var(--primary);
       color: #fff;
       font-size: 0.75rem;
       font-weight: 700;
@@ -142,10 +144,10 @@
       right: 0;
       top: calc(100% + 0.35rem);
       min-width: 12rem;
-      background: #fff;
-      border: 1px solid #e2e8f0;
+      background: var(--bg);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 24px var(--shell-shadow);
       padding: 0.35rem 0;
       z-index: 1001;
     }
@@ -154,14 +156,14 @@
     }
     .sondage-shell-menu-head {
       padding: 0.5rem 0.85rem;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid var(--border);
       font-size: 0.8rem;
-      color: #64748b;
+      color: var(--text-subtle);
       line-height: 1.35;
     }
     .sondage-shell-menu-head strong {
       display: block;
-      color: #1e293b;
+      color: var(--text);
       font-size: 0.9rem;
     }
     .sondage-shell-menu button {
@@ -173,35 +175,35 @@
       background: none;
       font: inherit;
       cursor: pointer;
-      color: #b91c1c;
+      color: var(--error);
     }
     .sondage-shell-menu button:hover {
-      background: #fef2f2;
+      background: var(--error-bg);
     }
     .sondage-shell-guest {
       font-size: 0.8rem;
-      color: #94a3b8;
+      color: var(--text-subtle);
       white-space: nowrap;
     }
     .sondage-change-poll-btn {
       margin: 0.35rem 0 1rem;
       padding: 0.35rem 0.75rem;
-      border: 1px solid #d1d5db;
+      border: 1px solid var(--border-strong);
       border-radius: 6px;
-      background: #fff;
-      color: #475569;
+      background: var(--bg);
+      color: var(--text-muted);
       font: inherit;
       font-size: 0.85rem;
       cursor: pointer;
     }
     .sondage-change-poll-btn:hover {
-      background: #f8fafc;
-      border-color: #94a3b8;
-      color: #1e293b;
+      background: var(--surface);
+      border-color: var(--text-subtle);
+      color: var(--text);
     }
     .sondage-poll-ref {
       margin: 0 0 0.25rem;
-      color: #555;
+      color: var(--text-muted);
     }
   `;
 
@@ -246,10 +248,15 @@
     return PLATFORM_LABELS[platform] || platform || "—";
   }
 
+  function resolvePollIdForNav() {
+    return (
+      getActivePollId() ||
+      new URLSearchParams(window.location.search).get("pollId")
+    );
+  }
+
   function buildNav(active) {
-    const pollId =
-      new URLSearchParams(window.location.search).get("pollId") ||
-      getActivePollId();
+    const pollId = resolvePollIdForNav();
     const q = pollId ? "?pollId=" + encodeURIComponent(pollId) : "";
 
     return NAV_ITEMS.map((item) => {
@@ -260,6 +267,12 @@
       const cls = item.id === active ? " is-active" : "";
       return `<a href="${href}" class="${cls.trim()}">${item.label}</a>`;
     }).join("");
+  }
+
+  function refreshNav() {
+    const nav = document.querySelector(".sondage-shell-nav");
+    if (!nav) return;
+    nav.innerHTML = buildNav(activeNavId);
   }
 
   function renderGuest(sessionEl, message) {
@@ -422,10 +435,12 @@
     } else {
       sessionStorage.removeItem(ACTIVE_POLL_KEY);
     }
+    refreshNav();
   }
 
   function clearActivePoll() {
     sessionStorage.removeItem(ACTIVE_POLL_KEY);
+    refreshNav();
   }
 
   function goToPollPicker(targetPage) {
@@ -446,6 +461,30 @@
     creatorPlatformOverride = platform || null;
   }
 
+  function themeToggleLabel(theme) {
+    return theme === "dark" ? "Mode clair" : "Mode sombre";
+  }
+
+  function themeToggleIcon(theme) {
+    return theme === "dark" ? "☀" : "☾";
+  }
+
+  function mountThemeToggle() {
+    const btn = document.getElementById("sondage-theme-toggle");
+    if (!btn || !window.SondageTheme) return;
+    const update = () => {
+      const theme = window.SondageTheme.getTheme();
+      btn.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+      btn.title = themeToggleLabel(theme);
+      btn.textContent = themeToggleIcon(theme);
+    };
+    btn.addEventListener("click", () => {
+      window.SondageTheme.toggleTheme();
+      update();
+    });
+    update();
+  }
+
   window.SondageShell = {
     getActivePollId,
     setActivePollId,
@@ -453,8 +492,9 @@
     clearActivePoll,
     goToPollPicker,
     syncActivePollFromUrl,
+    refreshNav,
     init(options) {
-      const active = (options && options.active) || "";
+      activeNavId = (options && options.active) || "";
       injectStyles();
 
       if (document.querySelector(".sondage-shell")) return;
@@ -464,9 +504,10 @@
       header.innerHTML = `
         <a class="sondage-shell-brand" href="/">Sondage MJ</a>
         <nav class="sondage-shell-nav" aria-label="Navigation principale">
-          ${buildNav(active)}
+          ${buildNav(activeNavId)}
         </nav>
         <div class="sondage-shell-session">
+          <button type="button" class="sondage-theme-toggle" id="sondage-theme-toggle" aria-label="Basculer le mode sombre" aria-pressed="false">☾</button>
           <div class="sondage-shell-auth-label" id="sondage-shell-auth-label"></div>
           <div id="sondage-shell-session">
             <span class="sondage-shell-guest">…</span>
@@ -475,19 +516,15 @@
       `;
       document.body.prepend(header);
       document.body.classList.add("sondage-with-shell");
+      mountThemeToggle();
 
       const apiBase = (options && options.apiBase) || window.location.origin;
       syncActivePollFromUrl();
-      const pollId =
-        new URLSearchParams(window.location.search).get("pollId") ||
-        getActivePollId();
-      refreshSession(apiBase, pollId);
+      refreshSession(apiBase, resolvePollIdForNav());
 
       window.SondageShell.refresh = function () {
-        const currentPollId =
-          new URLSearchParams(window.location.search).get("pollId") ||
-          getActivePollId();
-        return refreshSession(apiBase, currentPollId);
+        refreshNav();
+        return refreshSession(apiBase, resolvePollIdForNav());
       };
     },
   };

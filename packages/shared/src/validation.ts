@@ -165,7 +165,4 @@ export function validateCreatePoll(input: CreatePollInput): void {
   if (input.mockSnapshotEveryVote && input.platform !== "mock") {
     throw new Error("mockSnapshotEveryVote is only valid for mock platform");
   }
-  if (normalized.resultPolicy === "threshold_1" && normalized.platform !== "mock") {
-    throw new Error("threshold_1 is only valid for mock platform");
-  }
 }

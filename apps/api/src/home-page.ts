@@ -18,6 +18,8 @@ export function buildHomeHtml(): string {
 <html lang="fr">
   <head>
 ${ogHead}    <meta charset="UTF-8" />
+    <script src="/embed/sondage-theme-init.js"></script>
+    <link rel="stylesheet" href="/embed/sondage-theme.css" />
     <link rel="canonical" href="${canonicalUrl}" />    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${TITLE}</title>
     <meta name="description" content="${DESCRIPTION}" />    <style>
@@ -27,18 +29,19 @@ ${ogHead}    <meta charset="UTF-8" />
         margin: 0 auto;
         padding: 1rem;
         line-height: 1.5;
-        color: #1a1a1a;
+        color: var(--text);
+        background: var(--bg);
       }
       main {
         margin-top: 1rem;
       }
       h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-      p { color: #444; }
+      p { color: var(--text-muted); }
       .primary {
         display: inline-block;
         margin-top: 1.25rem;
         padding: 0.75rem 1.4rem;
-        background: #2563eb;
+        background: var(--primary);
         color: #fff;
         text-decoration: none;
         border-radius: 8px;
@@ -46,7 +49,7 @@ ${ogHead}    <meta charset="UTF-8" />
         font-size: 1rem;
       }
       .primary:hover {
-        background: #1d4ed8;
+        background: var(--primary-hover);
       }
     </style>
     <script src="/embed/sondage-shell.js"></script>

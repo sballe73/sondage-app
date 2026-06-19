@@ -6,12 +6,14 @@ import { authRoutes } from "../../apps/api/dist/routes/auth.js";
 import { voteRoutes } from "../../apps/api/dist/routes/votes.js";
 import { resultsRoutes } from "../../apps/api/dist/routes/results.js";
 import { adminRoutes } from "../../apps/api/dist/routes/admin.js";
+import { buildHealthPayload } from "../../apps/api/dist/health.js";
 
 /** API Fastify pour tests d'intégration (sans écoute réseau). */
 export async function buildApiApp() {
   const app = Fastify({ logger: false });
   await app.register(errorHandlerPlugin);
   await app.register(corsPlugin);
+  app.get("/health", async () => buildHealthPayload());
   await app.register(pollRoutes);
   await app.register(authRoutes);
   await app.register(voteRoutes);

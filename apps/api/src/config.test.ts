@@ -68,16 +68,16 @@ describe("vote rate limit (Redis)", () => {
 
     try {
       for (let i = 0; i < max; i++) {
-        const r = await checkVoteRateLimit(pollId, subjectId, max);
+        const r = await checkVoteRateLimit(pollId, "mock", subjectId, max);
         assert.equal(r.allowed, true);
       }
-      const blocked = await checkVoteRateLimit(pollId, subjectId, max);
+      const blocked = await checkVoteRateLimit(pollId, "mock", subjectId, max);
       assert.equal(blocked.allowed, false);
       if (!blocked.allowed) {
         assert.ok(blocked.retryAfterSec >= 1);
       }
 
-      await getRedis().del(`rate:vote:${pollId}:${subjectId}`);
+      await getRedis().del(`rate:vote:${pollId}:mock:${subjectId}`);
     } finally {
       await closeRedis();
     }

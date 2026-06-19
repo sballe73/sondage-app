@@ -1,4 +1,4 @@
-import { config, isFacebookOAuthConfigured, isGoogleOAuthConfigured } from "./config.js";
+import { config, isFacebookOAuthConfigured, isGoogleOAuthConfigured, isMultiPlatformAuthAllowed } from "./config.js";
 import { legalPageUrl } from "./meta-constants.js";
 import {
   isPlatformUsable,
@@ -44,6 +44,7 @@ export function buildHealthPayload() {
     publicBaseUrl: config.publicBaseUrl,
     enabledPlatforms: config.enabledPlatforms,
     usablePlatforms: listUsablePlatforms(),
+    allowMultiPlatformAuth: isMultiPlatformAuthAllowed(),
     legalUrls: {
       privacy: legalPageUrl(config.publicBaseUrl, "privacy"),
       terms: legalPageUrl(config.publicBaseUrl, "terms"),

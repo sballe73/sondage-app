@@ -35,4 +35,20 @@ describe("grade-scale defaults", () => {
     assert.strictEqual(labelForGrade(1, n.gradeLabels, 1), "Excellent");
     assert.strictEqual(labelForGrade(7, n.gradeLabels, 1), "À Rejeter");
   });
+
+  it("accepts threshold_1 for non-mock platforms", () => {
+    const n = normalizeCreatePoll({
+      name: "t",
+      creatorId: "c",
+      platform: "facebook",
+      items: [{ label: "A" }],
+      startsAt: new Date().toISOString(),
+      endsAt: new Date(Date.now() + 86400000).toISOString(),
+      visibility: "public",
+      voterMode: "public",
+      resultPolicy: "threshold_1",
+    });
+    assert.strictEqual(n.resultPolicy, "threshold_1");
+    assert.strictEqual(n.platform, "facebook");
+  });
 });

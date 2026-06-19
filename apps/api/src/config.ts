@@ -80,3 +80,8 @@ export function isFacebookOAuthConfigured(): boolean {
       config.oauthFacebookRedirectUri
   );
 }
+
+/** Autorise plusieurs plateformes OAuth par sondage (lu à l'exécution pour les tests). */
+export function isMultiPlatformAuthAllowed(): boolean {
+  return process.env.ALLOW_MULTI_PLATFORM_AUTH === "true";
+}
