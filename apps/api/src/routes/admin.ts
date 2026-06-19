@@ -20,8 +20,8 @@ import { getLiveVoteCount } from "../redis.js";
 
 const dateFieldSchema = z.union([z.literal("now"), z.string().datetime()]);
 
-function resolveDateField(value: string | "now"): Date {
-  if (value === "now") return new Date();
+function resolveDateField(value: string | "now", now: Date): Date {
+  if (value === "now") return now;
   return new Date(value);
 }
 
@@ -43,12 +43,13 @@ export async function adminRoutes(app: FastifyInstance) {
       request.headers.authorization
     );
 
+    const now = new Date();
     const update: { startsAt?: Date; endsAt?: Date } = {};
     if (body.startsAt !== undefined) {
-      update.startsAt = resolveDateField(body.startsAt);
+      update.startsAt = resolveDateField(body.startsAt, now);
     }
     if (body.endsAt !== undefined) {
-      update.endsAt = resolveDateField(body.endsAt);
+      update.endsAt = resolveDateField(body.endsAt, now);
     }
 
     let nextDates;
@@ -59,7 +60,8 @@ export async function adminRoutes(app: FastifyInstance) {
           endsAt: poll.endsAt,
           closedAt: poll.closedAt,
         },
-        update
+        update,
+        now
       );
     } catch (e) {
       if (e instanceof PollDateUpdateError) {
