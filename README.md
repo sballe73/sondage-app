@@ -288,20 +288,6 @@ Tous les tests (unitaires + intégration) : `npm run test:all`.
 
 Pour inspecter les checkpoints attendus : `npm run test:integration:print`.
 
-## Publication sur GitHub
-
-Dépôt git initialisé sur `main` (commit racine). Compte GitHub détecté en SSH : **sballe73**.
-
-```bash
-# Option A — GitHub CLI (crée le dépôt + push)
-gh auth login
-./scripts/publish-github.sh
-
-# Option B — dépôt créé à la main sur https://github.com/new (vide, sans README)
-git remote add origin git@github.com:sballe73/sondage-app.git
-git push -u origin main
-```
-
 Pour régénérer la fixture (après changement de l'algorithme MJ uniquement) :
 
 ```bash
