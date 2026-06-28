@@ -1,6 +1,10 @@
 # Blueprint Render — https://render.com/docs/blueprint-spec
 # Déploiement : Dashboard → New → Blueprint → repo GitHub.
 # Après le 1er déploiement : renseigner OAUTH_FACEBOOK_* dans l’env du service web.
+#
+# Worker prod : self-hosted (npm run worker:prod + .env.worker.prod sur votre machine).
+# Redis externe : Dashboard → sondage-redis → Access Control → IP statique du worker (/32).
+# Ne pas committer d’IP dans ce fichier.
 
 databases:
   - name: sondage-db
@@ -15,6 +19,8 @@ services:
     plan: free
     region: frankfurt
     maxmemoryPolicy: allkeys-lru
+    # Accès externe pour le worker self-hosted : ajouter l’IP /32 dans le Dashboard Render
+    # (ipAllowList vide = réseau privé Render uniquement).
     ipAllowList: []
 
   - type: web
@@ -23,8 +29,8 @@ services:
     plan: free
     region: frankfurt
     buildCommand: ./scripts/render-build.sh
-    # Plan free : pas de preDeployCommand — migrations dans render-start.sh
-    startCommand: ./scripts/render-start.sh
+    # Plan free : pas de preDeployCommand — migrations dans render-start-api.sh
+    startCommand: ./scripts/render-start-api.sh
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -49,9 +55,8 @@ services:
       - key: PARTICIPATION_HASH_SALT
         generateValue: true
       # PUBLIC_BASE_URL : optionnel — RENDER_EXTERNAL_URL par défaut
-      # Serveur pilote : https://sondage-app-eweb.onrender.com
       # - key: PUBLIC_BASE_URL
-      #   value: https://sondage-app-eweb.onrender.com
+      #   value: https://<votre-service>.onrender.com
       # À configurer manuellement dans le Dashboard Render :
       # - key: OAUTH_FACEBOOK_APP_ID
       #   sync: false
