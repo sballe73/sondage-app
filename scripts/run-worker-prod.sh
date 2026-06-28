@@ -14,8 +14,9 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 
 set -a
-# shellcheck disable=SC1090
-source "$ENV_FILE"
+# shellcheck disable=SC1091
+source "${ROOT}/scripts/load-env-file.sh"
+load_env_file "$ENV_FILE"
 set +a
 
 looks_local() {
