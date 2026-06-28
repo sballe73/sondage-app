@@ -196,21 +196,56 @@ Les sondages portent `data_region` (`EU`, `US`, `GLOBAL`). Les requêtes doivent
 
 ## Déploiement Render (pilote Meta HTTPS)
 
-Fichier [`render.yaml`](render.yaml) : Postgres (Frankfurt), Redis, service web **API + worker** (plan free).
+Fichier [`render.yaml`](render.yaml) : Postgres (Frankfurt), Redis, service web **API seule** (plan free).  
+Le **worker production** tourne sur une machine dédiée (`npm run worker:prod`) — distinct du worker local de dev.
 
-### Création
+### Deux workers (ne pas confondre)
+
+| | **Dev worker** | **Prod worker (self-hosted)** |
+|---|----------------|-------------------------------|
+| **Rôle** | Dev local, tests d’intégration, k6 contre `localhost` | Agrégation des votes pour l’API **Render** |
+| **Fichier env** | [`.env`](.env.example) | `.env.worker.prod` (copie de [`.env.worker.prod.example`](.env.worker.prod.example)) |
+| **Postgres / Redis** | `localhost` ([`docker-compose.yml`](docker-compose.yml)) | URLs **externes** Render (Frankfurt, TLS) |
+| **API servie** | `npm run dev` → `http://localhost:3000` | `https://<service>.onrender.com` |
+| **Commande** | `npm run dev` ou `npm run worker:dev` | `npm run worker:prod` (+ systemd) |
+| **Ne pas utiliser pour** | Trafic Render production | Tests docker-compose locaux |
+
+Règle : `.env` → stack locale uniquement. `.env.worker.prod` → stores Render production uniquement.
+
+### Création (API Render)
 
 1. [render.com](https://render.com/) → **New** → **Blueprint** → repo `sondage-app`.
 2. Valider la création des ressources (`sondage-db`, `sondage-redis`, `sondage`).
 3. Attendre le 1er déploiement ; noter l’URL : `https://sondage.onrender.com` (nom variable).
 
-### Variables d’environnement (service `sondage`)
+### Worker production (machine self-hosted)
+
+1. **Redis** (Dashboard → `sondage-redis` → Access Control) : activer l’accès externe, allowlist IP statique du worker (`/32`), copier l’URL **externe** `rediss://…`.
+2. **Postgres** (Dashboard → `sondage-db` → Info → External) : copier l’URL + `?sslmode=require` ; optionnel : restreindre l’accès à la même IP.
+3. `cp .env.worker.prod.example .env.worker.prod` — coller URLs externes + `JWT_SECRET` / `PARTICIPATION_HASH_SALT` **identiques** au service web Render.
+4. `npm ci && npm run build && npm run worker:prod` — log attendu : `Worker home-prod-worker-1 starting…`.
+5. Smoke test : voter via l’URL Render → le worker loggue `processed N`.
+
+Exemple **systemd** (`sondage-worker-prod.service`) :
+
+```ini
+[Service]
+WorkingDirectory=/path/to/sondage-app
+EnvironmentFile=/path/to/sondage-app/.env.worker.prod
+ExecStart=/usr/bin/npm run worker:prod
+Restart=always
+```
+
+Après une migration SQL déployée sur Render : redémarrer le worker prod uniquement.
+
+### Variables d’environnement (service web `sondage`)
 
 | Variable | Valeur |
 |----------|--------|
 | `OAUTH_FACEBOOK_APP_ID` | App ID Meta |
 | `OAUTH_FACEBOOK_APP_SECRET` | App Secret Meta |
 | `ENABLED_PLATFORMS` | `facebook` (déjà dans le blueprint ; exclure `mock` en prod) |
+| `WORKER_POLL_INTERVAL_MS` | `5000` recommandé sous charge (aligner avec `.env.worker.prod`) |
 
 `PUBLIC_BASE_URL` est **optionnel** : l’API utilise `RENDER_EXTERNAL_URL` si absent.  
 Callback OAuth dérivé : `{PUBLIC_BASE_URL ou RENDER_EXTERNAL_URL}/auth/facebook/callback`.
@@ -264,13 +299,18 @@ Mode **Development** : ajouter chaque compte votant dans **App roles → Testers
 | Script | Rôle |
 |--------|------|
 | `scripts/render-build.sh` | `npm ci` + build monorepo |
-| `scripts/render-start.sh` | worker en arrière-plan + API (plan free) |
+| `scripts/render-start-api.sh` | API Render seule + migrations (déploiement prod) |
+| `scripts/render-start.sh` | Fallback : API + worker dans le même service Render |
+| `scripts/run-worker-dev.sh` | Worker local (`.env` + docker-compose) |
+| `scripts/run-worker-prod.sh` | Worker prod self-hosted (`.env.worker.prod` + Render externe) |
+| `npm run worker:dev` | Raccourci worker local |
+| `npm run worker:prod` | Raccourci worker prod |
 | `scripts/run-load-test.sh` | test de charge k6 (votes mock concurrents) |
-| `npm run db:migrate:prod` | migrations SQL (preDeploy Render) |
+| `npm run db:migrate:prod` | migrations SQL au démarrage Render |
 
-**Coût indicatif :** web + Redis free ; Postgres `basic-256mb` (~7 $/mois). Le plan free web **s’endort** après inactivité (~30 s au réveil).
+**Coût indicatif :** API web + Redis free ; Postgres `basic-256mb` (~7 $/mois) ; worker prod self-hosted **0 $**. Le plan free web **s’endort** après inactivité (~30 s au réveil).
 
-**Évolution :** séparer API et worker en deux services Render quand le trafic augmente.
+**Fallback :** [`render-start.sh`](scripts/render-start.sh) (API + worker combinés sur Render) ou worker Render payant (~7 $/mois) si la machine self-hosted est indisponible.
 
 ## Test de charge (k6, mock)
 
@@ -293,8 +333,14 @@ Test de performance distribué : plusieurs machines envoient des votes mock simu
    ```
    Alternative sans installation : `--docker` (image `grafana/k6`).
 
-2. **Cible** : API + worker démarrés, sondage `platform: mock`, fenêtre de vote ouverte.
-3. **Serveur** : `ENABLED_PLATFORMS` inclut `mock` ; pour forte concurrence depuis une seule IP, `RATE_LIMIT_ENABLED=false`.
+2. **Cible** : API + **worker adapté** démarrés, sondage `platform: mock`, fenêtre de vote ouverte.
+
+   | URL cible k6 | Worker |
+   |--------------|--------|
+   | `http://localhost:3000` | `npm run dev` ou `npm run worker:dev` (`.env`) |
+   | `https://*.onrender.com` | `npm run worker:prod` sur machine self-hosted (`.env.worker.prod`) |
+
+3. **Serveur** : `ENABLED_PLATFORMS` inclut `mock` ; pour forte concurrence depuis une seule IP, `RATE_LIMIT_ENABLED=false`. Sous charge Render, aligner `WORKER_POLL_INTERVAL_MS=5000` sur l’API Render et `.env.worker.prod`.
 
 ### Lancement simple (une machine)
 

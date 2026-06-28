@@ -8,6 +8,8 @@
   "scripts": {
     "build": "npm run build -w @sondage/shared && npm run build -w @sondage/db && npm run build -w @sondage/worker && npm run build -w @sondage/api",
     "dev": "npm run build -w @sondage/shared && npm run build -w @sondage/db && concurrently -n api,worker \"npm run dev -w @sondage/api\" \"npm run dev -w @sondage/worker\"",
+    "worker:dev": "./scripts/run-worker-dev.sh",
+    "worker:prod": "./scripts/run-worker-prod.sh",
     "db:migrate": "npm run migrate -w @sondage/db",
     "db:migrate:prod": "npm run migrate:prod -w @sondage/db",
     "db:seed": "npm run seed -w @sondage/db",

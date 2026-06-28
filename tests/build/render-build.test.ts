@@ -5,10 +5,16 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = join(import.meta.dirname, "../..");
+
+const DEPLOY_SCRIPTS = [
+  "scripts/render-start-api.sh",
+  "scripts/run-worker-dev.sh",
+  "scripts/run-worker-prod.sh",
+];
 
 const DIST_DIRS = [
   "packages/shared/dist",
@@ -43,6 +49,15 @@ describe("Render production build", () => {
       undefined,
       "API must not import worker; share logic via @sondage/db instead"
     );
+  });
+
+  it("deploy shell scripts exist and are executable", () => {
+    for (const rel of DEPLOY_SCRIPTS) {
+      const path = join(ROOT, rel);
+      assert.ok(existsSync(path), `expected ${rel}`);
+      const mode = statSync(path).mode & 0o111;
+      assert.ok(mode !== 0, `${rel} should be executable`);
+    }
   });
 
   it("npm run build succeeds from a clean dist (like Render deploy)", () => {
