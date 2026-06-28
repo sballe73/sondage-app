@@ -3,6 +3,7 @@ import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { validateGrades } from "@sondage/shared";
 import type { VoteSubmittedEvent } from "@sondage/shared";
+import { isPerfLogEnabled } from "@sondage/shared";
 import { enforcePollRegion } from "../middleware/region.js";
 import { requireVoterAuth } from "./auth.js";
 import { verifyGroupMembership } from "../auth/oauth.js";
@@ -22,8 +23,10 @@ const voteBodySchema = z.object({
 
 export async function voteRoutes(app: FastifyInstance) {
   app.post("/polls/:pollId/votes", async (request, reply) => {
+    const t0 = performance.now();
     const { pollId } = z.object({ pollId: z.string().uuid() }).parse(request.params);
     const { poll, items } = await enforcePollRegion(request, pollId);
+    const dbPollMs = Math.round(performance.now() - t0);
 
     const now = new Date();
     if (now < poll.startsAt) {
@@ -40,6 +43,7 @@ export async function voteRoutes(app: FastifyInstance) {
 
     const auth = await requireVoterAuth(pollId, request.headers.authorization);
 
+    const tRedis = performance.now();
     const rateLimit = await checkVoteRateLimit(
       pollId,
       auth.token.platform,
@@ -163,6 +167,16 @@ export async function voteRoutes(app: FastifyInstance) {
       },
       "Vote accepted"
     );
+
+    if (isPerfLogEnabled()) {
+      request.log.info({
+        event: "perf_vote",
+        pollId,
+        db_poll_ms: dbPollMs,
+        redis_ms: Math.round(performance.now() - tRedis),
+        total_ms: Math.round(performance.now() - t0),
+      });
+    }
 
     return reply.status(202).send({
       status: "accepted",

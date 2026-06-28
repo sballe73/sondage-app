@@ -4,8 +4,8 @@ import { getRedis } from "../redis.js";
 import {
   getVoteCount,
   isEventProcessed,
-  markEventProcessed,
   processVoteEvent,
+  maybePublishSnapshot,
 } from "@sondage/db";
 import { syncVoteCountFromDb } from "../redis.js";
 
@@ -15,7 +15,7 @@ function parseStreamPayload(fields: string[]): string | null {
   return fields[payloadIdx + 1] ?? null;
 }
 
-function isDuplicateParticipationError(err: unknown): boolean {
+function isPgUniqueViolation(err: unknown): boolean {
   return (
     typeof err === "object" &&
     err !== null &&
@@ -46,10 +46,7 @@ export async function drainVoteEventsForPoll(
       await processVoteEvent(event);
       processed += 1;
     } catch (err) {
-      if (isDuplicateParticipationError(err)) {
-        if (!(await isEventProcessed(event.eventId))) {
-          await markEventProcessed(event.eventId, pollId);
-        }
+      if (isPgUniqueViolation(err)) {
         continue;
       }
       throw err;
@@ -57,6 +54,7 @@ export async function drainVoteEventsForPoll(
   }
 
   if (processed > 0) {
+    await maybePublishSnapshot(pollId);
     const dbCount = await getVoteCount(pollId);
     await syncVoteCountFromDb(pollId, dbCount);
   }

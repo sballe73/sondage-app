@@ -46,8 +46,8 @@ export function shouldPublishSnapshot(
   if (policy === "end_only") {
     return now >= endsAt && previousCount < newCount;
   }
-  const threshold = THRESHOLD_BY_POLICY[policy];
-  const prevBlock = Math.floor(previousCount / threshold);
-  const newBlock = Math.floor(newCount / threshold);
-  return newBlock > prevBlock;
+  if (policy in THRESHOLD_BY_POLICY) {
+    return newCount > previousCount;
+  }
+  return false;
 }

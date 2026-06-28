@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { PLATFORMS } from "@sondage/shared";
+import { isPerfLogEnabled } from "@sondage/shared";
 import { getPollById } from "@sondage/db";
 import {
   mockOAuthLogin,
@@ -305,6 +306,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/auth/mock/login", async (request, reply) => {
+    const t0 = performance.now();
     const body = z
       .object({
         pollId: z.string().uuid().optional(),
@@ -316,8 +318,10 @@ export async function authRoutes(app: FastifyInstance) {
 
     assertPlatformUsable(body.platform);
 
+    let dbPollMs = 0;
     if (body.pollId) {
       const data = await getPollById(body.pollId);
+      dbPollMs = Math.round(performance.now() - t0);
       if (!data) {
         throw new AppError(404, "NOT_FOUND", "Poll not found");
       }
@@ -360,6 +364,15 @@ export async function authRoutes(app: FastifyInstance) {
       subjectId: profile.subjectId,
       displayName: profile.displayName,
     });
+
+    if (isPerfLogEnabled()) {
+      request.log.info({
+        event: "perf_mock_login",
+        pollId: body.pollId ?? null,
+        db_poll_ms: dbPollMs,
+        total_ms: Math.round(performance.now() - t0),
+      });
+    }
 
     return {
       accessToken: token,

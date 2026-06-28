@@ -1,6 +1,7 @@
 import { eq, and, asc, desc, sql } from "drizzle-orm";
 import type { Platform, PollResultsSnapshot } from "@sondage/shared";
 import { getDb, schema } from "../client.js";
+import type { DbTx } from "../db-types.js";
 
 const {
   gradeHistograms,
@@ -10,8 +11,12 @@ const {
   voteBallots,
 } = schema;
 
-export async function getVoteCount(pollId: string): Promise<number> {
-  const db = getDb();
+function dbOr(tx?: DbTx) {
+  return tx ?? getDb();
+}
+
+export async function getVoteCount(pollId: string, tx?: DbTx): Promise<number> {
+  const db = dbOr(tx);
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(voteParticipation)
@@ -19,8 +24,8 @@ export async function getVoteCount(pollId: string): Promise<number> {
   return row?.count ?? 0;
 }
 
-export async function getHistogramRows(pollId: string) {
-  const db = getDb();
+export async function getHistogramRows(pollId: string, tx?: DbTx) {
+  const db = dbOr(tx);
   return db
     .select({
       itemId: gradeHistograms.itemId,
@@ -57,20 +62,31 @@ export async function saveSnapshot(
   version: number,
   voteCount: number,
   visible: boolean,
-  payload: PollResultsSnapshot
-) {
-  const db = getDb();
-  await db.insert(resultSnapshots).values({
-    pollId,
-    version,
-    voteCount,
-    visible,
-    payload,
-  });
+  payload: PollResultsSnapshot,
+  tx?: DbTx
+): Promise<boolean> {
+  const db = dbOr(tx);
+  const rows = await db
+    .insert(resultSnapshots)
+    .values({
+      pollId,
+      version,
+      voteCount,
+      visible,
+      payload,
+    })
+    .onConflictDoNothing({
+      target: [resultSnapshots.pollId, resultSnapshots.version],
+    })
+    .returning({ id: resultSnapshots.id });
+  return rows.length > 0;
 }
 
-export async function getMaxSnapshotVersion(pollId: string): Promise<number> {
-  const db = getDb();
+export async function getMaxSnapshotVersion(
+  pollId: string,
+  tx?: DbTx
+): Promise<number> {
+  const db = dbOr(tx);
   const [row] = await db
     .select({
       max: sql<number>`coalesce(max(${resultSnapshots.version}), 0)::int`,
@@ -84,8 +100,8 @@ export async function getNextSnapshotVersion(pollId: string): Promise<number> {
   return (await getMaxSnapshotVersion(pollId)) + 1;
 }
 
-export async function getLatestVisibleSnapshot(pollId: string) {
-  const db = getDb();
+export async function getLatestVisibleSnapshot(pollId: string, tx?: DbTx) {
+  const db = dbOr(tx);
   const rows = await db
     .select()
     .from(resultSnapshots)
@@ -184,6 +200,20 @@ export async function recordBallot(
   });
 }
 
+export async function tryClaimVoteEvent(
+  eventId: string,
+  pollId: string
+): Promise<boolean> {
+  const db = getDb();
+  const { processedVoteEvents } = schema;
+  const rows = await db
+    .insert(processedVoteEvents)
+    .values({ eventId, pollId })
+    .onConflictDoNothing({ target: processedVoteEvents.eventId })
+    .returning({ eventId: processedVoteEvents.eventId });
+  return rows.length > 0;
+}
+
 export async function isEventProcessed(eventId: string) {
   const db = getDb();
   const { processedVoteEvents } = schema;
@@ -195,7 +225,5 @@ export async function isEventProcessed(eventId: string) {
 }
 
 export async function markEventProcessed(eventId: string, pollId: string) {
-  const db = getDb();
-  const { processedVoteEvents } = schema;
-  await db.insert(processedVoteEvents).values({ eventId, pollId });
+  await tryClaimVoteEvent(eventId, pollId);
 }

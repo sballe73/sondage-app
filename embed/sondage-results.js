@@ -254,7 +254,9 @@
           ${renderLiveVoteNotice(
             meta.voteCount,
             meta.liveVoteCount,
-            this.poll
+            this.poll,
+            meta.computedAt,
+            meta.aggregationIntervalMs
           )}
           ${
             snap.tieBreakMethodDescription
@@ -378,24 +380,44 @@
       </header>`;
   }
 
-  function renderLiveVoteNotice(snapshotCount, liveCount, poll) {
+  function formatAggregationInterval(ms) {
+    const n = Number(ms);
+    if (!Number.isFinite(n) || n <= 0) return "une minute";
+    if (n < 60_000) {
+      const sec = Math.max(1, Math.round(n / 1000));
+      return `${sec} seconde${sec > 1 ? "s" : ""}`;
+    }
+    const min = Math.round(n / 60_000);
+    return min === 1 ? "une minute" : `${min} minutes`;
+  }
+
+  function renderLiveVoteNotice(
+    snapshotCount,
+    liveCount,
+    poll,
+    computedAt,
+    aggregationIntervalMs
+  ) {
     if (liveCount == null || snapshotCount == null || liveCount === snapshotCount) {
       return "";
     }
 
-    const policy = poll?.resultPolicy;
-    const threshold = THRESHOLD_BY_POLICY[policy];
     const pollEnded = isPollEnded(poll);
-
     let message;
+
     if (pollEnded) {
       message =
         "Le classement affiché n’inclut pas encore tous les votes reçus avant la clôture. Rechargez la page pour afficher le résultat final.";
-    } else if (threshold && policy !== "end_only") {
-      const nextCheckpoint = Math.ceil(liveCount / threshold) * threshold;
-      message = `La grille et le classement ci-dessous correspondent au palier de ${snapshotCount} votes. Prochaine mise à jour prévue à ${nextCheckpoint} votes (${liveCount} votes enregistrés).`;
     } else {
-      message = `Classement affiché basé sur ${snapshotCount} votes sur ${liveCount} enregistrés.`;
+      const intervalLabel = formatAggregationInterval(
+        aggregationIntervalMs ?? 60_000
+      );
+      const updatedAt = computedAt
+        ? ` (dernière mise à jour : ${formatDateTime(computedAt)})`
+        : "";
+      message =
+        `Le classement et la grille ci-dessous correspondent à ${snapshotCount} votes enregistrés${updatedAt}. ` +
+        `${liveCount} votes au total — prochaine synchronisation automatique sous environ ${intervalLabel}.`;
     }
 
     return `<aside class="live-vote-notice">${escapeHtml(message)}</aside>`;

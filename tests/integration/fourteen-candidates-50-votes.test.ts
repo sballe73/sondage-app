@@ -18,6 +18,7 @@ import {
 } from "../../packages/db/dist/index.js";
 import type { CreatePollInput } from "../../packages/shared/dist/types.js";
 import { processVoteEvent } from "../../apps/worker/dist/processor.js";
+import { maybePublishSnapshot } from "../../packages/db/dist/publish-snapshot.js";
 import { closeRedis } from "../../apps/worker/dist/redis.js";
 import {
   normalizeResultsPayload,
@@ -91,6 +92,7 @@ describe("Integration: 14 candidats, 50 votants, seuils /10", { skip: !hasDb }, 
         voterMode: "public",
         submittedAt: new Date().toISOString(),
       });
+      await maybePublishSnapshot(poll.id);
 
       const count = await getVoteCount(poll.id);
       assert.strictEqual(count, v + 1);

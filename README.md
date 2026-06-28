@@ -12,6 +12,8 @@ Application de sondages à grande échelle basée sur le **jugement majoritaire*
 
 ```
 Client → API (SETNX Redis, XADD stream) → Worker → Postgres (histogrammes, participation, bulletins publics)
+
+Le worker vérifie le stream Redis **toutes les minutes** (`WORKER_POLL_INTERVAL_MS`, défaut 60 000 ms) et n’agrège les votes **que s’il y en a de nouveaux**. À la fin de chaque passe, un **snapshot** est publié si le compteur agrégé a augmenté depuis le dernier snapshot affiché (le seuil `threshold_10` ne s’applique qu’à la **première** publication, pas aux mises à jour suivantes).
                 ↓
          Results API (snapshots, Cache-Control)
 ```
@@ -263,11 +265,86 @@ Mode **Development** : ajouter chaque compte votant dans **App roles → Testers
 |--------|------|
 | `scripts/render-build.sh` | `npm ci` + build monorepo |
 | `scripts/render-start.sh` | worker en arrière-plan + API (plan free) |
+| `scripts/run-load-test.sh` | test de charge k6 (votes mock concurrents) |
 | `npm run db:migrate:prod` | migrations SQL (preDeploy Render) |
 
 **Coût indicatif :** web + Redis free ; Postgres `basic-256mb` (~7 $/mois). Le plan free web **s’endort** après inactivité (~30 s au réveil).
 
 **Évolution :** séparer API et worker en deux services Render quand le trafic augmente.
+
+## Test de charge (k6, mock)
+
+Test de performance distribué : plusieurs machines envoient des votes mock simultanés contre une API en cours d’exécution. Outil **manuel / staging** (pas en CI).
+
+### Prérequis
+
+1. **k6** sur chaque machine cliente :
+   ```bash
+   # Debian/Ubuntu
+   sudo gpg -k
+   sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+     --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+   echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+     | sudo tee /etc/apt/sources.list.d/k6.list
+   sudo apt-get update && sudo apt-get install k6
+
+   # macOS
+   brew install k6
+   ```
+   Alternative sans installation : `--docker` (image `grafana/k6`).
+
+2. **Cible** : API + worker démarrés, sondage `platform: mock`, fenêtre de vote ouverte.
+3. **Serveur** : `ENABLED_PLATFORMS` inclut `mock` ; pour forte concurrence depuis une seule IP, `RATE_LIMIT_ENABLED=false`.
+
+### Lancement simple (une machine)
+
+```bash
+npm run load-test -- -p <UUID> -n 50
+# Cible distante (écrase .env) :
+npm run load-test -- -p <UUID> -n 50 --url http://localhost:3000
+```
+
+Chaque exécution utilise de nouveaux `perf-voter-N` (auto-incrément depuis les bulletins existants).
+
+### Paramètres principaux
+
+| Option | Description |
+|--------|-------------|
+| `-p, --poll-id` | UUID du sondage (obligatoire) |
+| `-n, --users` | Nombre de votants virtuels sur **cette** machine |
+| `-c, --concurrency` | Votants **en parallèle** max (défaut : identique à `-n`) |
+| `--at HH:MM` | Heure de lancement (jour courant) — synchronise plusieurs machines |
+| `--timezone` | Fuseau IANA pour `--at` (ex. `Europe/Paris`) |
+| `--ramp-seconds N` | Montée progressive sur N secondes (défaut : rafale immédiate) |
+| `-u, --url` | URL de l’API — **prioritaire** sur `.env` (`API_BASE`, `PUBLIC_BASE_URL`) et la variable `API_BASE` |
+| `--api-base` | Alias de `--url` |
+| `--segment-index i` | Index machine (0-based) pour k6 execution segments |
+| `--segments-total n` | Nombre total de machines |
+| `--total-users N` | Répartit N votants sur les segments (calcule `-n` et offset) |
+| `--api-base` | URL API (défaut : `.env` → `API_BASE` / `PUBLIC_BASE_URL` → `http://localhost:3000`) |
+| `--dry-run` | Pré-vol + commande k6 sans exécuter |
+| `--report path` | Export JSON des métriques k6 |
+
+Aide complète : `./scripts/run-load-test.sh --help`
+
+### Multi-machine (ex. 600 votants, 3 laptops, 14h30)
+
+Sur chaque machine, à la même heure :
+
+```bash
+npm run load-test -- -p <UUID> --total-users 600 --segment-index 0 --segments-total 3 --at 14:30
+npm run load-test -- -p <UUID> --total-users 600 --segment-index 1 --segments-total 3 --at 14:30
+npm run load-test -- -p <UUID> --total-users 600 --segment-index 2 --segments-total 3 --at 14:30 --ramp-seconds 15
+```
+
+k6 affiche latences (p50/p95/p99), débit et taux d’échec. Vérifier le décompte :
+
+```bash
+curl -s -H 'X-Data-Region: EU' http://localhost:3000/polls/<UUID>/results | jq '.liveVoteCount, .voteCount'
+node scripts/debug-poll-state.mjs <UUID>
+```
+
+Fichiers : [`tests/load/poll-votes.k6.js`](tests/load/poll-votes.k6.js), [`scripts/run-load-test.sh`](scripts/run-load-test.sh).
 
 
 ## Test d'intégration (14 candidats × 50 votants)

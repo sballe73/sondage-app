@@ -44,6 +44,34 @@ function parseStreamMessages(
   });
 }
 
+function groupEntryToMap(entry: unknown): Record<string, string | number> {
+  if (!Array.isArray(entry)) {
+    return (entry ?? {}) as Record<string, string | number>;
+  }
+  const map: Record<string, string | number> = {};
+  for (let i = 0; i < entry.length; i += 2) {
+    map[String(entry[i])] = entry[i + 1] as string | number;
+  }
+  return map;
+}
+
+function parseConsumerGroupInfo(
+  raw: unknown,
+  groupName: string
+): { pending: number; lag: number } | null {
+  if (!Array.isArray(raw)) return null;
+  for (const entry of raw) {
+    const map = groupEntryToMap(entry);
+    if (map.name === groupName) {
+      return {
+        pending: Number(map.pending ?? 0),
+        lag: Number(map.lag ?? 0),
+      };
+    }
+  }
+  return null;
+}
+
 export async function ensureConsumerGroup(): Promise<void> {
   const r = getRedis();
   try {
@@ -75,18 +103,39 @@ export async function ensureConsumerGroupWithRetry(
   }
 }
 
+/** Nombre d'événements en attente (PEL + lag du consumer group). */
+export async function getPendingVoteWork(): Promise<number> {
+  const r = getRedis();
+  try {
+    const [pendingSummary, groups] = await Promise.all([
+      r.xpending(
+        workerConfig.voteEventsStream,
+        workerConfig.consumerGroup
+      ) as Promise<[number, string, string, unknown[]]>,
+      r.xinfo("GROUPS", workerConfig.voteEventsStream),
+    ]);
+    const pel = Number(pendingSummary?.[0] ?? 0);
+    const info = parseConsumerGroupInfo(groups, workerConfig.consumerGroup);
+    const lag = Number(info?.lag ?? 0);
+    return pel + lag;
+  } catch (err) {
+    if (!isMissingConsumerGroupError(err)) throw err;
+    await ensureConsumerGroup();
+    return 0;
+  }
+}
+
 async function readGroupEventsOnce(
-  r: RedisClient,
-  blockMs = workerConfig.blockMs
+  r: RedisClient
 ): Promise<{ id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]> {
   const rows = await r.xreadgroup(
     "GROUP",
     workerConfig.consumerGroup,
     workerConfig.consumerName,
     "COUNT",
-    workerConfig.batchSize,
+    workerConfig.streamReadCount,
     "BLOCK",
-    blockMs,
+    0,
     "STREAMS",
     workerConfig.voteEventsStream,
     ">"
@@ -109,7 +158,7 @@ export async function claimStalePendingEvents(
       minIdleMs,
       "0-0",
       "COUNT",
-      workerConfig.batchSize
+      workerConfig.streamReadCount
     )) as [string, [string, string[]][], string[]];
     const messages = result[1] ?? [];
     return parseStreamMessages(messages);
@@ -120,7 +169,8 @@ export async function claimStalePendingEvents(
   }
 }
 
-export async function readGroupEvents(): Promise<
+/** Lecture immédiate (sans attente) des nouveaux événements du stream. */
+export async function readGroupEventsImmediate(): Promise<
   { id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]
 > {
   const r = getRedis();
@@ -130,20 +180,6 @@ export async function readGroupEvents(): Promise<
     if (!isMissingConsumerGroupError(err)) throw err;
     await ensureConsumerGroup();
     return readGroupEventsOnce(r);
-  }
-}
-
-/** Lecture immédiate (sans attente) pour vider le lag du consumer group. */
-export async function readGroupEventsImmediate(): Promise<
-  { id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]
-> {
-  const r = getRedis();
-  try {
-    return await readGroupEventsOnce(r, 0);
-  } catch (err) {
-    if (!isMissingConsumerGroupError(err)) throw err;
-    await ensureConsumerGroup();
-    return readGroupEventsOnce(r, 0);
   }
 }
 
