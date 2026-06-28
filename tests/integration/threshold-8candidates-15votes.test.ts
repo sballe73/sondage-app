@@ -174,7 +174,7 @@ describe(
       );
     }
 
-    it("seuil /10 : 5 → masqué, 10 → snapshot v1, 15 → live seulement, fin → v2", async () => {
+    it("seuil /10 : 5 → masqué, 10 → snapshot v1, 15 → snapshot v2, fin → v2", async () => {
       await castVotes(1, 5);
       await assertWidgetCounts(5, "après 5 votes");
 
@@ -202,14 +202,14 @@ describe(
 
       results = await fetchResultsWidgetView(app, pollId);
       assert.equal(results.resultsStatus, 200);
-      assert.equal(results.snapshotVersion, 1);
-      assert.equal(results.snapshotVoteCount, 10);
+      assert.equal(results.snapshotVersion, 2);
+      assert.equal(results.snapshotVoteCount, 15);
       assert.equal(results.liveVoteCount, 15);
 
       snap = await getLatestVisibleSnapshot(pollId);
       assert.ok(snap);
-      assert.equal(snap!.version, 1);
-      assert.equal(snap!.voteCount, 10);
+      assert.equal(snap!.version, 2);
+      assert.equal(snap!.voteCount, 15);
 
       await setPollEndsAt(pollId, new Date(Date.now() - 60_000));
 

@@ -7,17 +7,16 @@ import {
   getSnapshotByVersion,
   getVoteCount,
   getHistogramRows,
-  getNextSnapshotVersion,
   listBallots,
   getBallotBySubject,
   listParticipation,
-  computeAndSaveSnapshot,
+  maybePublishSnapshot,
   getPollById,
 } from "@sondage/db";
 import { enforcePollRegion } from "../middleware/region.js";
+import { config } from "../config.js";
 import {
   isResultsVisible,
-  shouldPublishSnapshot,
 } from "../services/results-policy.js";
 import { getLiveVoteCount, hasParticipationClaim } from "../redis.js";
 import { drainVoteEventsForPoll } from "../services/vote-drain.js";
@@ -37,7 +36,11 @@ export async function resultsRoutes(app: FastifyInstance) {
     let voteCount = await getLiveVoteCount(pollId, dbCount);
 
     if (dbCount < voteCount) {
-      await drainVoteEventsForPoll(pollId);
+      try {
+        await drainVoteEventsForPoll(pollId);
+      } catch (err) {
+        request.log.warn({ err, pollId, event: "vote_drain_failed" }, "Vote drain failed");
+      }
       dbCount = await getVoteCount(pollId);
       voteCount = await getLiveVoteCount(pollId, dbCount);
     }
@@ -71,19 +74,19 @@ export async function resultsRoutes(app: FastifyInstance) {
     const snapshotVoteCount = snapshot?.voteCount ?? 0;
     const now = new Date();
     const pollEnded = now >= poll.endsAt;
-    const needsSnapshot =
-      !snapshot ||
-      shouldPublishSnapshot(
-        policy,
-        snapshotVoteCount,
-        voteCount,
-        poll.endsAt,
-        now,
-        snapshotOptions
-      ) ||
-      (pollEnded && snapshotVoteCount < voteCount);
 
     if (aggregationPending) {
+      if (snapshot) {
+        reply.header("Cache-Control", `private, max-age=${CACHE_MAX_AGE_HIDDEN}`);
+        return {
+          version: snapshot.version,
+          voteCount: snapshot.voteCount,
+          liveVoteCount: voteCount,
+          computedAt: snapshot.computedAt,
+          aggregationIntervalMs: config.aggregationIntervalMs,
+          results: snapshot.payload,
+        };
+      }
       reply.header("Cache-Control", `private, max-age=${CACHE_MAX_AGE_HIDDEN}`);
       throw new AppError(
         404,
@@ -93,9 +96,13 @@ export async function resultsRoutes(app: FastifyInstance) {
       );
     }
 
+    const needsSnapshot =
+      !snapshot ||
+      voteCount > snapshotVoteCount ||
+      (pollEnded && snapshotVoteCount < voteCount);
+
     if (needsSnapshot) {
-      const version = await getNextSnapshotVersion(pollId);
-      await computeAndSaveSnapshot(pollId, version, true);
+      await maybePublishSnapshot(pollId, { forceVisible: true });
       snapshot = await getLatestVisibleSnapshot(pollId);
       if (!snapshot) {
         reply.header("Cache-Control", `private, max-age=${CACHE_MAX_AGE_HIDDEN}`);
@@ -118,6 +125,7 @@ export async function resultsRoutes(app: FastifyInstance) {
       voteCount: snapshot.voteCount,
       liveVoteCount: voteCount,
       computedAt: snapshot.computedAt,
+      aggregationIntervalMs: config.aggregationIntervalMs,
       results: snapshot.payload,
     };
   });

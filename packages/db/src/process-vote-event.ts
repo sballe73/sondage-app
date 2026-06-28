@@ -2,22 +2,20 @@ import type { VoteSubmittedEvent, ResultPolicy, Platform } from "@sondage/shared
 import {
   hashSubjectForParticipation,
   shouldPublishSnapshot,
-  isResultsVisible,
+  isMockLiveSnapshot,
 } from "@sondage/shared";
 import { getPollById } from "./repositories/polls.js";
 import {
-  isEventProcessed,
-  markEventProcessed,
+  tryClaimVoteEvent,
   incrementHistogram,
   recordParticipation,
   recordBallot,
   getVoteCount,
-  getNextSnapshotVersion,
 } from "./repositories/results.js";
-import { computeAndSaveSnapshot } from "./snapshot.js";
+import { maybePublishSnapshot } from "./publish-snapshot.js";
 
 export async function processVoteEvent(event: VoteSubmittedEvent): Promise<void> {
-  if (await isEventProcessed(event.eventId)) {
+  if (!(await tryClaimVoteEvent(event.eventId, event.pollId))) {
     return;
   }
 
@@ -63,41 +61,25 @@ export async function processVoteEvent(event: VoteSubmittedEvent): Promise<void>
     );
   }
 
-  await markEventProcessed(event.eventId, event.pollId);
-
   const newCount = previousCount + 1;
   const policy = data.poll.resultPolicy as ResultPolicy;
   const snapshotOptions = {
     platform: data.poll.platform as Platform,
     mockSnapshotEveryVote: data.poll.mockSnapshotEveryVote,
   };
-  const publishThreshold = shouldPublishSnapshot(
-    policy,
-    previousCount,
-    newCount,
-    data.poll.endsAt,
-    new Date(),
-    snapshotOptions
-  );
-  const atEnd =
-    new Date() >= data.poll.endsAt &&
-    isResultsVisible(
-      policy,
-      newCount,
-      data.poll.endsAt,
-      new Date(),
-      snapshotOptions
-    );
 
-  if (publishThreshold || atEnd) {
-    const version = await getNextSnapshotVersion(event.pollId);
-    const forceVisible = isResultsVisible(
+  // Mock live dev : snapshot à chaque vote. Sinon publication différée (worker / GET results).
+  if (isMockLiveSnapshot(snapshotOptions)) {
+    const publish = shouldPublishSnapshot(
       policy,
+      previousCount,
       newCount,
       data.poll.endsAt,
       new Date(),
       snapshotOptions
     );
-    await computeAndSaveSnapshot(event.pollId, version, forceVisible);
+    if (publish) {
+      await maybePublishSnapshot(event.pollId);
+    }
   }
 }

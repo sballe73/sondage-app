@@ -5,7 +5,8 @@ import {
   closePoll,
   updatePollDates,
   getVoteCount,
-  computeAndSaveSnapshot,
+  maybePublishSnapshot,
+  getLatestVisibleSnapshot,
 } from "@sondage/db";
 import {
   isResultsVisible,
@@ -109,7 +110,8 @@ export async function adminRoutes(app: FastifyInstance) {
         mockSnapshotEveryVote: poll.mockSnapshotEveryVote,
       }
     );
-    const snapshot = await computeAndSaveSnapshot(pollId, 1, visible || true);
-    return { closed: true, snapshot };
+    await maybePublishSnapshot(pollId, { forceVisible: visible || true });
+    const snapshotRow = await getLatestVisibleSnapshot(pollId);
+    return { closed: true, snapshot: snapshotRow?.payload ?? null };
   });
 }

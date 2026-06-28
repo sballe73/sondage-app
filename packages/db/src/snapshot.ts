@@ -16,17 +16,19 @@ import {
   getVoteCount,
   saveSnapshot,
 } from "./repositories/results.js";
+import type { DbTx } from "./db-types.js";
 
 export async function computeAndSaveSnapshot(
   pollId: string,
   version: number,
-  forceVisible?: boolean
-): Promise<PollResultsSnapshot> {
-  const data = await getPollById(pollId);
+  forceVisible?: boolean,
+  tx?: DbTx
+): Promise<PollResultsSnapshot | null> {
+  const data = await getPollById(pollId, tx);
   if (!data) throw new Error("Poll not found");
   const { poll, items } = data;
-  const voteCount = await getVoteCount(pollId);
-  const rows = await getHistogramRows(pollId);
+  const voteCount = await getVoteCount(pollId, tx);
+  const rows = await getHistogramRows(pollId, tx);
   const visible =
     forceVisible ??
     isResultsVisible(
@@ -110,6 +112,13 @@ export async function computeAndSaveSnapshot(
     visible,
   };
 
-  await saveSnapshot(pollId, version, voteCount, visible, snapshot);
-  return snapshot;
+  const saved = await saveSnapshot(
+    pollId,
+    version,
+    voteCount,
+    visible,
+    snapshot,
+    tx
+  );
+  return saved ? snapshot : null;
 }

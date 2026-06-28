@@ -8,3 +8,4 @@ export * from "./results-policy.js";
 export * from "./privacy.js";
 export * from "./platforms.js";
 export * from "./compliance-checks.js";
+export * from "./perf-log.js";

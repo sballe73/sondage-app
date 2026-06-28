@@ -56,8 +56,10 @@ export async function createPoll(input: CreatePollInput) {
   });
 }
 
-export async function getPollById(pollId: string) {
-  const db = getDb();
+import type { DbTx } from "../db-types.js";
+
+export async function getPollById(pollId: string, tx?: DbTx) {
+  const db = tx ?? getDb();
   const [poll] = await db.select().from(polls).where(eq(polls.id, pollId));
   if (!poll) return null;
   const items = await db

@@ -40,22 +40,22 @@ describe("shouldPublishSnapshot", () => {
     );
   });
 
-  it("publie à chaque multiple du seuil (10, 20, 30…)", () => {
+  it("threshold_10 : publie dès qu'il y a de nouveaux votes agrégés", () => {
     assert.strictEqual(
       shouldPublishSnapshot("threshold_10", 9, 10, endsAt),
       true
     );
     assert.strictEqual(
       shouldPublishSnapshot("threshold_10", 10, 11, endsAt),
+      true
+    );
+    assert.strictEqual(
+      shouldPublishSnapshot("threshold_10", 23910, 23914, endsAt),
+      true
+    );
+    assert.strictEqual(
+      shouldPublishSnapshot("threshold_10", 15, 15, endsAt),
       false
-    );
-    assert.strictEqual(
-      shouldPublishSnapshot("threshold_10", 19, 20, endsAt),
-      true
-    );
-    assert.strictEqual(
-      shouldPublishSnapshot("threshold_10", 29, 30, endsAt),
-      true
     );
   });
 

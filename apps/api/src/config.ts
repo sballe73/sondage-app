@@ -51,6 +51,8 @@ export const config = {
   rateLimitVotesPerMinute: Number(
     process.env.RATE_LIMIT_VOTES_PER_MINUTE ?? 5
   ),
+  /** Aligné sur WORKER_POLL_INTERVAL_MS (affichage UI résultats). */
+  aggregationIntervalMs: Number(process.env.WORKER_POLL_INTERVAL_MS ?? 60_000),
   oauthGoogleClientId: process.env.OAUTH_GOOGLE_CLIENT_ID ?? "",
   oauthGoogleClientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET ?? "",
   oauthGoogleRedirectUri:
