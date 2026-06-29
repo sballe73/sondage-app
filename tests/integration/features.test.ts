@@ -30,6 +30,13 @@ async function mockToken(
   return res.json().accessToken as string;
 }
 
+function creatorAuthHeaders(token: string) {
+  return {
+    "X-Data-Region": "EU",
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
   let app: Awaited<ReturnType<typeof buildApiApp>>;
   const prevMultiAuth = process.env.ALLOW_MULTI_PLATFORM_AUTH;
@@ -73,6 +80,7 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     assert.equal(createRes.statusCode, 201, createRes.body);
     const poll = createRes.json();
     const pollId = poll.id as string;
+    const creatorToken = await mockToken(app, "attendance-creator", pollId);
 
     await processVoteEvent({
       eventId: crypto.randomUUID(),
@@ -88,7 +96,7 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     const res = await app.inject({
       method: "GET",
       url: `/polls/${pollId}/attendance`,
-      headers: { "X-Data-Region": "EU" },
+      headers: creatorAuthHeaders(creatorToken),
     });
     assert.equal(res.statusCode, 200, res.body);
     const body = res.json();
@@ -126,6 +134,7 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     const poll = createRes.json();
     const pollId = poll.id as string;
     const itemId = poll.items[0].id as string;
+    const creatorToken = await mockToken(app, "attendance-creator", pollId);
 
     await processVoteEvent({
       eventId: crypto.randomUUID(),
@@ -141,7 +150,7 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     const res = await app.inject({
       method: "GET",
       url: `/polls/${pollId}/attendance`,
-      headers: { "X-Data-Region": "EU" },
+      headers: creatorAuthHeaders(creatorToken),
     });
     assert.equal(res.statusCode, 200, res.body);
     const body = res.json();
@@ -178,6 +187,7 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     const poll = createRes.json();
     assert.equal(poll.name, "Sondage injecté");
     assert.equal(poll.items[0].label, "Candidat A");
+    const creatorToken = await mockToken(app, "attendance-creator", poll.id);
 
     await processVoteEvent({
       eventId: crypto.randomUUID(),
@@ -193,7 +203,7 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     const res = await app.inject({
       method: "GET",
       url: `/polls/${poll.id}/attendance`,
-      headers: { "X-Data-Region": "EU" },
+      headers: creatorAuthHeaders(creatorToken),
     });
     const body = res.json();
     assert.equal(body.voters[0].displayName, "Jean Dupont");
@@ -202,7 +212,7 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     const tsvRes = await app.inject({
       method: "GET",
       url: `/polls/${poll.id}/attendance?format=tsv`,
-      headers: { "X-Data-Region": "EU" },
+      headers: creatorAuthHeaders(creatorToken),
     });
     assert.equal(tsvRes.statusCode, 200, tsvRes.body);
     assert.match(tsvRes.headers["content-type"] ?? "", /tab-separated-values/);
@@ -287,10 +297,12 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
       submittedAt: new Date().toISOString(),
     });
 
+    const creatorToken = await mockToken(multiApp, "multi-creator", pollId);
+
     const attendance = await multiApp.inject({
       method: "GET",
       url: `/polls/${pollId}/attendance`,
-      headers: { "X-Data-Region": "EU" },
+      headers: creatorAuthHeaders(creatorToken),
     });
     assert.equal(attendance.statusCode, 200, attendance.body);
     assert.equal(attendance.json().total, 2);
@@ -327,6 +339,7 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     const poll = createRes.json();
     const pollId = poll.id as string;
     const itemId = poll.items[0].id as string;
+    const creatorToken = await mockToken(app, "attendance-creator", pollId);
 
     for (let i = 0; i < 3; i++) {
       await processVoteEvent({
@@ -344,7 +357,7 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     const page1 = await app.inject({
       method: "GET",
       url: `/polls/${pollId}/attendance?offset=0&limit=2`,
-      headers: { "X-Data-Region": "EU" },
+      headers: creatorAuthHeaders(creatorToken),
     });
     const body1 = page1.json();
     assert.equal(body1.total, 3);
@@ -355,10 +368,47 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     const page2 = await app.inject({
       method: "GET",
       url: `/polls/${pollId}/attendance?offset=2&limit=2`,
-      headers: { "X-Data-Region": "EU" },
+      headers: creatorAuthHeaders(creatorToken),
     });
     const body2 = page2.json();
     assert.equal(body2.voters.length, 1);
+  });
+
+  it("rejects attendance without creator auth", async () => {
+    const now = Date.now();
+    const createRes = await app.inject({
+      method: "POST",
+      url: "/polls",
+      headers: { "Content-Type": "application/json", "X-Data-Region": "EU" },
+      payload: {
+        name: "Protected attendance",
+        creatorId: "attendance-creator",
+        platform: "mock",
+        items: [{ label: "A", sortOrder: 0 }],
+        visibility: "public",
+        voterMode: "anonymous",
+        resultPolicy: "end_only",
+        dataRegion: "EU",
+        startsAt: new Date(now - 3600_000).toISOString(),
+        endsAt: new Date(now + 7 * 86400_000).toISOString(),
+      },
+    });
+    const pollId = createRes.json().id as string;
+
+    const unauth = await app.inject({
+      method: "GET",
+      url: `/polls/${pollId}/attendance`,
+      headers: { "X-Data-Region": "EU" },
+    });
+    assert.equal(unauth.statusCode, 401, unauth.body);
+
+    const voterToken = await mockToken(app, "not-the-creator", pollId);
+    const forbidden = await app.inject({
+      method: "GET",
+      url: `/polls/${pollId}/attendance`,
+      headers: creatorAuthHeaders(voterToken),
+    });
+    assert.equal(forbidden.statusCode, 403, forbidden.body);
   });
 
   it("creates poll without platform field when ALLOW_MULTI_PLATFORM_AUTH=true", async () => {
