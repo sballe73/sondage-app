@@ -6,6 +6,10 @@ import {
   defaultGradeLabels,
   validateGradeLabels,
 } from "./grade-scale.js";
+import {
+  STORED_TEXT_LIMITS,
+  sanitizeStoredTextRequired,
+} from "./sanitize-text.js";
 
 export function assertPlatform(value: string): asserts value is Platform {
   if (!PLATFORMS.includes(value as Platform)) {
@@ -128,10 +132,25 @@ export function normalizeCreatePoll(input: CreatePollInput): CreatePollInput & {
 } {
   const gradeMin = input.gradeMin ?? DEFAULT_GRADE_MIN;
   const gradeMax = input.gradeMax ?? DEFAULT_GRADE_MAX;
-  const gradeLabels = input.gradeLabels ?? defaultGradeLabels();
+  const gradeLabels = (input.gradeLabels ?? defaultGradeLabels()).map((label) =>
+    sanitizeStoredTextRequired(label, STORED_TEXT_LIMITS.gradeLabel, "gradeLabel")
+  );
   const bestGradeIsLowest = input.bestGradeIsLowest ?? true;
   return {
     ...input,
+    name: sanitizeStoredTextRequired(
+      input.name,
+      STORED_TEXT_LIMITS.pollName,
+      "name"
+    ),
+    items: input.items.map((item, i) => ({
+      ...item,
+      label: sanitizeStoredTextRequired(
+        item.label,
+        STORED_TEXT_LIMITS.itemLabel,
+        "item.label"
+      ),
+    })),
     gradeMin,
     gradeMax,
     gradeLabels,

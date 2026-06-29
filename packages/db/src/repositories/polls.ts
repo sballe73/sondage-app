@@ -1,6 +1,10 @@
 import { eq, and, asc, desc, gt, ilike, isNull, lte, sql } from "drizzle-orm";
 import type { CreatePollInput, Platform } from "@sondage/shared";
-import { normalizeCreatePoll } from "@sondage/shared";
+import {
+  normalizeCreatePoll,
+  STORED_TEXT_LIMITS,
+  sanitizeStoredTextRequired,
+} from "@sondage/shared";
 import { getDb, schema } from "../client.js";
 
 const { polls, pollItems, campaigns } = schema;
@@ -163,9 +167,14 @@ export async function updatePollDates(
 
 export async function createCampaign(name: string, creatorId: string) {
   const db = getDb();
+  const safeName = sanitizeStoredTextRequired(
+    name,
+    STORED_TEXT_LIMITS.campaignName,
+    "name"
+  );
   const [row] = await db
     .insert(campaigns)
-    .values({ name, creatorId })
+    .values({ name: safeName, creatorId })
     .returning();
   return row;
 }

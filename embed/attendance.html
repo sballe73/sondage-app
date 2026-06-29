@@ -54,13 +54,27 @@
       .sondage-attendance .attendance-footer {
         margin-top: 1rem;
       }
-      .sondage-attendance .attendance-footer button {
+      .sondage-attendance .attendance-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .sondage-attendance .attendance-footer button,
+      .sondage-attendance .attendance-footer .download-tsv {
         padding: 0.45rem 1rem;
         cursor: pointer;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 6px;
         color: var(--text);
+        text-decoration: none;
+        font-size: inherit;
+        font-family: inherit;
+      }
+      .sondage-attendance .attendance-footer button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
       .sondage-attendance .error {
         color: var(--error);

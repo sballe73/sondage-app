@@ -36,12 +36,14 @@ export function buildHealthPayload() {
 
   oauth.facebook.redirectUri = config.oauthFacebookRedirectUri;
   oauth.facebook.dataDeletionCallbackUrl = `${config.publicBaseUrl}/auth/facebook/data-deletion`;
-  oauth.google.redirectUri = config.oauthGoogleRedirectUri;
+    oauth.google.redirectUri = config.oauthGoogleRedirectUri;
 
   return {
     status: "ok" as const,
     region: config.defaultDataRegion,
     publicBaseUrl: config.publicBaseUrl,
+    /** Aligné sur SNAPSHOT_MIN_INTERVAL_MS — rafraîchissement auto créateur / résultats. */
+    snapshotMinIntervalMs: config.snapshotMinIntervalMs,
     enabledPlatforms: config.enabledPlatforms,
     usablePlatforms: listUsablePlatforms(),
     allowMultiPlatformAuth: isMultiPlatformAuthAllowed(),

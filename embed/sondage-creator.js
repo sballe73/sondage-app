@@ -12,7 +12,7 @@
   const datetimeLocalToIso = (value) => DT.datetimeLocalToIso(value);
 
   const TAG = "sondage-creator-widget";
-  const STATUS_POLL_MS = 30000;
+  const RI = () => window.SondageRefreshInterval;
   const MIN_CANDIDATES = 1;
   const MAX_CANDIDATES = 20;
 
@@ -91,6 +91,7 @@
         const res = await fetch(`${this.apiBase}/health`);
         if (!res.ok) throw new Error(await res.text());
         this.instanceHealth = await res.json();
+        this._refreshIntervalMs = RI().fromHealth(this.instanceHealth);
       } catch (e) {
         this.renderError(
           `Configuration serveur indisponible : ${e.message || e}`
@@ -820,6 +821,9 @@
           snapshotVersion: resultsBody.version,
           computedAt: resultsBody.computedAt,
         };
+        if (RI()) {
+          this._refreshIntervalMs = RI().fromResultsMeta(resultsBody);
+        }
       } else if (resultsRes.status === 403) {
         const info = normalizeResultsErrorBody(resultsBody);
         this.statusInfo = {
@@ -1017,7 +1021,7 @@
           <dt>Candidats</dt><dd>${(poll.items || []).length}</dd>
         </dl>
         ${this._renderCreatorAuthHint(poll)}
-        <p class="hint">Rafraîchissement automatique toutes les 30 s.</p>
+        <p class="hint">Rafraîchissement automatique toutes les ${escapeHtml(this._refreshIntervalLabel())}.</p>
       `;
     }
 
@@ -1142,11 +1146,25 @@
       }
     }
 
+    _refreshIntervalLabel() {
+      const ms =
+        this._refreshIntervalMs ??
+        (this.instanceHealth && RI()
+          ? RI().fromHealth(this.instanceHealth)
+          : RI()?.DEFAULT_MS ?? 60_000);
+      return RI() ? RI().formatSecondsLabel(ms) : "60 secondes";
+    }
+
     _maybeStartStatusPolling() {
       this._stopStatusPolling();
+      const ms =
+        this._refreshIntervalMs ??
+        (this.instanceHealth && RI()
+          ? RI().fromHealth(this.instanceHealth)
+          : RI()?.DEFAULT_MS ?? 60_000);
       this._statusTimer = setInterval(
         () => this.refreshStatusAndRender(),
-        STATUS_POLL_MS
+        RI() ? RI().pollMs(ms) : ms
       );
     }
 

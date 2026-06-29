@@ -1,5 +1,9 @@
 import { eq, and, asc, desc, sql } from "drizzle-orm";
 import type { Platform, PollResultsSnapshot } from "@sondage/shared";
+import {
+  STORED_TEXT_LIMITS,
+  sanitizeStoredTextOptional,
+} from "@sondage/shared";
 import { getDb, schema } from "../client.js";
 import type { DbTx } from "../db-types.js";
 
@@ -155,6 +159,66 @@ export async function getBallotBySubject(
   return row ?? null;
 }
 
+function sanitizeDisplayName(displayName?: string | null): string | null {
+  const cleaned = sanitizeStoredTextOptional(
+    displayName,
+    STORED_TEXT_LIMITS.displayName
+  );
+  return cleaned ?? null;
+}
+
+export async function countParticipation(pollId: string): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(voteParticipation)
+    .where(eq(voteParticipation.pollId, pollId));
+  return row?.count ?? 0;
+}
+
+export async function countBallots(pollId: string): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(voteBallots)
+    .where(eq(voteBallots.pollId, pollId));
+  return row?.count ?? 0;
+}
+
+export async function listParticipationPage(
+  pollId: string,
+  offset: number,
+  limit: number
+) {
+  const db = getDb();
+  return db
+    .select({
+      displayName: voteParticipation.displayName,
+      participatedAt: voteParticipation.participatedAt,
+      platform: voteParticipation.platform,
+    })
+    .from(voteParticipation)
+    .where(eq(voteParticipation.pollId, pollId))
+    .orderBy(asc(voteParticipation.participatedAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function listBallotsPage(
+  pollId: string,
+  offset: number,
+  limit: number
+) {
+  const db = getDb();
+  return db
+    .select()
+    .from(voteBallots)
+    .where(eq(voteBallots.pollId, pollId))
+    .orderBy(asc(voteBallots.votedAt))
+    .limit(limit)
+    .offset(offset);
+}
+
 export async function listParticipation(pollId: string) {
   const db = getDb();
   return db
@@ -179,7 +243,7 @@ export async function recordParticipation(
     pollId,
     platform,
     subjectId,
-    displayName: displayName ?? null,
+    displayName: sanitizeDisplayName(displayName),
   });
 }
 
@@ -195,7 +259,7 @@ export async function recordBallot(
     pollId,
     platform,
     subjectId,
-    displayName: displayName ?? null,
+    displayName: sanitizeDisplayName(displayName),
     grades,
   });
 }
@@ -271,7 +335,7 @@ export async function bulkRecordParticipations(
       pollId: row.pollId,
       platform: row.platform,
       subjectId: row.subjectId,
-      displayName: row.displayName ?? null,
+      displayName: sanitizeDisplayName(row.displayName),
     }))
   );
 }
@@ -293,7 +357,7 @@ export async function bulkRecordBallots(
       pollId: row.pollId,
       platform: row.platform,
       subjectId: row.subjectId,
-      displayName: row.displayName ?? null,
+      displayName: sanitizeDisplayName(row.displayName),
       grades: row.grades,
     }))
   );

@@ -76,7 +76,7 @@ Depuis la page de vote (`vote.html`), le lien **Voir les résultats** ouvre cett
    ```bash
    ./scripts/simulate-votes.sh <UUID> 10
    ```
-5. Actualiser la page résultats (ou attendre le polling 30 s) — classement + histogrammes visibles.
+5. Actualiser la page résultats (ou attendre le rafraîchissement automatique, intervalle `SNAPSHOT_MIN_INTERVAL_MS`) — classement + histogrammes visibles.
 6. Vérifier que `medianDisplay` du tableau correspond aux pourcentages ballotage de l’API :
    ```bash
    curl -s -H 'X-Data-Region: EU' http://localhost:3000/polls/<UUID>/results | jq '.results.ranking[0]'
