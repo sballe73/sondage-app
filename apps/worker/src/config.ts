@@ -9,4 +9,6 @@ export const workerConfig = {
   /** Intervalle entre deux vérifications de nouveaux votes (défaut : 1 min). */
   pollIntervalMs: Number(process.env.WORKER_POLL_INTERVAL_MS ?? 60_000),
   streamReadCount: STREAM_READ_COUNT,
+  /** Max événements agrégés par tick (évite un tick bloqué des heures). */
+  maxEventsPerTick: Number(process.env.WORKER_MAX_EVENTS_PER_TICK ?? 500),
 };

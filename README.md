@@ -13,7 +13,7 @@ Application de sondages à grande échelle basée sur le **jugement majoritaire*
 ```
 Client → API (SETNX Redis, XADD stream) → Worker → Postgres (histogrammes, participation, bulletins publics)
 
-Le worker vérifie le stream Redis **toutes les minutes** (`WORKER_POLL_INTERVAL_MS`, défaut 60 000 ms) et n’agrège les votes **que s’il y en a de nouveaux**. À la fin de chaque passe, un **snapshot** est publié si le compteur agrégé a augmenté depuis le dernier snapshot affiché (le seuil `threshold_10` ne s’applique qu’à la **première** publication, pas aux mises à jour suivantes).
+Le worker vérifie le stream Redis **toutes les minutes** (`WORKER_POLL_INTERVAL_MS`, défaut 60 000 ms) et n’agrège les votes **que s’il y en a de nouveaux**. À la fin de chaque passe, un **snapshot** est publié si le compteur agrégé a augmenté depuis le dernier snapshot affiché (le seuil `threshold_10` ne s’applique qu’à la **première** publication, pas aux mises à jour suivantes). Entre deux publications pour un même sondage, `SNAPSHOT_MIN_INTERVAL_MS` impose un délai minimum (défaut 60 000 ms ; `0` désactive la limite).
                 ↓
          Results API (snapshots, Cache-Control)
 ```
@@ -246,6 +246,7 @@ Après une migration SQL déployée sur Render : redémarrer le worker prod uniq
 | `OAUTH_FACEBOOK_APP_SECRET` | App Secret Meta |
 | `ENABLED_PLATFORMS` | `facebook` (déjà dans le blueprint ; exclure `mock` en prod) |
 | `WORKER_POLL_INTERVAL_MS` | `5000` recommandé sous charge (aligner avec `.env.worker.prod`) |
+| `SNAPSHOT_MIN_INTERVAL_MS` | `60000` par défaut — au plus une publication snapshot / sondage / intervalle (`0` = illimité) |
 
 `PUBLIC_BASE_URL` est **optionnel** : l’API utilise `RENDER_EXTERNAL_URL` si absent.  
 Callback OAuth dérivé : `{PUBLIC_BASE_URL ou RENDER_EXTERNAL_URL}/auth/facebook/callback`.

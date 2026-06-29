@@ -19,7 +19,6 @@ import {
   isResultsVisible,
 } from "../services/results-policy.js";
 import { getLiveVoteCount, hasParticipationClaim } from "../redis.js";
-import { drainVoteEventsForPoll } from "../services/vote-drain.js";
 import { requireVoterAuth } from "./auth.js";
 import { AppError } from "../errors.js";
 import { toIsoString } from "../serialize-timestamp.js";
@@ -34,17 +33,6 @@ export async function resultsRoutes(app: FastifyInstance) {
 
     let dbCount = await getVoteCount(pollId);
     let voteCount = await getLiveVoteCount(pollId, dbCount);
-
-    if (dbCount < voteCount) {
-      try {
-        await drainVoteEventsForPoll(pollId);
-      } catch (err) {
-        request.log.warn({ err, pollId, event: "vote_drain_failed" }, "Vote drain failed");
-      }
-      dbCount = await getVoteCount(pollId);
-      voteCount = await getLiveVoteCount(pollId, dbCount);
-    }
-
     const aggregationPending = voteCount > dbCount;
 
     const policy = poll.resultPolicy as ResultPolicy;

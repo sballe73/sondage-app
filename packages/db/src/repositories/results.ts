@@ -204,14 +204,99 @@ export async function tryClaimVoteEvent(
   eventId: string,
   pollId: string
 ): Promise<boolean> {
-  const db = getDb();
+  const claimed = await claimVoteEvents([{ eventId, pollId }]);
+  return claimed.has(eventId);
+}
+
+/** Réserve les eventId non encore traités (idempotence). */
+export async function claimVoteEvents(
+  events: { eventId: string; pollId: string }[],
+  tx?: DbTx
+): Promise<Set<string>> {
+  if (events.length === 0) {
+    return new Set();
+  }
+  const db = dbOr(tx);
   const { processedVoteEvents } = schema;
   const rows = await db
     .insert(processedVoteEvents)
-    .values({ eventId, pollId })
+    .values(events.map((e) => ({ eventId: e.eventId, pollId: e.pollId })))
     .onConflictDoNothing({ target: processedVoteEvents.eventId })
     .returning({ eventId: processedVoteEvents.eventId });
-  return rows.length > 0;
+  return new Set(rows.map((r) => r.eventId));
+}
+
+export async function bulkIncrementHistograms(
+  pollId: string,
+  deltas: { itemId: string; grade: number; delta: number }[],
+  tx?: DbTx
+) {
+  if (deltas.length === 0) return;
+  const db = dbOr(tx);
+  await db
+    .insert(gradeHistograms)
+    .values(
+      deltas.map((d) => ({
+        pollId,
+        itemId: d.itemId,
+        grade: d.grade,
+        count: d.delta,
+      }))
+    )
+    .onConflictDoUpdate({
+      target: [
+        gradeHistograms.pollId,
+        gradeHistograms.itemId,
+        gradeHistograms.grade,
+      ],
+      set: {
+        count: sql`${gradeHistograms.count} + excluded.count`,
+      },
+    });
+}
+
+export async function bulkRecordParticipations(
+  rows: {
+    pollId: string;
+    platform: Platform;
+    subjectId: string;
+    displayName?: string;
+  }[],
+  tx?: DbTx
+) {
+  if (rows.length === 0) return;
+  const db = dbOr(tx);
+  await db.insert(voteParticipation).values(
+    rows.map((row) => ({
+      pollId: row.pollId,
+      platform: row.platform,
+      subjectId: row.subjectId,
+      displayName: row.displayName ?? null,
+    }))
+  );
+}
+
+export async function bulkRecordBallots(
+  rows: {
+    pollId: string;
+    platform: Platform;
+    subjectId: string;
+    displayName?: string;
+    grades: { itemId: string; grade: number }[];
+  }[],
+  tx?: DbTx
+) {
+  if (rows.length === 0) return;
+  const db = dbOr(tx);
+  await db.insert(voteBallots).values(
+    rows.map((row) => ({
+      pollId: row.pollId,
+      platform: row.platform,
+      subjectId: row.subjectId,
+      displayName: row.displayName ?? null,
+      grades: row.grades,
+    }))
+  );
 }
 
 export async function isEventProcessed(eventId: string) {

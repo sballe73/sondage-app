@@ -1,6 +1,10 @@
 import { sql } from "drizzle-orm";
 import type { Platform, ResultPolicy } from "@sondage/shared";
-import { isResultsVisible } from "@sondage/shared";
+import {
+  isResultsVisible,
+  parseSnapshotMinIntervalMs,
+  snapshotThrottleRemainingMs,
+} from "@sondage/shared";
 import { getDb } from "./client.js";
 import { getPollById } from "./repositories/polls.js";
 import {
@@ -15,7 +19,8 @@ export type PublishSnapshotResult = {
   version?: number;
   voteCount?: number;
   snapshotMs?: number;
-  skipped?: "not_visible" | "up_to_date" | "version_conflict";
+  skipped?: "not_visible" | "up_to_date" | "throttled" | "version_conflict";
+  retryAfterMs?: number;
 };
 
 /**
@@ -60,6 +65,23 @@ export async function maybePublishSnapshot(
         published: false,
         skipped: "up_to_date" as const,
         voteCount,
+      };
+    }
+
+    const minIntervalMs = parseSnapshotMinIntervalMs(
+      process.env.SNAPSHOT_MIN_INTERVAL_MS
+    );
+    const retryAfterMs = snapshotThrottleRemainingMs(
+      existing?.computedAt,
+      now,
+      minIntervalMs
+    );
+    if (retryAfterMs > 0) {
+      return {
+        published: false,
+        skipped: "throttled" as const,
+        voteCount,
+        retryAfterMs,
       };
     }
 

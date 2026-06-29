@@ -17,7 +17,7 @@ export const DEV_HASH_SALTS = ["dev-salt", "change-me-for-anonymous-polls"] as c
 
 const port = Number(process.env.PORT ?? 3000);
 
-import { parseEnabledPlatforms } from "@sondage/shared";
+import { parseEnabledPlatforms, parseSnapshotMinIntervalMs } from "@sondage/shared";
 
 export const config = {
   port,
@@ -51,8 +51,14 @@ export const config = {
   rateLimitVotesPerMinute: Number(
     process.env.RATE_LIMIT_VOTES_PER_MINUTE ?? 5
   ),
-  /** Aligné sur WORKER_POLL_INTERVAL_MS (affichage UI résultats). */
-  aggregationIntervalMs: Number(process.env.WORKER_POLL_INTERVAL_MS ?? 60_000),
+  /** Délai min entre snapshots (affichage UI résultats). */
+  snapshotMinIntervalMs: parseSnapshotMinIntervalMs(
+    process.env.SNAPSHOT_MIN_INTERVAL_MS
+  ),
+  /** @deprecated alias UI — même valeur que snapshotMinIntervalMs */
+  aggregationIntervalMs: parseSnapshotMinIntervalMs(
+    process.env.SNAPSHOT_MIN_INTERVAL_MS
+  ),
   oauthGoogleClientId: process.env.OAUTH_GOOGLE_CLIENT_ID ?? "",
   oauthGoogleClientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET ?? "",
   oauthGoogleRedirectUri:

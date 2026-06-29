@@ -10,11 +10,11 @@ import {
   ackEvent,
   closeRedis,
 } from "./redis.js";
-import { processVoteEvent } from "./processor.js";
+import { processVoteEventBatch } from "./processor.js";
 import { maybePublishSnapshot } from "@sondage/db";
 
 console.log(
-  `Worker ${workerConfig.consumerName} starting (poll every ${workerConfig.pollIntervalMs}ms)...`
+  `Worker ${workerConfig.consumerName} starting (poll every ${workerConfig.pollIntervalMs}ms, max ${workerConfig.maxEventsPerTick} events/tick)...`
 );
 
 assertStartupCompliance();
@@ -27,41 +27,57 @@ type ProcessResult = {
   snapshotMs: number;
 };
 
-/** Vide le backlog : PEL périmés puis nouveaux événements jusqu'à épuisement. */
-async function processAllPendingVotes(): Promise<ProcessResult> {
+let tickRunning = false;
+
+async function processStreamEntries(
+  entries: { id: string; event: import("@sondage/shared").VoteSubmittedEvent }[],
+  limit: number
+): Promise<number> {
+  if (entries.length === 0 || limit <= 0) return 0;
+
+  const slice = entries.slice(0, limit);
+  const result = await processVoteEventBatch(slice.map((e) => e.event));
+  const failedIds = new Set(result.failed.map((f) => f.eventId));
+  let acked = 0;
+
+  for (const { id, event } of slice) {
+    if (failedIds.has(event.eventId)) {
+      console.error(
+        `Failed event ${id}:`,
+        result.failed.find((f) => f.eventId === event.eventId)?.error
+      );
+      continue;
+    }
+    await ackEvent(id);
+    acked += 1;
+  }
+
+  return acked;
+}
+
+/** Traite jusqu'à maxEventsPerTick événements (PEL puis nouveaux messages). */
+async function processPendingVotesUpTo(maxEvents: number): Promise<ProcessResult> {
   const aggregateStart = Date.now();
   let total = 0;
   let snapshotMs = 0;
   const dirtyPolls = new Set<string>();
 
-  for (;;) {
+  while (total < maxEvents) {
     const reclaimed = await claimStalePendingEvents();
     if (reclaimed.length === 0) break;
-    for (const { id, event } of reclaimed) {
-      try {
-        await processVoteEvent(event);
-        await ackEvent(id);
-        dirtyPolls.add(event.pollId);
-        total += 1;
-      } catch (err) {
-        console.error(`Failed event ${id}:`, err);
-      }
+    for (const { event } of reclaimed) {
+      dirtyPolls.add(event.pollId);
     }
+    total += await processStreamEntries(reclaimed, maxEvents - total);
   }
 
-  for (;;) {
+  while (total < maxEvents) {
     const batch = await readGroupEventsImmediate();
     if (batch.length === 0) break;
-    for (const { id, event } of batch) {
-      try {
-        await processVoteEvent(event);
-        await ackEvent(id);
-        dirtyPolls.add(event.pollId);
-        total += 1;
-      } catch (err) {
-        console.error(`Failed event ${id}:`, err);
-      }
+    for (const { event } of batch) {
+      dirtyPolls.add(event.pollId);
     }
+    total += await processStreamEntries(batch, maxEvents - total);
   }
 
   for (const pollId of dirtyPolls) {
@@ -81,18 +97,32 @@ async function processAllPendingVotes(): Promise<ProcessResult> {
 }
 
 async function tick(): Promise<void> {
-  const pending = await getPendingVoteWork();
-  if (pending === 0) {
-    console.log(`[worker] No new votes (${new Date().toISOString()})`);
+  if (tickRunning) {
     return;
   }
+  tickRunning = true;
+  try {
+    const pending = await getPendingVoteWork();
+    if (pending === 0) {
+      console.log(`[worker] No new votes (${new Date().toISOString()})`);
+      return;
+    }
 
-  console.log(
-    `[worker] ~${pending} vote event(s) pending — processing (${new Date().toISOString()})...`
-  );
-  const { processed, aggregateMs, snapshotMs } = await processAllPendingVotes();
-  console.log(`[worker] Processed ${processed} vote event(s)`);
-  perfLog("perf_worker_tick", { processed, aggregate_ms: aggregateMs, snapshot_ms: snapshotMs });
+    console.log(
+      `[worker] ~${pending} vote event(s) pending — processing up to ${workerConfig.maxEventsPerTick} (${new Date().toISOString()})...`
+    );
+    const { processed, aggregateMs, snapshotMs } = await processPendingVotesUpTo(
+      workerConfig.maxEventsPerTick
+    );
+    console.log(`[worker] Processed ${processed} vote event(s)`);
+    perfLog("perf_worker_tick", {
+      processed,
+      aggregate_ms: aggregateMs,
+      snapshot_ms: snapshotMs,
+    });
+  } finally {
+    tickRunning = false;
+  }
 }
 
 await tick().catch((e) => console.error("Initial tick error:", e));
