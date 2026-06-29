@@ -1,4 +1,8 @@
 import type { Platform, VoterJwtPayload } from "@sondage/shared";
+import {
+  STORED_TEXT_LIMITS,
+  sanitizeStoredTextOptional,
+} from "@sondage/shared";
 import { SignJWT, jwtVerify } from "jose";
 import { config } from "../config.js";
 
@@ -17,7 +21,11 @@ export async function mockOAuthLogin(
   subjectId: string,
   displayName?: string
 ): Promise<OAuthProfile> {
-  return { platform, subjectId, displayName };
+  const safeName = sanitizeStoredTextOptional(
+    displayName,
+    STORED_TEXT_LIMITS.displayName
+  );
+  return { platform, subjectId, displayName: safeName };
 }
 
 export async function issueVoterToken(

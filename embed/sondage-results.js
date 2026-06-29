@@ -15,7 +15,7 @@
   const formatPollWindow = (starts, ends) => DT.formatPollWindow(starts, ends);
 
   const TAG = "sondage-results-widget";
-  const POLL_INTERVAL_MS = 30000;
+  const RI = () => window.SondageRefreshInterval;
 
   const POLICY_LABELS = {
     end_only: "Fin du sondage uniquement",
@@ -65,6 +65,7 @@
       this.dataRegion = this.getAttribute("data-data-region") || "EU";
       const autoRefresh = this.getAttribute("data-auto-refresh");
       this.autoRefreshEnabled = autoRefresh !== "false";
+      this._refreshIntervalMs = null;
 
       if (!this.pollId || !this.apiBase) return;
 
@@ -80,6 +81,7 @@
     async load(silent) {
       if (!silent) this.renderLoading();
       try {
+        await this._ensureRefreshInterval();
         await this.loadPoll();
         const outcome = await this.loadResults();
         if (outcome === "visible") {
@@ -96,6 +98,30 @@
         this.renderError(e.message);
         this._stopPolling();
       }
+    }
+
+    async _ensureRefreshInterval() {
+      if (this._refreshIntervalMs != null) return;
+      try {
+        const res = await fetch(`${this.apiBase}/health`);
+        if (res.ok) {
+          this._refreshIntervalMs = RI().fromHealth(await res.json());
+          return;
+        }
+      } catch {
+        /* fallback */
+      }
+      this._refreshIntervalMs = RI().DEFAULT_MS;
+    }
+
+    _applyRefreshIntervalFromMeta(meta) {
+      if (!meta) return;
+      this._refreshIntervalMs = RI().fromResultsMeta(meta);
+    }
+
+    _refreshIntervalLabel() {
+      const ms = this._refreshIntervalMs ?? RI().DEFAULT_MS;
+      return RI().formatSecondsLabel(ms);
     }
 
     async loadPoll() {
@@ -141,6 +167,7 @@
       if (!res.ok) throw new Error(await res.text());
 
       this.resultsMeta = await res.json();
+      this._applyRefreshIntervalFromMeta(this.resultsMeta);
       this.snapshot = this.resultsMeta.results;
       return "visible";
     }
@@ -159,7 +186,10 @@
       ) {
         return;
       }
-      this._pollTimer = setInterval(() => this.load(true), POLL_INTERVAL_MS);
+      this._pollTimer = setInterval(
+        () => this.load(true),
+        RI().pollMs(this._refreshIntervalMs)
+      );
     }
 
     _stopPolling() {
@@ -206,7 +236,8 @@
           </section>
           ${renderRefreshControls(
             !isPollEnded(this.poll),
-            this._isThresholdPolicy() && !isPollEnded(this.poll)
+            this._isThresholdPolicy() && !isPollEnded(this.poll),
+            this._refreshIntervalLabel()
           )}
         </article>
       `;
@@ -256,7 +287,7 @@
             meta.liveVoteCount,
             this.poll,
             meta.computedAt,
-            meta.aggregationIntervalMs
+            meta.snapshotMinIntervalMs ?? meta.aggregationIntervalMs
           )}
           ${
             snap.tieBreakMethodDescription
@@ -300,7 +331,8 @@
           </section>
           ${renderRefreshControls(
             !isPollEnded(this.poll),
-            this._isThresholdPolicy() && !isPollEnded(this.poll)
+            this._isThresholdPolicy() && !isPollEnded(this.poll),
+            this._refreshIntervalLabel()
           )}
         </article>
       `;
@@ -381,14 +413,10 @@
   }
 
   function formatAggregationInterval(ms) {
-    const n = Number(ms);
-    if (!Number.isFinite(n) || n <= 0) return "une minute";
-    if (n < 60_000) {
-      const sec = Math.max(1, Math.round(n / 1000));
-      return `${sec} seconde${sec > 1 ? "s" : ""}`;
-    }
-    const min = Math.round(n / 60_000);
-    return min === 1 ? "une minute" : `${min} minutes`;
+    const ri = window.SondageRefreshInterval;
+    if (ri) return ri.formatSecondsLabel(ms);
+    const sec = Math.max(1, Math.round(Number(ms) / 1000) || 60);
+    return `${sec} seconde${sec > 1 ? "s" : ""}`;
   }
 
   function renderLiveVoteNotice(
@@ -410,7 +438,7 @@
         "Le classement affiché n’inclut pas encore tous les votes reçus avant la clôture. Rechargez la page pour afficher le résultat final.";
     } else {
       const intervalLabel = formatAggregationInterval(
-        aggregationIntervalMs ?? 60_000
+        aggregationIntervalMs ?? window.SondageRefreshInterval?.DEFAULT_MS ?? 60_000
       );
       const updatedAt = computedAt
         ? ` (dernière mise à jour : ${formatDateTime(computedAt)})`
@@ -423,14 +451,14 @@
     return `<aside class="live-vote-notice">${escapeHtml(message)}</aside>`;
   }
 
-  function renderRefreshControls(showFooter, showAutoHint) {
+  function renderRefreshControls(showFooter, showAutoHint, intervalLabel) {
     if (!showFooter) return "";
     return `
       <footer class="results-footer">
         <button type="button" id="refresh-btn">Actualiser</button>
         ${
           showAutoHint
-            ? `<span class="auto-hint">Rafraîchissement automatique toutes les 30 s</span>`
+            ? `<span class="auto-hint">Rafraîchissement automatique toutes les ${escapeHtml(intervalLabel)}</span>`
             : ""
         }
       </footer>`;

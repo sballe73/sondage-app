@@ -1,11 +1,12 @@
 /**
- * Feuille d'émargement — liste des votants d'un sondage.
+ * Feuille d'émargement — liste paginée des votants d'un sondage.
  */
 (function () {
   const DT = window.SondageDateTime;
   const formatDateTime = (iso) => DT.formatDateTime(iso);
 
   const TAG = "sondage-attendance-widget";
+  const PAGE_SIZE = 100;
 
   const PLATFORM_LABELS = {
     mock: "mock (dev)",
@@ -27,13 +28,25 @@
   class SondageAttendanceWidget extends HTMLElement {
     connectedCallback() {
       this.pollId = this.getAttribute("data-poll-id");
-      this.apiBase = this.getAttribute("data-api-base") || "";
+      this.apiBase = (this.getAttribute("data-api-base") || "").replace(
+        /\/$/,
+        ""
+      );
       this.dataRegion = this.getAttribute("data-data-region") || "EU";
+      this.offset = 0;
       this.innerHTML = "<p>Chargement…</p>";
       this.load();
     }
 
-    async load() {
+    attendanceUrl(params) {
+      const q = new URLSearchParams(params);
+      return `${this.apiBase}/polls/${this.pollId}/attendance?${q}`;
+    }
+
+    async load(nextOffset) {
+      if (typeof nextOffset === "number") {
+        this.offset = Math.max(0, nextOffset);
+      }
       try {
         const pollRes = await fetch(`${this.apiBase}/polls/${this.pollId}`, {
           headers: { "X-Data-Region": this.dataRegion },
@@ -41,9 +54,13 @@
         if (!pollRes.ok) throw new Error(await pollRes.text());
         this.poll = await pollRes.json();
 
-        const res = await fetch(`${this.apiBase}/polls/${this.pollId}/attendance`, {
-          headers: { "X-Data-Region": this.dataRegion },
-        });
+        const res = await fetch(
+          this.attendanceUrl({
+            offset: String(this.offset),
+            limit: String(PAGE_SIZE),
+          }),
+          { headers: { "X-Data-Region": this.dataRegion } }
+        );
         if (!res.ok) throw new Error(await res.text());
         this.attendance = await res.json();
         this.render();
@@ -54,8 +71,11 @@
 
     render() {
       const voters = this.attendance.voters || [];
+      const total = this.attendance.total ?? voters.length;
       const isPublic = this.attendance.voterMode === "public";
       const pollName = this.poll?.name || this.pollId;
+      const pageStart = total === 0 ? 0 : this.offset + 1;
+      const pageEnd = this.offset + voters.length;
 
       let rows = "";
       if (voters.length === 0) {
@@ -82,6 +102,9 @@
       }
 
       const ballotHeader = isPublic ? "<th>Bulletin</th>" : "";
+      const hasPrev = this.offset > 0;
+      const hasNext = this.offset + PAGE_SIZE < total;
+      const tsvUrl = this.attendanceUrl({ format: "tsv" });
 
       this.innerHTML = `
         <article class="sondage-attendance">
@@ -89,7 +112,12 @@
             <h2>${escapeHtml(pollName)}</h2>
             <p class="meta">
               Mode ${isPublic ? "public" : "anonyme"} —
-              ${voters.length} votant${voters.length !== 1 ? "s" : ""}
+              ${total} votant${total !== 1 ? "s" : ""}
+              ${
+                total > 0
+                  ? ` — affichage ${pageStart}–${pageEnd}`
+                  : ""
+              }
             </p>
             ${
               !isPublic
@@ -111,14 +139,31 @@
             </table>
           </div>
           <footer class="attendance-footer">
-            <button type="button" id="refresh-attendance">Actualiser</button>
+            <div class="attendance-actions">
+              <button type="button" id="prev-page" ${hasPrev ? "" : "disabled"}>Précédent</button>
+              <button type="button" id="next-page" ${hasNext ? "" : "disabled"}>Suivant</button>
+              <a class="download-tsv" href="${escapeHtml(tsvUrl)}" download="emargement-${escapeHtml(this.pollId)}.tsv">Télécharger TSV</a>
+              <button type="button" id="refresh-attendance">Actualiser</button>
+            </div>
           </footer>
         </article>
       `;
 
       this.querySelector("#refresh-attendance").addEventListener("click", () =>
-        this.load()
+        this.load(this.offset)
       );
+      const prev = this.querySelector("#prev-page");
+      if (prev) {
+        prev.addEventListener("click", () =>
+          this.load(this.offset - PAGE_SIZE)
+        );
+      }
+      const next = this.querySelector("#next-page");
+      if (next) {
+        next.addEventListener("click", () =>
+          this.load(this.offset + PAGE_SIZE)
+        );
+      }
     }
 
     renderGrades(grades) {

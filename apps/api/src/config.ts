@@ -51,14 +51,14 @@ export const config = {
   rateLimitVotesPerMinute: Number(
     process.env.RATE_LIMIT_VOTES_PER_MINUTE ?? 5
   ),
-  /** Délai min entre snapshots (affichage UI résultats). */
+  /** Aligné sur SNAPSHOT_MIN_INTERVAL_MS (rafraîchissement auto embed). */
   snapshotMinIntervalMs: parseSnapshotMinIntervalMs(
     process.env.SNAPSHOT_MIN_INTERVAL_MS
   ),
-  /** @deprecated alias UI — même valeur que snapshotMinIntervalMs */
-  aggregationIntervalMs: parseSnapshotMinIntervalMs(
-    process.env.SNAPSHOT_MIN_INTERVAL_MS
-  ),
+  /** @deprecated utiliser snapshotMinIntervalMs */
+  get aggregationIntervalMs() {
+    return this.snapshotMinIntervalMs;
+  },
   oauthGoogleClientId: process.env.OAUTH_GOOGLE_CLIENT_ID ?? "",
   oauthGoogleClientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET ?? "",
   oauthGoogleRedirectUri:

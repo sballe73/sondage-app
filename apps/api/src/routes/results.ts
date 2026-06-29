@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { Platform, ResultPolicy } from "@sondage/shared";
-import { hashSubjectForParticipation, labelForGrade } from "@sondage/shared";
+import { hashSubjectForParticipation } from "@sondage/shared";
 import {
   getLatestVisibleSnapshot,
   getSnapshotByVersion,
@@ -9,9 +9,8 @@ import {
   getHistogramRows,
   listBallots,
   getBallotBySubject,
-  listParticipation,
-  maybePublishSnapshot,
   getPollById,
+  maybePublishSnapshot,
 } from "@sondage/db";
 import { enforcePollRegion } from "../middleware/region.js";
 import { config } from "../config.js";
@@ -19,6 +18,12 @@ import {
   isResultsVisible,
 } from "../services/results-policy.js";
 import { getLiveVoteCount, hasParticipationClaim } from "../redis.js";
+import {
+  ATTENDANCE_PAGE_SIZE,
+  buildAttendanceTsv,
+  fetchAllAttendanceVoters,
+  fetchAttendancePage,
+} from "../services/attendance.js";
 import { requireVoterAuth } from "./auth.js";
 import { AppError } from "../errors.js";
 import { toIsoString } from "../serialize-timestamp.js";
@@ -71,7 +76,8 @@ export async function resultsRoutes(app: FastifyInstance) {
           voteCount: snapshot.voteCount,
           liveVoteCount: voteCount,
           computedAt: snapshot.computedAt,
-          aggregationIntervalMs: config.aggregationIntervalMs,
+          snapshotMinIntervalMs: config.snapshotMinIntervalMs,
+          aggregationIntervalMs: config.snapshotMinIntervalMs,
           results: snapshot.payload,
         };
       }
@@ -113,7 +119,8 @@ export async function resultsRoutes(app: FastifyInstance) {
       voteCount: snapshot.voteCount,
       liveVoteCount: voteCount,
       computedAt: snapshot.computedAt,
-      aggregationIntervalMs: config.aggregationIntervalMs,
+      snapshotMinIntervalMs: config.snapshotMinIntervalMs,
+      aggregationIntervalMs: config.snapshotMinIntervalMs,
       results: snapshot.payload,
     };
   });
@@ -158,43 +165,45 @@ export async function resultsRoutes(app: FastifyInstance) {
 
   app.get("/polls/:pollId/attendance", async (request, reply) => {
     const { pollId } = z.object({ pollId: z.string().uuid() }).parse(request.params);
-    const { poll } = await enforcePollRegion(request, pollId);
+    const query = z
+      .object({
+        offset: z.coerce.number().int().min(0).default(0),
+        limit: z.coerce
+          .number()
+          .int()
+          .min(1)
+          .max(ATTENDANCE_PAGE_SIZE)
+          .default(ATTENDANCE_PAGE_SIZE),
+        format: z.enum(["json", "tsv"]).default("json"),
+      })
+      .parse(request.query ?? {});
+
+    await enforcePollRegion(request, pollId);
     const data = await getPollById(pollId);
     if (!data) {
       throw new AppError(404, "NOT_FOUND", "Poll not found");
     }
 
-    if (poll.voterMode === "anonymous") {
-      const rows = await listParticipation(pollId);
-      return {
-        voterMode: poll.voterMode,
-        voters: rows.map((row) => ({
-          displayName: row.displayName ?? "Anonyme",
-          platform: row.platform,
-          participatedAt: toIsoString(row.participatedAt),
-        })),
-      };
+    const page =
+      query.format === "tsv"
+        ? await fetchAllAttendanceVoters(pollId)
+        : await fetchAttendancePage(pollId, query.offset, query.limit);
+
+    if (query.format === "tsv") {
+      const tsv = buildAttendanceTsv(
+        data.poll.name,
+        page,
+        (data.poll.gradeLabels as string[]) ?? [],
+        data.poll.gradeMin
+      );
+      const filename = `emargement-${pollId}.tsv`;
+      reply
+        .header("Content-Type", "text/tab-separated-values; charset=utf-8")
+        .header("Content-Disposition", `attachment; filename="${filename}"`);
+      return tsv;
     }
 
-    const ballots = await listBallots(pollId);
-    const itemLabels = new Map(data.items.map((item) => [item.id, item.label]));
-    const gradeLabels = data.poll.gradeLabels;
-    const gradeMin = data.poll.gradeMin;
-
-    return {
-      voterMode: poll.voterMode,
-      voters: ballots.map((ballot) => ({
-        displayName: ballot.displayName ?? "Anonyme",
-        platform: ballot.platform,
-        participatedAt: toIsoString(ballot.votedAt),
-        grades: ballot.grades.map((g) => ({
-          itemId: g.itemId,
-          itemLabel: itemLabels.get(g.itemId) ?? g.itemId,
-          grade: g.grade,
-          gradeLabel: labelForGrade(g.grade, gradeLabels, gradeMin),
-        })),
-      })),
-    };
+    return page;
   });
 
   app.get("/polls/:pollId/ballots/:subjectId", async (request, reply) => {
