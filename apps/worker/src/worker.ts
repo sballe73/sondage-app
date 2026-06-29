@@ -8,6 +8,7 @@ import {
   readGroupEventsImmediate,
   getPendingVoteWork,
   ackEvent,
+  trimProcessedVoteEvents,
   closeRedis,
 } from "./redis.js";
 import { processVoteEventBatch } from "./processor.js";
@@ -104,6 +105,10 @@ async function tick(): Promise<void> {
   try {
     const pending = await getPendingVoteWork();
     if (pending === 0) {
+      const trimmed = await trimProcessedVoteEvents();
+      if (trimmed > 0) {
+        console.log(`[worker] Trimmed ${trimmed} acked stream entries`);
+      }
       console.log(`[worker] No new votes (${new Date().toISOString()})`);
       return;
     }
@@ -114,11 +119,13 @@ async function tick(): Promise<void> {
     const { processed, aggregateMs, snapshotMs } = await processPendingVotesUpTo(
       workerConfig.maxEventsPerTick
     );
+    const trimmed = await trimProcessedVoteEvents();
     console.log(`[worker] Processed ${processed} vote event(s)`);
     perfLog("perf_worker_tick", {
       processed,
       aggregate_ms: aggregateMs,
       snapshot_ms: snapshotMs,
+      stream_trimmed: trimmed,
     });
   } finally {
     tickRunning = false;
