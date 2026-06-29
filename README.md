@@ -15,7 +15,7 @@ Application de sondages à grande échelle basée sur le **jugement majoritaire*
 ```
 Client → API (SETNX Redis, XADD stream) → Worker → Postgres (histogrammes, participation, bulletins publics)
 
-Le worker vérifie le stream Redis **toutes les minutes** (`WORKER_POLL_INTERVAL_MS`, défaut 60 000 ms) et n’agrège les votes **que s’il y en a de nouveaux**. À la fin de chaque passe, un **snapshot** est publié si le compteur agrégé a augmenté depuis le dernier snapshot affiché (le seuil `threshold_10` ne s’applique qu’à la **première** publication, pas aux mises à jour suivantes). Entre deux publications pour un même sondage, `SNAPSHOT_MIN_INTERVAL_MS` impose un délai minimum (défaut 60 000 ms ; `0` désactive la limite).
+Le worker vérifie le stream Redis **toutes les minutes** (`WORKER_POLL_INTERVAL_MS`, défaut 60 000 ms) et n’agrège les votes **que s’il y en a de nouveaux**. Après traitement, les entrées **déjà ackées** sont retirées du stream (`XTRIM MINID`, activé par défaut — `VOTE_STREAM_TRIM_ENABLED=false` pour désactiver). À la fin de chaque passe, un **snapshot** est publié si le compteur agrégé a augmenté depuis le dernier snapshot affiché (le seuil `threshold_10` ne s’applique qu’à la **première** publication, pas aux mises à jour suivantes). Entre deux publications pour un même sondage, `SNAPSHOT_MIN_INTERVAL_MS` impose un délai minimum (défaut 60 000 ms ; `0` désactive la limite).
                 ↓
          Results API (snapshots, Cache-Control)
 ```

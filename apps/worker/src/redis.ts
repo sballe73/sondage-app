@@ -55,17 +55,26 @@ function groupEntryToMap(entry: unknown): Record<string, string | number> {
   return map;
 }
 
+type ConsumerGroupInfo = {
+  pending: number;
+  lag: number;
+  lastDeliveredId: string | null;
+};
+
 function parseConsumerGroupInfo(
   raw: unknown,
   groupName: string
-): { pending: number; lag: number } | null {
+): ConsumerGroupInfo | null {
   if (!Array.isArray(raw)) return null;
   for (const entry of raw) {
     const map = groupEntryToMap(entry);
     if (map.name === groupName) {
+      const lastDeliveredId = map["last-delivered-id"];
       return {
         pending: Number(map.pending ?? 0),
         lag: Number(map.lag ?? 0),
+        lastDeliveredId:
+          typeof lastDeliveredId === "string" ? lastDeliveredId : null,
       };
     }
   }
@@ -189,6 +198,54 @@ export async function ackEvent(id: string): Promise<void> {
     workerConfig.consumerGroup,
     id
   );
+}
+
+/**
+ * Retire du stream les entrées déjà livrées et ackées par le consumer group.
+ * Ne supprime jamais les messages encore dans le PEL ni ceux non lus (lag).
+ */
+export async function trimProcessedVoteEvents(): Promise<number> {
+  if (!workerConfig.voteStreamTrimEnabled) {
+    return 0;
+  }
+
+  const r = getRedis();
+  const stream = workerConfig.voteEventsStream;
+  const group = workerConfig.consumerGroup;
+
+  try {
+    const [pendingSummary, groups] = await Promise.all([
+      r.xpending(stream, group) as Promise<[number, string, string, unknown[]]>,
+      r.xinfo("GROUPS", stream),
+    ]);
+
+    const pelCount = Number(pendingSummary?.[0] ?? 0);
+    let minId: string | null = null;
+
+    if (pelCount > 0) {
+      const oldest = (await r.xpending(
+        stream,
+        group,
+        "-",
+        "+",
+        1
+      )) as [string, string, number, number][] | null;
+      minId = oldest?.[0]?.[0] ?? null;
+    } else {
+      minId = parseConsumerGroupInfo(groups, group)?.lastDeliveredId ?? null;
+    }
+
+    if (!minId) {
+      return 0;
+    }
+
+    return await r.xtrim(stream, "MINID", "~", minId);
+  } catch (err) {
+    if (isMissingConsumerGroupError(err)) {
+      return 0;
+    }
+    throw err;
+  }
 }
 
 export async function closeRedis() {

@@ -11,4 +11,6 @@ export const workerConfig = {
   streamReadCount: STREAM_READ_COUNT,
   /** Max événements agrégés par tick (évite un tick bloqué des heures). */
   maxEventsPerTick: Number(process.env.WORKER_MAX_EVENTS_PER_TICK ?? 500),
+  /** Supprime du stream les événements déjà ackés (XTRIM MINID). */
+  voteStreamTrimEnabled: process.env.VOTE_STREAM_TRIM_ENABLED !== "false",
 };
