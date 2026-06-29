@@ -24,7 +24,7 @@ import {
   fetchAllAttendanceVoters,
   fetchAttendancePage,
 } from "../services/attendance.js";
-import { requireVoterAuth } from "./auth.js";
+import { requirePollCreatorAuth, requireVoterAuth } from "./auth.js";
 import { AppError } from "../errors.js";
 import { toIsoString } from "../serialize-timestamp.js";
 
@@ -179,10 +179,11 @@ export async function resultsRoutes(app: FastifyInstance) {
       .parse(request.query ?? {});
 
     await enforcePollRegion(request, pollId);
-    const data = await getPollById(pollId);
-    if (!data) {
-      throw new AppError(404, "NOT_FOUND", "Poll not found");
-    }
+    const { poll, items } = await requirePollCreatorAuth(
+      pollId,
+      request.headers.authorization
+    );
+    const data = { poll, items };
 
     const page =
       query.format === "tsv"

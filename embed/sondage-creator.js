@@ -851,7 +851,6 @@
       const embedBase = this._embedBase();
       const voteUrl = `${embedBase}/vote.html?pollId=${poll.id}`;
       const resultsUrl = `${embedBase}/results.html?pollId=${poll.id}`;
-      const attendanceUrl = `${embedBase}/attendance.html?pollId=${poll.id}`;
       const snippet = `<sondage-poll-widget
   data-poll-id="${poll.id}"
   data-api-base="${this.apiBase}"
@@ -873,13 +872,14 @@
             <h3>Liens à partager</h3>
             ${copyField("Lien vote", voteUrl)}
             ${copyField("Lien résultats", resultsUrl)}
-            ${copyField("Feuille d'émargement", attendanceUrl)}
             ${copyField("Snippet embed", snippet, true)}
           </section>
 
           <section class="status-panel" id="status-panel">
             ${this.renderStatusHtml()}
           </section>
+
+          <section class="attendance-panel-host" id="attendance-panel"></section>
 
           <footer class="creator-footer">
             <button type="button" id="refresh-status" class="btn-secondary">Actualiser l'état</button>
@@ -917,7 +917,35 @@
       });
 
       this._bindStatusPanelHandlers();
+      this._mountAttendance();
       this._maybeStartStatusPolling();
+    }
+
+    _mountAttendance() {
+      const host = this.querySelector("#attendance-panel");
+      if (!host) return;
+
+      if (!this._isPollCreator()) {
+        host.innerHTML = `
+          <section class="attendance-panel locked">
+            <h3>Feuille d'émargement</h3>
+            <p class="hint">Réservée au créateur du sondage.</p>
+            ${this._renderCreatorAuthHint(this.createdPoll)}
+          </section>`;
+        return;
+      }
+
+      host.innerHTML = `<h3>Feuille d'émargement</h3><div id="attendance-widget-host"></div>`;
+      const widgetHost = host.querySelector("#attendance-widget-host");
+      const widget = document.createElement("sondage-attendance-widget");
+      widget.setAttribute("data-poll-id", this.pollId);
+      widget.setAttribute("data-api-base", this.apiBase);
+      widget.setAttribute("data-data-region", this.dataRegion);
+      widget.setAttribute("data-embedded", "true");
+      if (this.token) {
+        widget.setAttribute("data-auth-token", this.token);
+      }
+      widgetHost.appendChild(widget);
     }
 
     _renderDateRow(field, pollDate, canEdit) {
@@ -1139,6 +1167,7 @@
           panel.innerHTML = this.renderStatusHtml();
           this._bindStatusPanelHandlers();
         }
+        this._mountAttendance();
       } catch (e) {
         if (panel) {
           panel.innerHTML = `<p class="error">${escapeHtml(e.message)}</p>`;

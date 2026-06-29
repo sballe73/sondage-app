@@ -1,5 +1,5 @@
 /**
- * Feuille d'émargement — liste paginée des votants d'un sondage.
+ * Feuille d'émargement — liste paginée des votants (créateur uniquement).
  */
 (function () {
   const DT = window.SondageDateTime;
@@ -33,9 +33,19 @@
         ""
       );
       this.dataRegion = this.getAttribute("data-data-region") || "EU";
+      this.authToken = this.getAttribute("data-auth-token") || "";
+      this.embedded = this.getAttribute("data-embedded") === "true";
       this.offset = 0;
       this.innerHTML = "<p>Chargement…</p>";
       this.load();
+    }
+
+    _requestHeaders() {
+      const headers = { "X-Data-Region": this.dataRegion };
+      if (this.authToken) {
+        headers.Authorization = `Bearer ${this.authToken}`;
+      }
+      return headers;
     }
 
     attendanceUrl(params) {
@@ -59,13 +69,36 @@
             offset: String(this.offset),
             limit: String(PAGE_SIZE),
           }),
-          { headers: { "X-Data-Region": this.dataRegion } }
+          { headers: this._requestHeaders() }
         );
         if (!res.ok) throw new Error(await res.text());
         this.attendance = await res.json();
         this.render();
       } catch (e) {
         this.innerHTML = `<p class="error">${escapeHtml(e.message)}</p>`;
+      }
+    }
+
+    async downloadTsv() {
+      const btn = this.querySelector("#download-tsv");
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch(
+          this.attendanceUrl({ format: "tsv" }),
+          { headers: this._requestHeaders() }
+        );
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `emargement-${this.pollId}.tsv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        alert(e.message || String(e));
+      } finally {
+        if (btn) btn.disabled = false;
       }
     }
 
@@ -104,12 +137,14 @@
       const ballotHeader = isPublic ? "<th>Bulletin</th>" : "";
       const hasPrev = this.offset > 0;
       const hasNext = this.offset + PAGE_SIZE < total;
-      const tsvUrl = this.attendanceUrl({ format: "tsv" });
+      const titleBlock = this.embedded
+        ? ""
+        : `<header class="attendance-header"><h2>${escapeHtml(pollName)}</h2></header>`;
 
       this.innerHTML = `
         <article class="sondage-attendance">
-          <header class="attendance-header">
-            <h2>${escapeHtml(pollName)}</h2>
+          ${titleBlock}
+          <div class="attendance-meta">
             <p class="meta">
               Mode ${isPublic ? "public" : "anonyme"} —
               ${total} votant${total !== 1 ? "s" : ""}
@@ -124,7 +159,7 @@
                 ? `<p class="hint">En mode anonyme, seuls les noms sont affichés (pas d'identifiant).</p>`
                 : ""
             }
-          </header>
+          </div>
           <div class="attendance-table-wrap">
             <table class="attendance-table">
               <thead>
@@ -142,7 +177,7 @@
             <div class="attendance-actions">
               <button type="button" id="prev-page" ${hasPrev ? "" : "disabled"}>Précédent</button>
               <button type="button" id="next-page" ${hasNext ? "" : "disabled"}>Suivant</button>
-              <a class="download-tsv" href="${escapeHtml(tsvUrl)}" download="emargement-${escapeHtml(this.pollId)}.tsv">Télécharger TSV</a>
+              <button type="button" id="download-tsv">Télécharger TSV</button>
               <button type="button" id="refresh-attendance">Actualiser</button>
             </div>
           </footer>
@@ -151,6 +186,9 @@
 
       this.querySelector("#refresh-attendance").addEventListener("click", () =>
         this.load(this.offset)
+      );
+      this.querySelector("#download-tsv").addEventListener("click", () =>
+        this.downloadTsv()
       );
       const prev = this.querySelector("#prev-page");
       if (prev) {

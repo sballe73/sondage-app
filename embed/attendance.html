@@ -2,147 +2,20 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <script src="sondage-theme-init.js"></script>
-    <link rel="stylesheet" href="sondage-theme.css" />
-    <title>Feuille d'émargement — Sondage MJ</title>
-    <style>
-      body {
-        font-family: system-ui, sans-serif;
-        max-width: 960px;
-        margin: 2rem auto;
-        padding: 0 1rem;
-        color: var(--text);
-        background: var(--bg);
-      }
-      .sondage-attendance .attendance-header h2 {
-        margin: 0 0 0.25rem;
-      }
-      .sondage-attendance .meta {
-        color: var(--text-muted);
-        margin: 0 0 1rem;
-      }
-      .sondage-attendance .hint {
-        color: var(--text-muted);
-        font-size: 0.875rem;
-        margin: 0 0 1rem;
-      }
-      .sondage-attendance .attendance-table-wrap {
-        overflow-x: auto;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-      }
-      .sondage-attendance .attendance-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-      }
-      .sondage-attendance .attendance-table th,
-      .sondage-attendance .attendance-table td {
-        text-align: left;
-        padding: 0.55rem 0.75rem;
-        border-bottom: 1px solid var(--border);
-        vertical-align: top;
-      }
-      .sondage-attendance .attendance-table th {
-        background: var(--surface);
-        font-weight: 600;
-      }
-      .sondage-attendance .grade-entry {
-        display: inline-block;
-        margin: 0.1rem 0;
-      }
-      .sondage-attendance .attendance-footer {
-        margin-top: 1rem;
-      }
-      .sondage-attendance .attendance-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        align-items: center;
-      }
-      .sondage-attendance .attendance-footer button,
-      .sondage-attendance .attendance-footer .download-tsv {
-        padding: 0.45rem 1rem;
-        cursor: pointer;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        color: var(--text);
-        text-decoration: none;
-        font-size: inherit;
-        font-family: inherit;
-      }
-      .sondage-attendance .attendance-footer button:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-      .sondage-attendance .error {
-        color: var(--error);
-      }
-    </style>
-    <script src="sondage-auth-storage.js"></script>
-    <script src="sondage-shell.js"></script>
-    <script src="sondage-datetime.js"></script>
-    <script src="sondage-poll-picker.js"></script>
-    <script src="sondage-attendance.js"></script>
-  </head>
-  <body>
-    <h1>Feuille d'émargement</h1>
-    <p id="help" class="sondage-poll-ref"></p>
-    <p id="change-poll-wrap" style="display: none">
-      <button type="button" id="change-poll-btn" class="sondage-change-poll-btn">
-        Changer de sondage
-      </button>
-    </p>
-    <div id="poll-picker-host"></div>
-    <div id="attendance-host"></div>
+    <title>Redirection — Feuille d'émargement</title>
     <script>
       (function () {
         var params = new URLSearchParams(window.location.search);
         var pollId = params.get("pollId");
-        var help = document.getElementById("help");
-        var pickerHost = document.getElementById("poll-picker-host");
-        var host = document.getElementById("attendance-host");
-
-        if (!pollId && window.SondageShell) {
-          pollId = SondageShell.getActivePollId();
-          if (pollId) {
-            window.location.replace(
-              "attendance.html?pollId=" + encodeURIComponent(pollId)
-            );
-            return;
-          }
+        var target = "creator.html";
+        if (pollId) {
+          target += "?pollId=" + encodeURIComponent(pollId);
         }
-
-        if (!pollId) {
-          help.textContent = "Aucun sondage sélectionné";
-          host.style.display = "none";
-          SondageShell.init({ active: "attendance" });
-          SondagePollPicker.mount({
-            host: pickerHost,
-            mode: "results",
-            targetPage: "attendance.html",
-          });
-          return;
-        }
-
-        pickerHost.style.display = "none";
-        if (window.SondageShell) {
-          SondageShell.setActivePollId(pollId);
-        }
-        help.textContent = "Sondage : " + pollId;
-        document.getElementById("change-poll-wrap").style.display = "block";
-        document.getElementById("change-poll-btn").addEventListener("click", function () {
-          SondageShell.goToPollPicker("attendance.html");
-        });
-
-        var widget = document.createElement("sondage-attendance-widget");
-        widget.setAttribute("data-poll-id", pollId);
-        widget.setAttribute("data-api-base", window.location.origin);
-        widget.setAttribute("data-data-region", "EU");
-        host.appendChild(widget);
-        SondageShell.init({ active: "attendance" });
+        window.location.replace(target);
       })();
     </script>
+  </head>
+  <body>
+    <p>Redirection vers la page créateur…</p>
   </body>
 </html>

@@ -2,6 +2,8 @@
 
 Application de sondages à grande échelle basée sur le **jugement majoritaire**, intégrée aux réseaux sociaux via OAuth. Chaque sondage est lié à **une seule plateforme** (`facebook`, `x`, `linkedin`, `mock`).
 
+**Nouveau contributeur ?** Suivez le [guide développeur](docs/developer/README.md) (parcours progressif : installation → architecture → recettes → tests).
+
 ## Architecture
 
 - **API** (`apps/api`) — Fastify : création de sondages, auth OAuth (mock en dev), ingestion des votes, résultats versionnés
@@ -95,14 +97,13 @@ Depuis la page de vote (`vote.html`), le lien **Voir les résultats** ouvre cett
 
 | Fonctionnalité | Implémentation |
 |----------------|----------------|
-| Plateforme unique | `poll.platform` immuable ; rejet 403 si OAuth ≠ plateforme |
+| Plateforme | Par défaut : `poll.platform` verrouillé ; rejet 403 si OAuth ≠ plateforme. Avec `ALLOW_MULTI_PLATFORM_AUTH=true` : plusieurs plateformes sur un même sondage |
 | Vote anonyme | `vote_participation` seulement ; pas de `vote_ballots` |
 | Vote public | `vote_ballots` + liste par `subject_id` / `display_name` |
-| Anti double vote | Redis `SETNX` + `UNIQUE(poll_id, subject_id)` |
+| Anti double vote | Redis `SETNX` + `UNIQUE(poll_id, platform, subject_id)` |
 | Fenêtre de vote | `starts_at` / `ends_at` vérifiés à l’API |
 | Résultats | `end_only`, `threshold_10`, `threshold_100`, `threshold_1000` |
 | Région données | `data_region` sur le sondage ; header `X-Data-Region` (451 si mismatch) |
-| Campagnes | Plusieurs sondages (plateformes différentes) via `campaign_id` |
 
 ## API (extraits)
 

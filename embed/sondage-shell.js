@@ -20,7 +20,6 @@
     { id: "creator", label: "Créer", href: "/embed/creator.html" },
     { id: "vote", label: "Voter", href: "/embed/vote.html" },
     { id: "results", label: "Résultats", href: "/embed/results.html" },
-    { id: "attendance", label: "Émargement", href: "/embed/attendance.html" },
   ];
 
   const CSS = `

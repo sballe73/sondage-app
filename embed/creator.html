@@ -230,11 +230,73 @@
         align-items: flex-start;
         margin-top: 0.5rem;
       }
+      .sondage-creator .attendance-panel-host {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+        background: var(--surface);
+      }
+      .sondage-creator .attendance-panel-host h3 {
+        margin: 0 0 0.75rem;
+        font-size: 1rem;
+      }
+      .sondage-creator .sondage-attendance .meta {
+        color: var(--text-muted);
+        margin: 0 0 0.75rem;
+        font-size: 0.9rem;
+      }
+      .sondage-creator .sondage-attendance .hint {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin: 0 0 0.75rem;
+      }
+      .sondage-creator .sondage-attendance .attendance-table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+      .sondage-creator .sondage-attendance .attendance-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+      .sondage-creator .sondage-attendance .attendance-table th,
+      .sondage-creator .sondage-attendance .attendance-table td {
+        text-align: left;
+        padding: 0.55rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      .sondage-creator .sondage-attendance .attendance-table th {
+        background: var(--surface);
+        font-weight: 600;
+      }
+      .sondage-creator .sondage-attendance .attendance-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+      .sondage-creator .sondage-attendance .attendance-actions button {
+        padding: 0.45rem 1rem;
+        cursor: pointer;
+        background: var(--btn-secondary-bg);
+        border: 1px solid var(--btn-secondary-border);
+        border-radius: 6px;
+        color: var(--btn-secondary-text);
+        font: inherit;
+      }
+      .sondage-creator .sondage-attendance .attendance-actions button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
     </style>
     <script src="sondage-auth-storage.js"></script>
     <script src="sondage-shell.js"></script>
     <script src="sondage-datetime.js"></script>
     <script src="sondage-refresh-interval.js"></script>
+    <script src="sondage-attendance.js"></script>
     <script src="sondage-creator.js"></script>
   </head>
   <body>
