@@ -135,7 +135,8 @@ export async function getPendingVoteWork(): Promise<number> {
 }
 
 async function readGroupEventsOnce(
-  r: RedisClient
+  r: RedisClient,
+  streamId: ">" | "0"
 ): Promise<{ id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]> {
   const rows = await r.xreadgroup(
     "GROUP",
@@ -143,20 +144,32 @@ async function readGroupEventsOnce(
     workerConfig.consumerName,
     "COUNT",
     workerConfig.streamReadCount,
-    "BLOCK",
-    0,
     "STREAMS",
     workerConfig.voteEventsStream,
-    ">"
+    streamId
   );
   if (!rows) return [];
   const [, messages] = rows[0] as [string, [string, string[]][]];
   return parseStreamMessages(messages);
 }
 
-/** Reclaim events stuck in PEL after a worker crash (idle > minIdleMs). */
+/** PEL de ce consumer (messages livrés mais pas encore ack). */
+export async function readGroupPendingEvents(): Promise<
+  { id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]
+> {
+  const r = getRedis();
+  try {
+    return await readGroupEventsOnce(r, "0");
+  } catch (err) {
+    if (!isMissingConsumerGroupError(err)) throw err;
+    await ensureConsumerGroup();
+    return readGroupEventsOnce(r, "0");
+  }
+}
+
+/** Reclaim events stuck in PEL after a worker crash (idle > claimMinIdleMs). */
 export async function claimStalePendingEvents(
-  minIdleMs = 60_000
+  minIdleMs = workerConfig.claimMinIdleMs
 ): Promise<{ id: string; event: import("@sondage/shared").VoteSubmittedEvent }[]> {
   const r = getRedis();
   try {
@@ -184,11 +197,11 @@ export async function readGroupEventsImmediate(): Promise<
 > {
   const r = getRedis();
   try {
-    return await readGroupEventsOnce(r);
+    return await readGroupEventsOnce(r, ">");
   } catch (err) {
     if (!isMissingConsumerGroupError(err)) throw err;
     await ensureConsumerGroup();
-    return readGroupEventsOnce(r);
+    return readGroupEventsOnce(r, ">");
   }
 }
 
