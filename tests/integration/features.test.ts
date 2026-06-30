@@ -218,6 +218,22 @@ describe("Attendance and multi-auth features", { skip: !hasEnv }, () => {
     assert.match(tsvRes.headers["content-type"] ?? "", /tab-separated-values/);
     assert.ok(!tsvRes.body.includes("\tDupont"));
     assert.match(tsvRes.body, /Jean Dupont/);
+
+    const linkRes = await app.inject({
+      method: "POST",
+      url: `/polls/${poll.id}/attendance/download-url`,
+      headers: creatorAuthHeaders(creatorToken),
+    });
+    assert.equal(linkRes.statusCode, 200, linkRes.body);
+    const { token } = linkRes.json() as { token: string };
+    assert.ok(token);
+
+    const tsvViaToken = await app.inject({
+      method: "GET",
+      url: `/polls/${poll.id}/attendance?format=tsv&dl=${encodeURIComponent(token)}`,
+    });
+    assert.equal(tsvViaToken.statusCode, 200, tsvViaToken.body);
+    assert.match(tsvViaToken.body, /Jean Dupont/);
   });
 
   it("allows votes from different platforms when ALLOW_MULTI_PLATFORM_AUTH=true", async () => {
