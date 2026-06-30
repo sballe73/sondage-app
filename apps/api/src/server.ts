@@ -16,6 +16,7 @@ import { authRoutes } from "./routes/auth.js";
 import { voteRoutes } from "./routes/votes.js";
 import { resultsRoutes } from "./routes/results.js";
 import { adminRoutes } from "./routes/admin.js";
+import { syslogTestRoutes } from "./routes/syslog-test.js";
 import { closeRedis } from "./redis.js";
 import { closeDb } from "@sondage/db";
 
@@ -51,6 +52,7 @@ await app.register(authRoutes);
 await app.register(voteRoutes);
 await app.register(resultsRoutes);
 await app.register(adminRoutes);
+await app.register(syslogTestRoutes);
 
 assertStartupCompliance();
 

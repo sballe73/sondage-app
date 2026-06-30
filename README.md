@@ -239,6 +239,63 @@ Restart=always
 
 Après une migration SQL déployée sur Render : redémarrer le worker prod uniquement.
 
+### Logs Render → machine locale
+
+Render peut **streamer** les logs API / Postgres / Redis vers un endpoint syslog TLS externe ([doc Render](https://render.com/docs/log-streams)). Ce dépôt inclut un collecteur Docker sur la machine du worker prod.
+
+**Prérequis (une fois, manuel) :**
+
+1. **DuckDNS** — créer un sous-domaine sur [duckdns.org](https://www.duckdns.org) (ex. `sondage-logs.duckdns.org`).
+2. **Freebox** — [mafreebox.freebox.fr](https://mafreebox.freebox.fr) :
+   - Bail DHCP statique pour cette machine (Paramètres → Réseau → DHCP).
+   - Redirection de port **TCP 6514 → 6514** vers l’IP LAN de la machine (Mode avancé → Gestion des ports).
+3. **Pare-feu hôte** : `sudo ufw allow 6514/tcp comment 'Render syslog TLS'`
+4. **Cron DuckDNS** (IP publique à jour) :
+   ```bash
+   # crontab -e
+   */5 * * * * /path/to/sondage-app/scripts/logs-duckdns-update.sh
+   ```
+
+**Configuration projet :**
+
+```bash
+cp infra/logs/.env.logs.example infra/logs/.env.logs
+# Éditer LOG_HOSTNAME, DuckDNS_Token, DuckDNS_Domain, ACME_EMAIL
+npm run logs:generate-token   # secret partagé avec Render (LOG_STREAM_TOKEN)
+npm run logs:setup            # certificat Let's Encrypt (DNS DuckDNS, pas de port 80)
+npm run logs:start            # gate TLS + token sur :6514 → rsyslog interne
+```
+
+**Render Dashboard** → Integrations → Observability → Log Streams → **+ Set default** :
+
+| Champ | Valeur |
+|-------|--------|
+| Log Endpoint | `<LOG_HOSTNAME>:6514` (ex. `radiolouve.duckdns.org:6514`) |
+| Token | **identique** à `LOG_STREAM_TOKEN` dans `infra/logs/.env.logs` |
+| Preview logs | au choix (désactivé recommandé en pilote) |
+
+Render injecte le token dans les messages syslog (structured data RFC 5424). Le **syslog-gate** (`infra/logs/syslog-gate.mjs`) rejette tout message sans ce token — seul Render (configuré avec le même secret) peut écrire dans `logs/render/`. Tentatives rejetées : `logs/render/rejected.log`.
+
+Services couverts par défaut : `sondage` (API), `sondage-db`, `sondage-redis`.
+
+**Consulter les logs :**
+
+```bash
+npm run logs:tail              # suit logs/render/all.log
+ls logs/render/                # all.log, all-json.log, render-YYYY-MM-DD.log
+npm run logs:stop              # arrête le collecteur
+```
+
+**Vérification :**
+
+```bash
+docker compose -f docker-compose.logs.yml ps
+openssl s_client -connect <LOG_HOSTNAME>:6514 -servername <LOG_HOSTNAME> </dev/null
+curl -s https://sondage-app-eweb.onrender.com/health   # génère du trafic API
+```
+
+Si rien n’arrive : DuckDNS à jour, redirection Freebox, certificats (`infra/logs/certs/`), statut du log stream Render.
+
 ### Variables d’environnement (service web `sondage`)
 
 | Variable | Valeur |
@@ -305,8 +362,17 @@ Mode **Development** : ajouter chaque compte votant dans **App roles → Testers
 | `scripts/render-start.sh` | Fallback : API + worker dans le même service Render |
 | `scripts/run-worker-dev.sh` | Worker local (`.env` + docker-compose) |
 | `scripts/run-worker-prod.sh` | Worker prod self-hosted (`.env.worker.prod` + Render externe) |
+| `scripts/logs-setup-certs.sh` | Certificat TLS Let's Encrypt (DuckDNS) pour log stream Render |
+| `scripts/logs-generate-token.sh` | Génère `LOG_STREAM_TOKEN` (auth Render) |
+| `scripts/logs-start.sh` | Démarre gate TLS + collecteur (`docker-compose.logs.yml`) |
+| `scripts/logs-tail.sh` | Suit `logs/render/all.log` |
+| `scripts/logs-duckdns-update.sh` | Met à jour l’IP DuckDNS (cron) |
 | `npm run worker:dev` | Raccourci worker local |
 | `npm run worker:prod` | Raccourci worker prod |
+| `npm run logs:setup` | Raccourci certificats log stream |
+| `npm run logs:generate-token` | Raccourci génération token Render |
+| `npm run logs:start` | Raccourci démarrage gate + collecteur |
+| `npm run logs:tail` | Raccourci suivi des logs Render |
 | `scripts/run-load-test.sh` | test de charge k6 (votes mock concurrents) |
 | `npm run db:migrate:prod` | migrations SQL au démarrage Render |
 

@@ -57,6 +57,13 @@ services:
       # PUBLIC_BASE_URL : optionnel — RENDER_EXTERNAL_URL par défaut
       # - key: PUBLIC_BASE_URL
       #   value: https://<votre-service>.onrender.com
+      # Branche test/syslog-external — relais syslog vers collecteur maison :
+      # - key: SYSLOG_TEST_ENABLED
+      #   value: "true"
+      # - key: LOG_SYSLOG_HOST
+      #   value: <LOG_HOSTNAME>   # ex. radiolouve.duckdns.org (sans https://)
+      # - key: LOG_STREAM_TOKEN
+      #   sync: false             # même valeur que infra/logs/.env.logs + Render Log Streams
       # À configurer manuellement dans le Dashboard Render :
       # - key: OAUTH_FACEBOOK_APP_ID
       #   sync: false
