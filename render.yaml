@@ -1,4 +1,5 @@
 # Blueprint Render — https://render.com/docs/blueprint-spec
+# Branche perf_test : déploiement dédié aux tests de charge k6 (voir docs/perf-test.md).
 # Déploiement : Dashboard → New → Blueprint → repo GitHub.
 # Après le 1er déploiement : renseigner OAUTH_FACEBOOK_* dans l’env du service web.
 #
@@ -49,7 +50,13 @@ services:
       - key: COMPLIANCE_MODE
         value: prototype
       - key: ENABLED_PLATFORMS
-        value: facebook
+        value: mock
+      - key: RATE_LIMIT_ENABLED
+        value: "false"
+      - key: LOG_LEVEL
+        value: warn
+      - key: PERF_LOG
+        value: "true"
       - key: JWT_SECRET
         generateValue: true
       - key: PARTICIPATION_HASH_SALT
