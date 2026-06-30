@@ -1,0 +1,41 @@
+# Collecteur syslog TLS pour les logs Render (RFC 5424).
+# Démarrage : npm run logs:start (après npm run logs:setup).
+# Public : syslog-gate (TLS + token). Interne : log-collector (rsyslog).
+services:
+  syslog-gate:
+    image: node:22-alpine
+    restart: unless-stopped
+    command: ["node", "/app/infra/logs/syslog-gate.mjs"]
+    ports:
+      - "6514:6514/tcp"
+    environment:
+      LOG_GATE_PORT: "6514"
+      LOG_UPSTREAM_HOST: log-collector
+      LOG_UPSTREAM_PORT: "514"
+      TLS_CERT_FILE: /certs/cert.pem
+      TLS_KEY_FILE: /certs/key.pem
+      LOG_GATE_LOG_REJECTS: "true"
+      LOG_REJECT_FILE: /var/log/rejected.log
+    env_file:
+      - infra/logs/.env.logs
+    volumes:
+      - ./infra/logs/syslog-gate.mjs:/app/infra/logs/syslog-gate.mjs:ro
+      - ./infra/logs/certs:/certs:ro
+      - ./logs/render:/var/log
+    depends_on:
+      - log-collector
+
+  log-collector:
+    image: rsyslog/rsyslog-collector:latest
+    restart: unless-stopped
+    environment:
+      ENABLE_UDP: "off"
+      ENABLE_TCP: "on"
+      ENABLE_TLS: "off"
+      WRITE_ALL_FILE: "on"
+      WRITE_JSON_FILE: "on"
+    expose:
+      - "514/tcp"
+    volumes:
+      - ./infra/logs/rsyslog.d/render.conf:/etc/rsyslog.d/99-render.conf:ro
+      - ./logs/render:/var/log

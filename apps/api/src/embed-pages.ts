@@ -30,6 +30,11 @@ const EMBED_HTML_PAGES = [
     route: "/embed/attendance.html",
     title: "Feuille d'émargement — Sondage MJ",
   },
+  {
+    file: "syslog-test.html",
+    route: "/syslog-test.html",
+    title: "Test syslog externe — Sondage MJ",
+  },
 ] as const;
 
 const LEGAL_HTML_PAGES: ReadonlyArray<{

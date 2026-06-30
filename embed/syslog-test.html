@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Test syslog externe</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fff;
+        --text: #111;
+        --muted: #555;
+        --border: #ccc;
+        --ok: #0a7;
+        --err: #c33;
+        --panel: #f6f6f6;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #111;
+          --text: #eee;
+          --muted: #aaa;
+          --border: #444;
+          --panel: #1a1a1a;
+        }
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 42rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        color: var(--text);
+        background: var(--bg);
+        line-height: 1.5;
+      }
+      h1 {
+        font-size: 1.35rem;
+        margin-bottom: 0.25rem;
+      }
+      p {
+        color: var(--muted);
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin: 1rem 0 0.35rem;
+      }
+      textarea {
+        width: 100%;
+        min-height: 7rem;
+        box-sizing: border-box;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font: inherit;
+        color: var(--text);
+        background: var(--bg);
+      }
+      button {
+        margin-top: 0.75rem;
+        padding: 0.55rem 1rem;
+        font: inherit;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+      pre {
+        margin-top: 1rem;
+        padding: 0.85rem 1rem;
+        border-radius: 8px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .ok {
+        color: var(--ok);
+      }
+      .err {
+        color: var(--err);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Test syslog → collecteur</h1>
+    <p>
+      Cette page appelle l’API Render, qui relaie un message RFC&nbsp;5424 en TLS
+      vers le gate syslog configuré (<code>LOG_SYSLOG_HOST:6514</code>).
+    </p>
+
+    <label for="msg">Message</label>
+    <textarea id="msg">hello from render syslog-test page</textarea>
+    <button id="send" type="button">Envoyer</button>
+    <pre id="out" aria-live="polite">Prêt.</pre>
+
+    <script>
+      const msg = document.getElementById("msg");
+      const out = document.getElementById("out");
+      const sendBtn = document.getElementById("send");
+
+      sendBtn.addEventListener("click", async () => {
+        sendBtn.disabled = true;
+        out.textContent = "Envoi…";
+        out.className = "";
+
+        try {
+          const response = await fetch("/syslog-test/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: msg.value }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data.error || data.code || response.statusText);
+          }
+          out.textContent =
+            "OK — relayé vers " +
+            data.host +
+            ":" +
+            data.port +
+            "\n" +
+            (data.preview || "");
+          out.className = "ok";
+        } catch (err) {
+          out.textContent = "Erreur : " + (err && err.message ? err.message : String(err));
+          out.className = "err";
+        } finally {
+          sendBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
