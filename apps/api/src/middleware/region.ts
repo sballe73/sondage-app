@@ -2,7 +2,7 @@ import type { FastifyRequest } from "fastify";
 import type { DataRegion } from "@sondage/shared";
 import { DATA_REGIONS } from "@sondage/shared";
 import { config } from "../config.js";
-import { getPollById } from "@sondage/db";
+import { getPollByIdCached } from "../poll-cache.js";
 import { AppError } from "../errors.js";
 
 declare module "fastify" {
@@ -26,7 +26,7 @@ export async function enforcePollRegion(
   request: FastifyRequest,
   pollId: string
 ) {
-  const data = await getPollById(pollId);
+  const data = await getPollByIdCached(pollId);
   if (!data) {
     throw new AppError(404, "NOT_FOUND", "Poll not found");
   }

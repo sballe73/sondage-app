@@ -25,7 +25,8 @@ export async function voteRoutes(app: FastifyInstance) {
   app.post("/polls/:pollId/votes", async (request, reply) => {
     const t0 = performance.now();
     const { pollId } = z.object({ pollId: z.string().uuid() }).parse(request.params);
-    const { poll, items } = await enforcePollRegion(request, pollId);
+    const pollData = await enforcePollRegion(request, pollId);
+    const { poll, items } = pollData;
     const dbPollMs = Math.round(performance.now() - t0);
 
     const now = new Date();
@@ -41,9 +42,14 @@ export async function voteRoutes(app: FastifyInstance) {
       });
     }
 
-    const auth = await requireVoterAuth(pollId, request.headers.authorization);
+    const auth = await requireVoterAuth(
+      pollId,
+      request.headers.authorization,
+      pollData
+    );
 
     const tRedis = performance.now();
+    if (config.rateLimitEnabled) {
     const rateLimit = await checkVoteRateLimit(
       pollId,
       auth.token.platform,
@@ -72,6 +78,7 @@ export async function voteRoutes(app: FastifyInstance) {
         },
         { "Retry-After": String(rateLimit.retryAfterSec) }
       );
+    }
     }
 
     if (poll.visibility === "group" && poll.groupId) {

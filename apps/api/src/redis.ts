@@ -83,6 +83,32 @@ export async function hasParticipationClaim(
   return val === "1";
 }
 
+const CLAIM_VOTE_SCRIPT = `
+local idemKey = KEYS[1]
+local partKey = KEYS[2]
+local voteCountKey = KEYS[3]
+local ttl = tonumber(ARGV[1])
+local hasIdem = ARGV[2] == '1'
+
+if hasIdem then
+  local existing = redis.call('GET', idemKey)
+  if existing == 'accepted' then
+    return 'idempotent_replay'
+  end
+end
+
+local set = redis.call('SET', partKey, '1', 'EX', ttl, 'NX')
+if not set then
+  return 'already_voted'
+end
+
+if hasIdem then
+  redis.call('SET', idemKey, 'accepted', 'EX', ttl)
+end
+redis.call('INCR', voteCountKey)
+return 'claimed'
+`;
+
 export async function tryClaimVote(
   pollId: string,
   platform: Platform,
@@ -96,29 +122,30 @@ export async function tryClaimVote(
     Math.ceil((endsAt.getTime() - Date.now()) / 1000) + 86400
   );
 
-  if (idempotencyKeyValue) {
-    const idemKey = idempotencyKey(pollId, idempotencyKeyValue);
-    const existing = await r.get(idemKey);
-    if (existing === "accepted") return "idempotent_replay";
-  }
-
   const partKey = participationKey(pollId, platform, subjectId);
-  const set = await r.set(partKey, "1", "EX", ttlSeconds, "NX");
-  if (set !== "OK") {
-    return "already_voted";
-  }
+  const idemKey = idempotencyKeyValue
+    ? idempotencyKey(pollId, idempotencyKeyValue)
+    : partKey;
+  const countKey = voteCountKey(pollId);
 
-  if (idempotencyKeyValue) {
-    await r.set(
-      idempotencyKey(pollId, idempotencyKeyValue),
-      "accepted",
-      "EX",
-      ttlSeconds
-    );
-  }
+  const result = (await r.eval(
+    CLAIM_VOTE_SCRIPT,
+    3,
+    idemKey,
+    partKey,
+    countKey,
+    String(ttlSeconds),
+    idempotencyKeyValue ? "1" : "0"
+  )) as string;
 
-  await r.incr(voteCountKey(pollId));
-  return "claimed";
+  if (
+    result === "claimed" ||
+    result === "already_voted" ||
+    result === "idempotent_replay"
+  ) {
+    return result;
+  }
+  throw new Error(`Unexpected claim result: ${result}`);
 }
 
 export async function releaseVoteClaim(
