@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { PLATFORMS } from "@sondage/shared";
 import { isPerfLogEnabled } from "@sondage/shared";
-import { getPollById } from "@sondage/db";
+import { getPollByIdCached, type PollData } from "../poll-cache.js";
 import {
   mockOAuthLogin,
   issueVoterToken,
@@ -91,7 +91,7 @@ async function assertPollAcceptsPlatform(
   pollId: string,
   platform: (typeof PLATFORMS)[number]
 ) {
-  const data = await getPollById(pollId);
+  const data = await getPollByIdCached(pollId);
   if (!data) {
     throw new AppError(404, "NOT_FOUND", "Poll not found");
   }
@@ -320,7 +320,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     let dbPollMs = 0;
     if (body.pollId) {
-      const data = await getPollById(body.pollId);
+      const data = await getPollByIdCached(body.pollId);
       dbPollMs = Math.round(performance.now() - t0);
       if (!data) {
         throw new AppError(404, "NOT_FOUND", "Poll not found");
@@ -424,7 +424,8 @@ export async function authRoutes(app: FastifyInstance) {
 
 export async function requireVoterAuth(
   pollId: string,
-  authorization: string | undefined
+  authorization: string | undefined,
+  pollData?: PollData | null
 ) {
   if (!authorization?.startsWith("Bearer ")) {
     throw new AppError(401, "UNAUTHORIZED", "Unauthorized");
@@ -435,7 +436,7 @@ export async function requireVoterAuth(
   } catch {
     throw new AppError(401, "UNAUTHORIZED", "Invalid token");
   }
-  const data = await getPollById(pollId);
+  const data = pollData ?? (await getPollByIdCached(pollId));
   if (!data) {
     throw new AppError(404, "NOT_FOUND", "Poll not found");
   }
@@ -503,7 +504,7 @@ export async function requirePollCreatorAuth(
   } catch {
     throw new AppError(401, "UNAUTHORIZED", "Invalid token");
   }
-  const data = await getPollById(pollId);
+  const data = await getPollByIdCached(pollId);
   if (!data) {
     throw new AppError(404, "NOT_FOUND", "Poll not found");
   }
