@@ -6,6 +6,7 @@ import {
   ensureConsumerGroupWithRetry,
   claimStalePendingEvents,
   readGroupEventsImmediate,
+  readGroupPendingEvents,
   getPendingVoteWork,
   ackEvent,
   trimProcessedVoteEvents,
@@ -62,6 +63,15 @@ async function processPendingVotesUpTo(maxEvents: number): Promise<ProcessResult
   let total = 0;
   let snapshotMs = 0;
   const dirtyPolls = new Set<string>();
+
+  while (total < maxEvents) {
+    const pendingOwn = await readGroupPendingEvents();
+    if (pendingOwn.length === 0) break;
+    for (const { event } of pendingOwn) {
+      dirtyPolls.add(event.pollId);
+    }
+    total += await processStreamEntries(pendingOwn, maxEvents - total);
+  }
 
   while (total < maxEvents) {
     const reclaimed = await claimStalePendingEvents();
