@@ -22,25 +22,55 @@ if (!TOKEN || TOKEN.includes("CHANGE_ME")) {
 }
 
 const escapedToken = TOKEN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** Render masque le token dans le flux syslog réel (6× U+2022). Le bouton « test » envoie le hex. */
+const RENDER_MASKED_PREFIX = "\u2022\u2022\u2022\u2022\u2022\u2022";
+const RENDER_HEX_PREFIX = new RegExp(`^${escapedToken}\\s+(?=<[0-9])`);
+const RENDER_MASKED = new RegExp(
+  `^${RENDER_MASKED_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s+(?=<[0-9])`
+);
+const SYSLOG_START = /<[0-9]/;
 
-/** @param {string} msg */
-function tokenValid(msg) {
+/**
+ * Render préfixe les lignes : `{token} <pri>1…` ou `•••••• <pri>1…`.
+ * @returns {{ ok: boolean, body: string, auth: string }}
+ */
+function normalizeRenderMessage(msg) {
+  const trimmed = msg.trim();
+  if (!trimmed) return { ok: false, body: "", auth: "empty" };
+
+  if (RENDER_HEX_PREFIX.test(trimmed)) {
+    return { ok: true, body: trimmed.slice(TOKEN.length).trimStart(), auth: "render_hex" };
+  }
+  if (RENDER_MASKED.test(trimmed)) {
+    return { ok: true, body: trimmed.slice(RENDER_MASKED_PREFIX.length).trimStart(), auth: "render_masked" };
+  }
+  if (trimmed.startsWith(`${TOKEN} <`)) {
+    return { ok: true, body: trimmed.slice(TOKEN.length).trimStart(), auth: "render_hex" };
+  }
+
   const patterns = [
-    new RegExp(`source_token="${escapedToken}"`),
-    new RegExp(`source_token='${escapedToken}'`),
-    new RegExp(`private_key="${escapedToken}"`),
-    new RegExp(`api_key="${escapedToken}"`),
-    new RegExp(`\\btoken="${escapedToken}"`),
-    new RegExp(`nrLicenseKey=${escapedToken}\\b`),
+    { re: new RegExp(`source_token="${escapedToken}"`), auth: "structured_source_token" },
+    { re: new RegExp(`source_token='${escapedToken}'`), auth: "structured_source_token" },
+    { re: new RegExp(`private_key="${escapedToken}"`), auth: "structured_private_key" },
+    { re: new RegExp(`api_key="${escapedToken}"`), auth: "structured_api_key" },
+    { re: new RegExp(`\\btoken="${escapedToken}"`), auth: "structured_token" },
+    { re: new RegExp(`nrLicenseKey=${escapedToken}\\b`), auth: "structured_nr" },
   ];
-  if (msg.startsWith(`${TOKEN} <`)) return true;
-  return patterns.some((re) => re.test(msg));
+  for (const { re, auth } of patterns) {
+    if (re.test(trimmed)) return { ok: true, body: trimmed, auth };
+  }
+
+  if (SYSLOG_START.test(trimmed)) {
+    return { ok: false, body: trimmed, auth: "no_token" };
+  }
+  return { ok: false, body: trimmed, auth: "unrecognized" };
 }
 
-/** @param {string} reason @param {string} msg */
-function logReject(reason, msg) {
+/** @param {string} reason @param {string} msg @param {string} auth */
+function logReject(reason, msg, auth = "") {
   if (!LOG_REJECTS) return;
-  const line = `${new Date().toISOString()} ${reason} ${msg.slice(0, 400).replace(/\n/g, "\\n")}\n`;
+  const tag = auth ? ` ${auth}` : "";
+  const line = `${new Date().toISOString()} ${reason}${tag} ${msg.slice(0, 400).replace(/\n/g, "\\n")}\n`;
   try {
     fs.appendFileSync(REJECT_LOG, line);
   } catch {
@@ -90,6 +120,23 @@ function parseFrames(buf) {
   return { consumed: offset, messages };
 }
 
+/** @param {string} raw */
+function flushTrailingMessage(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed || !SYSLOG_START.test(trimmed)) return null;
+  return trimmed;
+}
+
+/** @param {string} msg @param {(body: string, auth: string) => void} accept @param {(reason: string, msg: string, auth: string) => void} reject */
+function handleMessage(msg, accept, reject) {
+  const { ok, body, auth } = normalizeRenderMessage(msg);
+  if (ok && SYSLOG_START.test(body)) {
+    accept(body, auth);
+    return;
+  }
+  reject("token_mismatch", msg, auth);
+}
+
 function connectUpstream() {
   return net.connect(UPSTREAM_PORT, UPSTREAM_HOST);
 }
@@ -105,6 +152,8 @@ const server = tls.createServer(
     let buffer = Buffer.alloc(0);
     let accepted = 0;
     let rejected = 0;
+    /** @type {Record<string, number>} */
+    const authCounts = {};
 
     const ensureUpstream = () => {
       if (upstream) return upstream;
@@ -125,20 +174,45 @@ const server = tls.createServer(
       buffer = buffer.subarray(consumed);
 
       for (const msg of messages) {
-        if (tokenValid(msg)) {
-          accepted += 1;
-          forward(ensureUpstream(), msg);
-        } else {
-          rejected += 1;
-          logReject("token_mismatch", msg);
-        }
+        handleMessage(
+          msg,
+          (body, auth) => {
+            accepted += 1;
+            authCounts[auth] = (authCounts[auth] ?? 0) + 1;
+            forward(ensureUpstream(), body);
+          },
+          (reason, raw, auth) => {
+            rejected += 1;
+            logReject(reason, raw, auth);
+          }
+        );
       }
     });
 
     socket.on("close", () => {
+      const trailing = flushTrailingMessage(buffer.toString("utf8"));
+      if (trailing) {
+        handleMessage(
+          trailing,
+          (body, auth) => {
+            accepted += 1;
+            authCounts[auth] = (authCounts[auth] ?? 0) + 1;
+            forward(ensureUpstream(), body);
+          },
+          (reason, raw, auth) => {
+            rejected += 1;
+            logReject(reason, raw, auth);
+          }
+        );
+        buffer = Buffer.alloc(0);
+      }
+
       const peer = `${socket.remoteAddress ?? "?"}:${socket.remotePort ?? "?"}`;
+      const authSummary = Object.entries(authCounts)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(" ");
       console.log(
-        `syslog-gate: ${peer} done — accepted=${accepted} rejected=${rejected} leftover=${buffer.length}`
+        `syslog-gate: ${peer} done — accepted=${accepted} rejected=${rejected}${authSummary ? ` auth={${authSummary}}` : ""} leftover=${buffer.length}`
       );
       if (buffer.length) {
         console.log(
