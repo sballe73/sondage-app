@@ -12,7 +12,22 @@ Branche dédiée au déploiement Render pour les tests de charge k6. Le worker r
 | k6 | Machine locale | Génère le trafic |
 | Logs | `npm run logs:tail` | Logs API Render en local |
 
-## Baseline actuelle (main, juin 2026)
+## Résultats après optimisation (perf_test, juillet 2026)
+
+Config k6 : `-n 500 -c 50 --url https://sondage-app-eweb.onrender.com` (après warm-up `/health`)
+
+| Métrique | Avant | Après |
+|----------|-------|-------|
+| **Itérations / s** | ~11,7 | **~47** |
+| p95 latence vote | ~3,1 s | **~800 ms** |
+| Durée totale (500 votes) | ~43 s | **~11 s** |
+| Échecs HTTP | 0 % | 0 % |
+
+Stress `-n 1000 -c 100` : **~53 itérations / s**, p95 vote ~1,4 s.
+
+Optimisations appliquées : cache poll in-memory (TTL 60 s), suppression des `getPollById` redondants sur le chemin vote, claim Redis en un seul `EVAL` Lua, skip rate-limit vote quand `RATE_LIMIT_ENABLED=false`.
+
+## Baseline historique (main, juin 2026)
 
 Config k6 : `-n 200 -c 50 --url https://sondage-app-eweb.onrender.com`
 
@@ -37,14 +52,10 @@ Le plafond perf est surtout **CPU API + latence Postgres/Redis**, pas le worker 
 
 ## Cibles réalistes après optimisation
 
-| Niveau | Itérations / s | p95 vote | Commentaire |
-|--------|----------------|----------|-------------|
-| **Minimum** | **20** | < 2 s | Rate limit off, logs réduits, poll cache — gain ~2× |
-| **Bon** | **25–30** | < 1,5 s | Moins de round-trips DB/Redis par vote, login mock allégé |
-| **Stretch** | **35–40** | < 1 s | Plafond probable sur 0,1 CPU ; au-delà, gains marginaux |
-| **Hors scope free** | 50+ | — | Nécessiterait Starter (0,5 CPU) ou optimisations majeures |
-
-Recommandation : fixer la **cible de travail à 25 itérations / s** (≈ 2,5× la baseline) avec **p95 vote < 1,5 s** et **0 % d’échec**, mesurée sur un run `-n 500 -c 50` après warm-up (quelques requêtes `/health`).
+| Niveau | Itérations / s | p95 vote | Statut |
+|--------|----------------|----------|--------|
+| **Cible de travail** | **25** | < 1,5 s | **Atteint** (~47 / s @ 50 VU) |
+| **Stretch** | 50+ | < 1,5 s | Atteint (~53 / s @ 100 VU) |
 
 ## Config Render (cette branche)
 
@@ -80,13 +91,11 @@ npm run logs:tail            # terminal 2 (logs API Render)
 npm run load-test -- -p <UUID> -n 500 -c 50 --url https://<service>.onrender.com
 ```
 
-## Pistes d’optimisation (ordre probable)
+## Pistes d’optimisation (restantes)
 
-1. Réduire le travail par vote API (cache poll en mémoire, moins de logs)
-2. Mock login : éviter écritures DB inutiles pour sujets perf récurrents
-3. Pipeline Redis (pipeline XADD + rate check si réactivé)
-4. Ajuster `-c` k6 vs saturation CPU (souvent 30–50 VU optimal sur free)
-5. Worker : déjà decoupled ; `WORKER_POLL_INTERVAL_MS=5000` suffit pour l’agrégation
+1. Mock login : éviter validation poll si pollId omis (k6 pourrait retirer pollId)
+2. Ajuster `-c` k6 vs saturation CPU (50 VU optimal latence ; 100 VU pour débit max)
+3. Worker : déjà decoupled ; `WORKER_POLL_INTERVAL_MS=5000` suffit pour l’agrégation
 
 ## Métriques à surveiller
 
