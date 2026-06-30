@@ -384,6 +384,8 @@ Mode **Development** : ajouter chaque compte votant dans **App roles → Testers
 
 Test de performance distribué : plusieurs machines envoient des votes mock simultanés contre une API en cours d’exécution. Outil **manuel / staging** (pas en CI).
 
+**Branche `perf_test`** : déploiement Render dédié (`ENABLED_PLATFORMS=mock`, rate limit off, `PERF_LOG=true`). Voir [`docs/perf-test.md`](docs/perf-test.md) pour baseline (~11 iter/s), cibles et config.
+
 ### Prérequis
 
 1. **k6** sur chaque machine cliente :
