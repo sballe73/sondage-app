@@ -6,7 +6,7 @@
   const formatDateTime = (iso) => DT.formatDateTime(iso);
 
   const TAG = "sondage-attendance-widget";
-  const PAGE_SIZE = 100;
+  const PAGE_SIZE = 20;
 
   const PLATFORM_LABELS = {
     mock: "mock (dev)",
@@ -81,24 +81,60 @@
 
     async downloadTsv() {
       const btn = this.querySelector("#download-tsv");
-      if (btn) btn.disabled = true;
+      const filename = `emargement-${this.pollId}.tsv`;
+      const originalLabel = btn?.textContent ?? "Télécharger TSV";
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Préparation…";
+      }
+
       try {
-        const res = await fetch(
-          this.attendanceUrl({ format: "tsv" }),
-          { headers: this._requestHeaders() }
+        if (typeof window.showSaveFilePicker === "function") {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [
+              {
+                description: "TSV",
+                accept: { "text/tab-separated-values": [".tsv"] },
+              },
+            ],
+          });
+          if (btn) btn.textContent = "Export en cours…";
+          const res = await fetch(this.attendanceUrl({ format: "tsv" }), {
+            headers: this._requestHeaders(),
+          });
+          if (!res.ok) throw new Error(await res.text());
+          if (!res.body) throw new Error("Réponse vide");
+          const writable = await handle.createWritable();
+          await res.body.pipeTo(writable);
+          return;
+        }
+
+        const linkRes = await fetch(
+          `${this.apiBase}/polls/${this.pollId}/attendance/download-url`,
+          { method: "POST", headers: this._requestHeaders() }
         );
-        if (!res.ok) throw new Error(await res.text());
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
+        if (!linkRes.ok) throw new Error(await linkRes.text());
+        const { token } = await linkRes.json();
+        const downloadUrl = this.attendanceUrl({
+          format: "tsv",
+          dl: token,
+        });
         const a = document.createElement("a");
-        a.href = url;
-        a.download = `emargement-${this.pollId}.tsv`;
+        a.href = downloadUrl;
+        a.rel = "noopener";
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(url);
+        a.remove();
       } catch (e) {
+        if (e?.name === "AbortError") return;
         alert(e.message || String(e));
       } finally {
-        if (btn) btn.disabled = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = originalLabel;
+        }
       }
     }
 

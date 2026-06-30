@@ -12,8 +12,12 @@ import {
   getPollById,
   maybePublishSnapshot,
 } from "@sondage/db";
-import { enforcePollRegion } from "../middleware/region.js";
+import { enforcePollRegion, resolveRequestRegion } from "../middleware/region.js";
 import { config } from "../config.js";
+import {
+  issueAttendanceTsvDownloadToken,
+  verifyAttendanceTsvDownloadToken,
+} from "../auth/attendance-download-token.js";
 import {
   isResultsVisible,
 } from "../services/results-policy.js";
@@ -163,6 +167,22 @@ export async function resultsRoutes(app: FastifyInstance) {
     return { ballots };
   });
 
+  app.post("/polls/:pollId/attendance/download-url", async (request) => {
+    const { pollId } = z.object({ pollId: z.string().uuid() }).parse(request.params);
+    await enforcePollRegion(request, pollId);
+    const { poll } = await requirePollCreatorAuth(
+      pollId,
+      request.headers.authorization
+    );
+    const region = resolveRequestRegion(request);
+    const token = await issueAttendanceTsvDownloadToken(
+      pollId,
+      poll.creatorId,
+      region
+    );
+    return { token };
+  });
+
   app.get("/polls/:pollId/attendance", async (request, reply) => {
     const { pollId } = z.object({ pollId: z.string().uuid() }).parse(request.params);
     const query = z
@@ -175,15 +195,34 @@ export async function resultsRoutes(app: FastifyInstance) {
           .max(ATTENDANCE_PAGE_SIZE)
           .default(ATTENDANCE_PAGE_SIZE),
         format: z.enum(["json", "tsv"]).default("json"),
+        dl: z.string().optional(),
       })
       .parse(request.query ?? {});
 
-    await enforcePollRegion(request, pollId);
-    const { poll, items } = await requirePollCreatorAuth(
-      pollId,
-      request.headers.authorization
-    );
-    const data = { poll, items };
+    let data: Awaited<ReturnType<typeof getPollById>>;
+
+    if (query.format === "tsv" && query.dl) {
+      const { creatorId, dataRegion } = await verifyAttendanceTsvDownloadToken(
+        query.dl,
+        pollId
+      );
+      request.headers[config.regionHeader] = dataRegion;
+      data = await enforcePollRegion(request, pollId);
+      if (!data || data.poll.creatorId !== creatorId) {
+        throw new AppError(403, "FORBIDDEN", "Not poll creator");
+      }
+    } else {
+      await enforcePollRegion(request, pollId);
+      const auth = await requirePollCreatorAuth(
+        pollId,
+        request.headers.authorization
+      );
+      data = { poll: auth.poll, items: auth.items };
+    }
+
+    if (!data) {
+      throw new AppError(404, "NOT_FOUND", "Poll not found");
+    }
 
     const page =
       query.format === "tsv"
