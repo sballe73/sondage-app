@@ -59,6 +59,11 @@ export const config = {
   get aggregationIntervalMs() {
     return this.snapshotMinIntervalMs;
   },
+  /** Relais syslog test (branche test/syslog-external). */
+  syslogTestEnabled: process.env.SYSLOG_TEST_ENABLED === "true",
+  logSyslogHost: process.env.LOG_SYSLOG_HOST ?? process.env.LOG_HOSTNAME ?? "",
+  logSyslogPort: Number(process.env.LOG_SYSLOG_PORT ?? 6514),
+  logStreamToken: process.env.LOG_STREAM_TOKEN ?? "",
   oauthGoogleClientId: process.env.OAUTH_GOOGLE_CLIENT_ID ?? "",
   oauthGoogleClientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET ?? "",
   oauthGoogleRedirectUri:

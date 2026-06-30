@@ -4,6 +4,9 @@ dist/
 .env.local
 .env.worker.prod
 *.log
+/logs/
+infra/logs/certs/
+infra/logs/.env.logs
 .DS_Store
 .cursor/
 
