@@ -7,16 +7,17 @@ import {
   claimStalePendingEvents,
   readGroupEventsImmediate,
   readGroupPendingEvents,
-  getPendingVoteWork,
+  getStreamQueueStats,
   ackEvent,
   trimProcessedVoteEvents,
   closeRedis,
+  type StreamQueueStats,
 } from "./redis.js";
 import { processVoteEventBatch } from "./processor.js";
 import { maybePublishSnapshot } from "@sondage/db";
 
 console.log(
-  `Worker ${workerConfig.consumerName} starting (poll every ${workerConfig.pollIntervalMs}ms, max ${workerConfig.maxEventsPerTick} events/tick)...`
+  `[worker] starting consumer=${workerConfig.consumerName} group=${workerConfig.consumerGroup} stream=${workerConfig.voteEventsStream} poll=${workerConfig.pollIntervalMs}ms max/tick=${workerConfig.maxEventsPerTick} claim_idle=${workerConfig.claimMinIdleMs}ms trim=${workerConfig.voteStreamTrimEnabled}`
 );
 
 assertStartupCompliance();
@@ -27,9 +28,19 @@ type ProcessResult = {
   processed: number;
   aggregateMs: number;
   snapshotMs: number;
+  fromOwnPel: number;
+  fromClaim: number;
+  fromNew: number;
+  dirtyPollCount: number;
 };
 
 let tickRunning = false;
+let tickSeq = 0;
+
+function formatQueueStats(stats: StreamQueueStats): string {
+  const tail = stats.lastDeliveredId ? ` last_id=${stats.lastDeliveredId}` : "";
+  return `pel=${stats.pel} lag=${stats.lag} total=${stats.total}${tail}`;
+}
 
 async function processStreamEntries(
   entries: { id: string; event: import("@sondage/shared").VoteSubmittedEvent }[],
@@ -45,13 +56,19 @@ async function processStreamEntries(
   for (const { id, event } of slice) {
     if (failedIds.has(event.eventId)) {
       console.error(
-        `Failed event ${id}:`,
+        `[worker] failed event stream_id=${id} event_id=${event.eventId} poll=${event.pollId}:`,
         result.failed.find((f) => f.eventId === event.eventId)?.error
       );
       continue;
     }
     await ackEvent(id);
     acked += 1;
+  }
+
+  if (result.failed.length > 0) {
+    console.warn(
+      `[worker] batch partial ack stream_ids=${slice.length} acked=${acked} failed=${result.failed.length} duplicate=${result.duplicate}`
+    );
   }
 
   return acked;
@@ -61,6 +78,9 @@ async function processStreamEntries(
 async function processPendingVotesUpTo(maxEvents: number): Promise<ProcessResult> {
   const aggregateStart = Date.now();
   let total = 0;
+  let fromOwnPel = 0;
+  let fromClaim = 0;
+  let fromNew = 0;
   let snapshotMs = 0;
   const dirtyPolls = new Set<string>();
 
@@ -70,7 +90,9 @@ async function processPendingVotesUpTo(maxEvents: number): Promise<ProcessResult
     for (const { event } of pendingOwn) {
       dirtyPolls.add(event.pollId);
     }
-    total += await processStreamEntries(pendingOwn, maxEvents - total);
+    const acked = await processStreamEntries(pendingOwn, maxEvents - total);
+    fromOwnPel += acked;
+    total += acked;
   }
 
   while (total < maxEvents) {
@@ -79,7 +101,9 @@ async function processPendingVotesUpTo(maxEvents: number): Promise<ProcessResult
     for (const { event } of reclaimed) {
       dirtyPolls.add(event.pollId);
     }
-    total += await processStreamEntries(reclaimed, maxEvents - total);
+    const acked = await processStreamEntries(reclaimed, maxEvents - total);
+    fromClaim += acked;
+    total += acked;
   }
 
   while (total < maxEvents) {
@@ -88,7 +112,9 @@ async function processPendingVotesUpTo(maxEvents: number): Promise<ProcessResult
     for (const { event } of batch) {
       dirtyPolls.add(event.pollId);
     }
-    total += await processStreamEntries(batch, maxEvents - total);
+    const acked = await processStreamEntries(batch, maxEvents - total);
+    fromNew += acked;
+    total += acked;
   }
 
   for (const pollId of dirtyPolls) {
@@ -96,7 +122,7 @@ async function processPendingVotesUpTo(maxEvents: number): Promise<ProcessResult
       const result = await maybePublishSnapshot(pollId);
       snapshotMs += result.snapshotMs ?? 0;
     } catch (err) {
-      console.error(`Failed snapshot for poll ${pollId}:`, err);
+      console.error(`[worker] snapshot failed poll=${pollId}:`, err);
     }
   }
 
@@ -104,48 +130,90 @@ async function processPendingVotesUpTo(maxEvents: number): Promise<ProcessResult
     processed: total,
     aggregateMs: Date.now() - aggregateStart,
     snapshotMs,
+    fromOwnPel,
+    fromClaim,
+    fromNew,
+    dirtyPollCount: dirtyPolls.size,
   };
 }
 
 async function tick(): Promise<void> {
   if (tickRunning) {
+    console.warn(
+      `[worker] tick skipped — previous tick still running (${new Date().toISOString()})`
+    );
     return;
   }
+
   tickRunning = true;
+  const tickId = ++tickSeq;
+  const tickStart = Date.now();
+
   try {
-    const pending = await getPendingVoteWork();
-    if (pending === 0) {
+    const before = await getStreamQueueStats();
+    if (before.total === 0) {
       const trimmed = await trimProcessedVoteEvents();
       if (trimmed > 0) {
-        console.log(`[worker] Trimmed ${trimmed} acked stream entries`);
+        console.log(`[worker] tick #${tickId} trimmed=${trimmed} acked stream entries`);
       }
-      console.log(`[worker] No new votes (${new Date().toISOString()})`);
+      console.log(`[worker] tick #${tickId} idle ${formatQueueStats(before)}`);
+      perfLog("perf_worker_tick", {
+        tick: tickId,
+        idle: true,
+        pel: before.pel,
+        lag: before.lag,
+        stream_trimmed: trimmed,
+        duration_ms: Date.now() - tickStart,
+      });
       return;
     }
 
     console.log(
-      `[worker] ~${pending} vote event(s) pending — processing up to ${workerConfig.maxEventsPerTick} (${new Date().toISOString()})...`
+      `[worker] tick #${tickId} begin ${formatQueueStats(before)} limit=${workerConfig.maxEventsPerTick}`
     );
-    const { processed, aggregateMs, snapshotMs } = await processPendingVotesUpTo(
-      workerConfig.maxEventsPerTick
-    );
+    const result = await processPendingVotesUpTo(workerConfig.maxEventsPerTick);
     const trimmed = await trimProcessedVoteEvents();
-    console.log(`[worker] Processed ${processed} vote event(s)`);
+    const after = await getStreamQueueStats();
+    const durationMs = Date.now() - tickStart;
+
+    console.log(
+      `[worker] tick #${tickId} done processed=${result.processed} own_pel=${result.fromOwnPel} claimed=${result.fromClaim} new=${result.fromNew} snapshots=${result.dirtyPollCount} trimmed=${trimmed} remaining ${formatQueueStats(after)} duration_ms=${durationMs}`
+    );
+
+    if (result.processed === 0 && before.total > 0) {
+      console.warn(
+        `[worker] tick #${tickId} processed 0 despite queue ${formatQueueStats(before)} — check PEL ownership or consumer=${workerConfig.consumerName}`
+      );
+    }
+
     perfLog("perf_worker_tick", {
-      processed,
-      aggregate_ms: aggregateMs,
-      snapshot_ms: snapshotMs,
+      tick: tickId,
+      processed: result.processed,
+      own_pel: result.fromOwnPel,
+      claimed: result.fromClaim,
+      new: result.fromNew,
+      snapshots: result.dirtyPollCount,
+      aggregate_ms: result.aggregateMs,
+      snapshot_ms: result.snapshotMs,
       stream_trimmed: trimmed,
+      pel_before: before.pel,
+      lag_before: before.lag,
+      pel_after: after.pel,
+      lag_after: after.lag,
+      duration_ms: durationMs,
     });
+  } catch (err) {
+    console.error(`[worker] tick #${tickId} error after ${Date.now() - tickStart}ms:`, err);
+    throw err;
   } finally {
     tickRunning = false;
   }
 }
 
-await tick().catch((e) => console.error("Initial tick error:", e));
+await tick().catch((e) => console.error("[worker] initial tick error:", e));
 
 const interval = setInterval(() => {
-  tick().catch((e) => console.error("Tick error:", e));
+  tick().catch((e) => console.error("[worker] tick error:", e));
 }, workerConfig.pollIntervalMs);
 
 process.on("SIGINT", async () => {

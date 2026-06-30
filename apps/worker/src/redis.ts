@@ -61,6 +61,13 @@ type ConsumerGroupInfo = {
   lastDeliveredId: string | null;
 };
 
+export type StreamQueueStats = {
+  pel: number;
+  lag: number;
+  total: number;
+  lastDeliveredId: string | null;
+};
+
 function parseConsumerGroupInfo(
   raw: unknown,
   groupName: string
@@ -112,8 +119,8 @@ export async function ensureConsumerGroupWithRetry(
   }
 }
 
-/** Nombre d'événements en attente (PEL + lag du consumer group). */
-export async function getPendingVoteWork(): Promise<number> {
+/** État du consumer group Redis (PEL + lag). */
+export async function getStreamQueueStats(): Promise<StreamQueueStats> {
   const r = getRedis();
   try {
     const [pendingSummary, groups] = await Promise.all([
@@ -126,12 +133,23 @@ export async function getPendingVoteWork(): Promise<number> {
     const pel = Number(pendingSummary?.[0] ?? 0);
     const info = parseConsumerGroupInfo(groups, workerConfig.consumerGroup);
     const lag = Number(info?.lag ?? 0);
-    return pel + lag;
+    return {
+      pel,
+      lag,
+      total: pel + lag,
+      lastDeliveredId: info?.lastDeliveredId ?? null,
+    };
   } catch (err) {
     if (!isMissingConsumerGroupError(err)) throw err;
     await ensureConsumerGroup();
-    return 0;
+    return { pel: 0, lag: 0, total: 0, lastDeliveredId: null };
   }
+}
+
+/** Nombre d'événements en attente (PEL + lag du consumer group). */
+export async function getPendingVoteWork(): Promise<number> {
+  const stats = await getStreamQueueStats();
+  return stats.total;
 }
 
 async function readGroupEventsOnce(
